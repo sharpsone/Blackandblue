@@ -79,8 +79,9 @@ class MFLClient {
 
 
   async getPlayers() {
-    return this.request('export', { TYPE: 'players' });
-  }
+    return this.request('export', { TYPE: 'players' }, { json: true });
+ }
+
 }
 
 module.exports = MFLClient;
