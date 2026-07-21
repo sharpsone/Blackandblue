@@ -67,10 +67,11 @@ class MFLClient {
 
 
   async getStandings(leagueId, week) {
-  const params = { L: leagueId };
-  if (week) params.W = week;
-  return this.request('standings', params, { json: true });
-  }
+    const params = { TYPE: 'leagueStandings', L: leagueId };
+    if (week) params.W = week;
+    return this.request('export', params, { json: true });
+}
+
 
 
   async getRosters(leagueId) {
