@@ -67,3 +67,14 @@ app.get('/api/league/:leagueId/rosters', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch rosters' });
   }
 });
+
+const db = require('./db');
+
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const result = await db.query('select now()');
+    res.json({ success: true, time: result.rows[0].now });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
