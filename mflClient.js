@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 class MFLClient {
-  constructor({ year = '2026', host = 'api.myfantasyleague.com', cookie = null, apiKey = null }) {
+  constructor({ year = '2026', host = 'www.myfantasyleague.com', cookie = null, apiKey = null }) {
     this.year = year;
     this.host = host;
     this.cookie = cookie;
