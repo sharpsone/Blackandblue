@@ -24,7 +24,7 @@ class MFLClient {
 
     const headers = {};
 
-    // ⭐ Send ALL cookies exactly as MFL returned them
+    // ⭐ Send ALL cookies exactly as decoded
     if (this.cookie) {
       headers['Cookie'] = this.cookie;
     }
@@ -58,10 +58,14 @@ class MFLClient {
 
     console.log("SET-COOKIE RAW:", setCookie);
 
-    // ⭐ Store ALL cookies exactly as returned (name=value only)
-    this.cookie = setCookie
-      .map(c => c.split(';')[0])   // keep only "name=value"
-      .join('; ');                 // join into a single Cookie header
+    // ⭐ Decode each cookie value
+    const decodedCookies = setCookie.map(c => {
+      const [name, value] = c.split(';')[0].split('=');
+      return `${name}=${decodeURIComponent(value || '')}`;
+    });
+
+    // ⭐ Join into a single Cookie header
+    this.cookie = decodedCookies.join('; ');
 
     console.log("FINAL COOKIE HEADER:", this.cookie);
 
