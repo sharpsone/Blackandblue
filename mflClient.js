@@ -50,6 +50,7 @@ class MFLClient {
     });
 
     const setCookie = res.headers['set-cookie'];
+    console.log("SET-COOKIE RAW:", setCookie);
     if (!setCookie) {
       throw new Error('Login failed: no cookie returned');
     }
