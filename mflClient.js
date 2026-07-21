@@ -24,10 +24,9 @@ class MFLClient {
 
     const headers = {};
 
+    // ⭐ Send ALL cookies exactly as MFL returned them
     if (this.cookie) {
-      // Decode the cookie before sending it
-      const decoded = decodeURIComponent(this.cookie);
-      headers['Cookie'] = `MFL_USER_ID=${decoded}`;
+      headers['Cookie'] = this.cookie;
     }
 
     try {
@@ -39,59 +38,53 @@ class MFLClient {
     }
   }
 
-async login(username, password) {
-  const url = `https://api.myfantasyleague.com/${this.year}/login`;
-  const params = new URLSearchParams({
-    USERNAME: username,
-    PASSWORD: password,
-    XML: '1'
-  });
+  async login(username, password) {
+    const url = `https://api.myfantasyleague.com/${this.year}/login`;
+    const params = new URLSearchParams({
+      USERNAME: username,
+      PASSWORD: password,
+      XML: '1'
+    });
 
-  const res = await axios.post(`${url}?${params.toString()}`, null, {
-    maxRedirects: 0,
-    validateStatus: status => status >= 200 && status < 400
-  });
+    const res = await axios.post(`${url}?${params.toString()}`, null, {
+      maxRedirects: 0,
+      validateStatus: status => status >= 200 && status < 400
+    });
 
-  const setCookie = res.headers['set-cookie'];
-  if (!setCookie) {
-    throw new Error('Login failed: no cookie returned');
+    const setCookie = res.headers['set-cookie'];
+    if (!setCookie) {
+      throw new Error('Login failed: no cookie returned');
+    }
+
+    console.log("SET-COOKIE RAW:", setCookie);
+
+    // ⭐ Store ALL cookies exactly as returned (name=value only)
+    this.cookie = setCookie
+      .map(c => c.split(';')[0])   // keep only "name=value"
+      .join('; ');                 // join into a single Cookie header
+
+    console.log("FINAL COOKIE HEADER:", this.cookie);
+
+    return this.cookie;
   }
-
-  console.log("SET-COOKIE RAW:", setCookie);
-
-  // ⭐ Store ALL cookies exactly as returned
-  this.cookie = setCookie
-    .map(c => c.split(';')[0])   // keep only "name=value"
-    .join('; ');                 // join into a single Cookie header
-
-  console.log("FINAL COOKIE HEADER:", this.cookie);
-
-  return this.cookie;
-}
-
 
   async getLeague(leagueId) {
     return this.request('export', { TYPE: 'league', L: leagueId }, { json: true });
   }
 
-
   async getStandings(leagueId, week) {
     const params = { TYPE: 'leagueStandings', L: leagueId };
     if (week) params.W = week;
     return this.request('export', params, { json: true });
-}
-
-
+  }
 
   async getRosters(leagueId) {
     return this.request('export', { TYPE: 'rosters', L: leagueId }, { json: true });
   }
 
-
   async getPlayers() {
     return this.request('export', { TYPE: 'players' }, { json: true });
- }
-
+  }
 }
 
 module.exports = MFLClient;
