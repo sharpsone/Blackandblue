@@ -62,18 +62,21 @@ class MFLClient {
   }
 
   async getLeague(leagueId) {
-    return this.request('export', { TYPE: 'league', L: leagueId });
+    return this.request('export', { TYPE: 'league', L: leagueId }, { json: true });
   }
+
 
   async getStandings(leagueId, week) {
-    const params = { L: leagueId };
-    if (week) params.W = week;
-    return this.request('standings', params);
+  const params = { L: leagueId };
+  if (week) params.W = week;
+  return this.request('standings', params, { json: true });
   }
 
+
   async getRosters(leagueId) {
-    return this.request('export', { TYPE: 'rosters', L: leagueId });
+    return this.request('export', { TYPE: 'rosters', L: leagueId }, { json: true });
   }
+
 
   async getPlayers() {
     return this.request('export', { TYPE: 'players' });
