@@ -14,42 +14,46 @@ app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 
 const MFLClient = require('./mflClient');
 
-// Example league ID — replace with yours
 const YEAR = '2026';
 const DEFAULT_HOST = 'api.myfantasyleague.com';
 
-// ⭐ Create ONE shared MFL client for the whole server
-const client = new MFLClient({
-  year: YEAR,
-  host: DEFAULT_HOST
-});
+// ⭐ Store the logged-in user's cookie (simple version)
+let userCookie = null;
 
-// ⭐ Login once at startup using Render environment variables
-(async () => {
-  try {
-    await client.login(process.env.MFL_USERNAME, process.env.MFL_PASSWORD);
-    console.log("MFL login successful");
-  } catch (err) {
-    console.error("MFL login failed:", err.message);
-  }
-})();
-
-// ⭐ Manual login route (keep this)
+// ⭐ User login route
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
     const tempClient = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
     const cookie = await tempClient.login(username, password);
-    res.json({ cookie });
+
+    // Save cookie for future API calls
+    userCookie = cookie;
+
+    res.json({ success: true });
   } catch (err) {
     res.status(401).json({ error: 'Login failed' });
   }
 });
 
-// ⭐ League info (uses shared logged-in client)
-app.get('/api/league/:leagueId', async (req, res) => {
+// ⭐ Require login before accessing league data
+function requireLogin(req, res, next) {
+  if (!userCookie) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  next();
+}
+
+// ⭐ League info
+app.get('/api/league/:leagueId', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    cookie: userCookie
+  });
 
   try {
     const league = await client.getLeague(leagueId);
@@ -59,10 +63,16 @@ app.get('/api/league/:leagueId', async (req, res) => {
   }
 });
 
-// ⭐ Standings (uses shared logged-in client)
-app.get('/api/league/:leagueId/standings', async (req, res) => {
+// ⭐ Standings
+app.get('/api/league/:leagueId/standings', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const { week } = req.query;
+
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    cookie: userCookie
+  });
 
   try {
     const standings = await client.getStandings(leagueId, week);
@@ -72,9 +82,15 @@ app.get('/api/league/:leagueId/standings', async (req, res) => {
   }
 });
 
-// ⭐ Rosters (uses shared logged-in client)
-app.get('/api/league/:leagueId/rosters', async (req, res) => {
+// ⭐ Rosters
+app.get('/api/league/:leagueId/rosters', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    cookie: userCookie
+  });
 
   try {
     const rosters = await client.getRosters(leagueId);
