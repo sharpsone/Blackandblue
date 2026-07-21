@@ -24,8 +24,8 @@ class MFLClient {
 
     const headers = {};
     if (this.cookie) {
-      headers['Cookie'] = `MFL_USER_ID=${this.cookie}`;
-    }
+      headers['Cookie'] = `MFL_USER_ID=${decodeURIComponent(this.cookie)}`;
+  }
 
     try {
       const res = await axios.get(url, { headers });
