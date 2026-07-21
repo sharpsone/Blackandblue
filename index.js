@@ -28,11 +28,14 @@ app.post('/api/login', async (req, res) => {
     const tempClient = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
     const cookie = await tempClient.login(username, password);
 
+    console.log("MFL COOKIE RECEIVED:", cookie);   // ⭐ ADD THIS
+
     // Save cookie for future API calls
     userCookie = cookie;
 
     res.json({ success: true });
   } catch (err) {
+    console.error("LOGIN ERROR:", err.message);   // ⭐ ADD THIS
     res.status(401).json({ error: 'Login failed' });
   }
 });
