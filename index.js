@@ -18,21 +18,38 @@ const MFLClient = require('./mflClient');
 const YEAR = '2026';
 const DEFAULT_HOST = 'api.myfantasyleague.com';
 
+// ⭐ Create ONE shared MFL client for the whole server
+const client = new MFLClient({
+  year: YEAR,
+  host: DEFAULT_HOST
+});
+
+// ⭐ Login once at startup using Render environment variables
+(async () => {
+  try {
+    await client.login(process.env.MFL_USERNAME, process.env.MFL_PASSWORD);
+    console.log("MFL login successful");
+  } catch (err) {
+    console.error("MFL login failed:", err.message);
+  }
+})();
+
+// ⭐ Manual login route (keep this)
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const client = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
-    const cookie = await client.login(username, password);
+    const tempClient = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
+    const cookie = await tempClient.login(username, password);
     res.json({ cookie });
   } catch (err) {
     res.status(401).json({ error: 'Login failed' });
   }
 });
 
+// ⭐ League info (uses shared logged-in client)
 app.get('/api/league/:leagueId', async (req, res) => {
   const { leagueId } = req.params;
-  const client = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
 
   try {
     const league = await client.getLeague(leagueId);
@@ -42,11 +59,10 @@ app.get('/api/league/:leagueId', async (req, res) => {
   }
 });
 
+// ⭐ Standings (uses shared logged-in client)
 app.get('/api/league/:leagueId/standings', async (req, res) => {
   const { leagueId } = req.params;
   const { week } = req.query;
-
-  const client = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
 
   try {
     const standings = await client.getStandings(leagueId, week);
@@ -56,9 +72,9 @@ app.get('/api/league/:leagueId/standings', async (req, res) => {
   }
 });
 
+// ⭐ Rosters (uses shared logged-in client)
 app.get('/api/league/:leagueId/rosters', async (req, res) => {
   const { leagueId } = req.params;
-  const client = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
 
   try {
     const rosters = await client.getRosters(leagueId);
@@ -68,6 +84,7 @@ app.get('/api/league/:leagueId/rosters', async (req, res) => {
   }
 });
 
+// ⭐ DB test route (unchanged)
 const db = require('./db');
 
 app.get('/api/db-test', async (req, res) => {
