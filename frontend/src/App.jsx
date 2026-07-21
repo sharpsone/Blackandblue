@@ -8,6 +8,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [error, setError] = useState(null);
 
+  // ⭐ LOGIN FUNCTION
   async function login() {
     setError(null);
 
@@ -18,14 +19,16 @@ function App() {
     });
 
     const json = await res.json();
+    console.log("LOGIN RESPONSE:", json);   // ⭐ Debugging output
 
     if (json.success) {
-      setLoggedIn(true);
+      setLoggedIn(true);                    // ⭐ Login success indicator
     } else {
-      setError("Login failed");
+      setError(json.error || "Login failed");
     }
   }
 
+  // ⭐ LOAD STANDINGS
   async function loadStandings() {
     setError(null);
 
@@ -34,6 +37,7 @@ function App() {
     );
 
     const json = await res.json();
+    console.log("STANDINGS RESPONSE:", json);  // ⭐ Debugging output
 
     if (json.error) {
       setError(json.error);
@@ -43,7 +47,7 @@ function App() {
   }
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "2rem", fontFamily: "sans-serif", color: "white" }}>
       <h1>Black & Blue League Dashboard</h1>
 
       {!loggedIn && (
@@ -51,9 +55,10 @@ function App() {
           <h2>Login to MyFantasyLeague</h2>
 
           <input
-            placeholder="MFL Username"
+            placeholder="MFL Username (email)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            style={{ display: "block", marginBottom: "1rem" }}
           />
 
           <input
@@ -61,11 +66,16 @@ function App() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            style={{ display: "block", marginBottom: "1rem" }}
           />
 
           <button onClick={login}>Login</button>
 
-          {error && <pre>{JSON.stringify(error, null, 2)}</pre>}
+          {error && (
+            <pre style={{ marginTop: "1rem", color: "red" }}>
+              {JSON.stringify(error, null, 2)}
+            </pre>
+          )}
         </div>
       )}
 
@@ -77,14 +87,26 @@ function App() {
             placeholder="League ID"
             value={leagueId}
             onChange={(e) => setLeagueId(e.target.value)}
+            style={{ display: "block", marginBottom: "1rem" }}
           />
 
           <button onClick={loadStandings}>Load Standings</button>
 
-          {error && <pre>{JSON.stringify(error, null, 2)}</pre>}
+          {error && (
+            <pre style={{ marginTop: "1rem", color: "red" }}>
+              {JSON.stringify(error, null, 2)}
+            </pre>
+          )}
 
           {data && (
-            <pre style={{ marginTop: "2rem", background: "#222", color: "#0f0", padding: "1rem" }}>
+            <pre
+              style={{
+                marginTop: "2rem",
+                background: "#222",
+                color: "#0f0",
+                padding: "1rem"
+              }}
+            >
               {JSON.stringify(data, null, 2)}
             </pre>
           )}
