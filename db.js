@@ -5,10 +5,8 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   },
-  // Force IPv4 instead of IPv6
-  connectionTimeoutMillis: 5000,
-  keepAlive: true,
-  host: process.env.DATABASE_URL.split('@')[1].split(':')[0]
+  // Force IPv4
+  family: 4
 });
 
 module.exports = {
