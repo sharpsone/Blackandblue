@@ -39,31 +39,36 @@ class MFLClient {
     }
   }
 
-  async login(username, password) {
-    const url = `https://api.myfantasyleague.com/${this.year}/login`;
-    const params = new URLSearchParams({
-      USERNAME: username,
-      PASSWORD: password,
-      XML: '1'
-    });
+async login(username, password) {
+  const url = `https://api.myfantasyleague.com/${this.year}/login`;
+  const params = new URLSearchParams({
+    USERNAME: username,
+    PASSWORD: password,
+    XML: '1'
+  });
 
-    const res = await axios.post(`${url}?${params.toString()}`, null, {
-      maxRedirects: 0,
-      validateStatus: status => status >= 200 && status < 400
-    });
+  const res = await axios.post(`${url}?${params.toString()}`, null, {
+    maxRedirects: 0,
+    validateStatus: status => status >= 200 && status < 400
+  });
 
-    const setCookie = res.headers['set-cookie'];
-    console.log("SET-COOKIE RAW:", setCookie);
-    if (!setCookie) {
-      throw new Error('Login failed: no cookie returned');
-    }
-
-    const cookie = setCookie.find(c => c.startsWith('MFL_USER_ID='));
-    const value = cookie.split(';')[0].split('=')[1];
-
-    this.cookie = value;
-    return value;
+  const setCookie = res.headers['set-cookie'];
+  if (!setCookie) {
+    throw new Error('Login failed: no cookie returned');
   }
+
+  console.log("SET-COOKIE RAW:", setCookie);
+
+  // ⭐ Store ALL cookies exactly as returned
+  this.cookie = setCookie
+    .map(c => c.split(';')[0])   // keep only "name=value"
+    .join('; ');                 // join into a single Cookie header
+
+  console.log("FINAL COOKIE HEADER:", this.cookie);
+
+  return this.cookie;
+}
+
 
   async getLeague(leagueId) {
     return this.request('export', { TYPE: 'league', L: leagueId }, { json: true });
