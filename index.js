@@ -8,7 +8,7 @@ const app = express();
 // ⭐ FIXED CORS — allows cookies to pass through Render
 app.use(
   cors({
-    origin: "*",
+    origin: "https://blackandblue.vercel.app",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true
