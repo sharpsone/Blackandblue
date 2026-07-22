@@ -125,9 +125,8 @@ app.get('/api/db-test', async (req, res) => {
 app.get('/api/myleagues', requireLogin, async (req, res) => {
   const client = new MFLClient({
     year: YEAR,
-    host: DEFAULT_HOST,
-    cookie: userCookie,       // ⭐ use logged-in user's cookie
-    apiKey: LEAGUE_API_KEY
+    host: "api.myfantasyleague.com",   // ⭐ IMPORTANT
+    cookie: userCookie
   });
 
   try {
@@ -138,3 +137,4 @@ app.get('/api/myleagues', requireLogin, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch my leagues' });
   }
 });
+
