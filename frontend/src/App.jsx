@@ -32,10 +32,10 @@ function App() {
       return;
     }
 
-    // ⭐ Step 2 — Set loggedIn FIRST so NavBar appears
+    // ⭐ Step 2 — NavBar must appear immediately
     setLoggedIn(true);
 
-    // Step 3 — Try to fetch leagues (but don't block NavBar)
+    // Step 3 — Try to fetch leagues (but do NOT block NavBar)
     try {
       const leagues = await fetchMyLeagues();
       const myLeague = leagues.leagues.league;
