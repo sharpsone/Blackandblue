@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 class MFLClient {
-  constructor({ year = '2026', host = 'www.myfantasyleague.com', cookie = null, apiKey = null }) {
+  constructor({ year = '2026', host = `www03.myfantasyleague.com`, cookie = null, apiKey = null }) {
     this.year = year;
     this.host = host;
     this.cookie = cookie;
@@ -12,33 +12,19 @@ class MFLClient {
     const baseUrl = `https://${this.host}/${this.year}/${command}`;
     const query = new URLSearchParams(params);
 
-    if (json) {
-      query.set('JSON', '1');
-    }
-
-    if (this.apiKey) {
-      query.set('APIKEY', this.apiKey);
-    }
+    if (json) query.set('JSON', '1');
+    if (this.apiKey) query.set('APIKEY', this.apiKey);
 
     const url = `${baseUrl}?${query.toString()}`;
 
     const headers = {};
+    if (this.cookie) headers['Cookie'] = this.cookie;
 
-    if (this.cookie) {
-      headers['Cookie'] = this.cookie;
-    }
-
-    try {
-      const res = await axios.get(url, { headers });
-      return res.data;
-    } catch (err) {
-      console.error('MFL request error:', err.message);
-      throw err;
-    }
+    const res = await axios.get(url, { headers });
+    return res.data;
   }
 
   async login(username, password) {
-    // ⭐ FIXED: use the SAME host as authenticated requests
     const url = `https://${this.host}/${this.year}/login`;
 
     const params = new URLSearchParams({
@@ -47,18 +33,10 @@ class MFLClient {
       XML: '1'
     });
 
-    const res = await axios.post(`${url}?${params.toString()}`, null, {
-      maxRedirects: 0,
-      validateStatus: status => status >= 200 && status < 400
-    });
+    const res = await axios.post(`${url}?${params.toString()}`);
 
     const setCookie = res.headers['set-cookie'];
-    if (!setCookie) {
-      console.error("LOGIN ERROR: no cookie returned");
-      throw new Error('Login failed: no cookie returned');
-    }
-
-    console.log("SET-COOKIE RAW:", setCookie);
+    if (!setCookie) throw new Error('Login failed: no cookie returned');
 
     const decodedCookies = setCookie.map(c => {
       const [name, value] = c.split(';')[0].split('=');
@@ -66,28 +44,25 @@ class MFLClient {
     });
 
     this.cookie = decodedCookies.join('; ');
-
-    console.log("FINAL COOKIE HEADER:", this.cookie);
-
     return this.cookie;
   }
 
   async getLeague(leagueId) {
-    return this.request('export', { TYPE: 'league', L: leagueId }, { json: true });
+    return this.request('export', { TYPE: 'league', L: leagueId });
   }
 
   async getStandings(leagueId, week) {
     const params = { TYPE: 'standings', L: leagueId };
     if (week) params.W = week;
-    return this.request('export', params, { json: true });
+    return this.request('export', params);
   }
 
   async getRosters(leagueId) {
-    return this.request('export', { TYPE: 'rosters', L: leagueId }, { json: true });
+    return this.request('export', { TYPE: 'rosters', L: leagueId });
   }
 
   async getPlayers() {
-    return this.request('export', { TYPE: 'players' }, { json: true });
+    return this.request('export', { TYPE: 'players' });
   }
 }
 

@@ -15,7 +15,8 @@ app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 const MFLClient = require('./mflClient');
 
 const YEAR = '2026';
-const DEFAULT_HOST = 'www.myfantasyleague.com';
+const DEFAULT_HOST = 'www03.myfantasyleague.com';
+
 
 // ⭐ Store the logged-in user's cookie (simple version)
 let userCookie = null;
