@@ -1,8 +1,7 @@
 const axios = require('axios');
 
 class MFLClient {
-  constructor({ year = '2026', host = `${year}.myfantasyleague.com`, cookie = null, apiKey = null }) {
- {
+  constructor({ year = '2026', host = 'www.myfantasyleague.com', cookie = null, apiKey = null }) {
     this.year = year;
     this.host = host;
     this.cookie = cookie;
@@ -40,7 +39,7 @@ class MFLClient {
   }
 
   async login(username, password) {
-    const url = `https://api.myfantasyleague.com/${this.year}/login`;
+    const url = `https://www.myfantasyleague.com/${this.year}/login`;
     const params = new URLSearchParams({
       USERNAME: username,
       PASSWORD: password,
@@ -81,7 +80,7 @@ class MFLClient {
     const params = { TYPE: 'standings', L: leagueId };
     if (week) params.W = week;
     return this.request('export', params, { json: true });
-}
+  }
 
   async getRosters(leagueId) {
     return this.request('export', { TYPE: 'rosters', L: leagueId }, { json: true });
