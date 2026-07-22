@@ -25,18 +25,27 @@ function App() {
   async function login() {
     setError(null);
 
+    // Step 1 — Login
     const res = await loginUser(username, password);
     if (!res.success) {
       setError("Login failed");
       return;
     }
 
+    // ⭐ Step 2 — Set loggedIn FIRST so NavBar appears
     setLoggedIn(true);
 
-    const leagues = await fetchMyLeagues();
-    const myLeague = leagues.leagues.league;
+    // Step 3 — Try to fetch leagues (but don't block NavBar)
+    try {
+      const leagues = await fetchMyLeagues();
+      const myLeague = leagues.leagues.league;
+      setMyFranchiseId(myLeague.franchise_id);
+    } catch (err) {
+      console.error("MYLEAGUES ERROR:", err);
+      setError("Could not load league data");
+    }
 
-    setMyFranchiseId(myLeague.franchise_id);
+    // Step 4 — Go to standings
     setPage("standings");
   }
 
@@ -45,10 +54,10 @@ function App() {
       style={{
         background: "#000814",
         minHeight: "100vh",
-        color: "white",
-        paddingTop: "80px"   // ⭐ ALWAYS applied
+        color: "white"
       }}
     >
+      {/* ⭐ NavBar appears immediately after login */}
       {loggedIn && <NavBar page={page} setPage={setPage} />}
 
       {!loggedIn ? (
