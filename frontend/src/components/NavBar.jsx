@@ -16,11 +16,11 @@ export default function NavBar({ page, setPage }) {
   return (
     <div
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        zIndex: 9999,
+        position: "fixed",     // ⭐ REQUIRED
+        top: 0,                // ⭐ REQUIRED
+        left: 0,               // ⭐ REQUIRED
+        width: "100%",         // ⭐ REQUIRED
+        zIndex: 9999,          // ⭐ REQUIRED
         display: "flex",
         gap: "1rem",
         padding: "1rem",
