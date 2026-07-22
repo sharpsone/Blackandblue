@@ -16,10 +16,15 @@ export default function NavBar({ page, setPage }) {
   return (
     <div
       style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        zIndex: 9999,
         display: "flex",
         gap: "1rem",
         padding: "1rem",
-        background: "#001f3f",
+        background: "#003566",
         borderBottom: "2px solid #00aaff",
         flexWrap: "wrap"
       }}

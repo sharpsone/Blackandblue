@@ -44,7 +44,14 @@ function App() {
   }
 
   return (
-    <div style={{ background: "#000814", minHeight: "100vh", color: "white" }}>
+    <div
+      style={{
+        background: "#000814",
+        minHeight: "100vh",
+        color: "white",
+        paddingTop: "80px"   // ⭐ FIXED: makes NavBar visible
+      }}
+    >
       {!loggedIn ? (
         <div style={{ padding: "2rem" }}>
           <h1>Black & Blue League Login</h1>
