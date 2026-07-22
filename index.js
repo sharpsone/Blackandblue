@@ -121,3 +121,20 @@ app.get('/api/db-test', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.get('/api/myleagues', requireLogin, async (req, res) => {
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    cookie: userCookie,       // ⭐ use logged-in user's cookie
+    apiKey: LEAGUE_API_KEY
+  });
+
+  try {
+    const leagues = await client.request('export', { TYPE: 'myleagues' });
+    res.json(leagues);
+  } catch (err) {
+    console.error("MYLEAGUES ERROR:", err.message);
+    res.status(500).json({ error: 'Failed to fetch my leagues' });
+  }
+});
