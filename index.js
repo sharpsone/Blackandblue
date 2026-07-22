@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const MFLClient = require('./mflClient');
 
 const app = express();
 app.use(cors());
@@ -12,36 +13,38 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 
-const MFLClient = require('./mflClient');
-
 const YEAR = '2026';
 const DEFAULT_HOST = 'www03.myfantasyleague.com';
 
+// ⭐ League-specific API key from MFL docs
+const LEAGUE_API_KEY = 'ahVp3s+SvuWpx1emOVDGZDUeFKUtiQ==';
 
-// ⭐ Store the logged-in user's cookie (simple version)
+// ⭐ Store logged-in user's cookie (for future commissioner ops)
 let userCookie = null;
 
-// ⭐ User login route
+// ⭐ Login route
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const tempClient = new MFLClient({ year: YEAR, host: DEFAULT_HOST });
+    const tempClient = new MFLClient({
+      year: YEAR,
+      host: DEFAULT_HOST
+    });
+
     const cookie = await tempClient.login(username, password);
+    console.log('MFL COOKIE RECEIVED:', cookie);
 
-    console.log("MFL COOKIE RECEIVED:", cookie);   // ⭐ ADD THIS
-
-    // Save cookie for future API calls
     userCookie = cookie;
 
     res.json({ success: true });
   } catch (err) {
-    console.error("LOGIN ERROR:", err.message);   // ⭐ ADD THIS
+    console.error('LOGIN ERROR:', err.message);
     res.status(401).json({ error: 'Login failed' });
   }
 });
 
-// ⭐ Require login before accessing league data
+// ⭐ Require login before league-specific data (optional guard)
 function requireLogin(req, res, next) {
   if (!userCookie) {
     return res.status(401).json({ error: 'Not logged in' });
@@ -49,25 +52,26 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ League info
+// ⭐ League info (uses APIKEY)
 app.get('/api/league/:leagueId', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
   const client = new MFLClient({
     year: YEAR,
     host: DEFAULT_HOST,
-    cookie: userCookie
+    apiKey: LEAGUE_API_KEY
   });
 
   try {
     const league = await client.getLeague(leagueId);
     res.json(league);
   } catch (err) {
+    console.error('LEAGUE ERROR:', err.message);
     res.status(500).json({ error: 'Failed to fetch league' });
   }
 });
 
-// ⭐ Standings
+// ⭐ Standings (uses APIKEY)
 app.get('/api/league/:leagueId/standings', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const { week } = req.query;
@@ -75,31 +79,33 @@ app.get('/api/league/:leagueId/standings', requireLogin, async (req, res) => {
   const client = new MFLClient({
     year: YEAR,
     host: DEFAULT_HOST,
-    cookie: userCookie
+    apiKey: LEAGUE_API_KEY
   });
 
   try {
     const standings = await client.getStandings(leagueId, week);
     res.json(standings);
   } catch (err) {
+    console.error('STANDINGS ERROR:', err.message);
     res.status(500).json({ error: 'Failed to fetch standings' });
   }
 });
 
-// ⭐ Rosters
+// ⭐ Rosters (uses APIKEY)
 app.get('/api/league/:leagueId/rosters', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
   const client = new MFLClient({
     year: YEAR,
     host: DEFAULT_HOST,
-    cookie: userCookie
+    apiKey: LEAGUE_API_KEY
   });
 
   try {
     const rosters = await client.getRosters(leagueId);
     res.json(rosters);
   } catch (err) {
+    console.error('ROSTERS ERROR:', err.message);
     res.status(500).json({ error: 'Failed to fetch rosters' });
   }
 });

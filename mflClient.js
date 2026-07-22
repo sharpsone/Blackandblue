@@ -1,7 +1,12 @@
 const axios = require('axios');
 
 class MFLClient {
-  constructor({ year = '2026', host = `www03.myfantasyleague.com`, cookie = null, apiKey = null }) {
+  constructor({
+    year = '2026',
+    host = 'www03.myfantasyleague.com',
+    cookie = null,
+    apiKey = null
+  }) {
     this.year = year;
     this.host = host;
     this.cookie = cookie;
@@ -40,7 +45,9 @@ class MFLClient {
 
     const decodedCookies = setCookie.map(c => {
       const [name, value] = c.split(';')[0].split('=');
-      return `${name}=${decodeURIComponent(value || '')}`;
+      const decoded = decodeURIComponent(value || '');
+      const reencoded = encodeURIComponent(decoded); // handles + / =
+      return `${name}=${reencoded}`;
     });
 
     this.cookie = decodedCookies.join('; ');
