@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
 import Roster from "./pages/Roster";
@@ -19,7 +19,7 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [myFranchiseId, setMyFranchiseId] = useState(null);
-  const [leagueId, setLeagueId] = useState("19757");
+  const [leagueId] = useState("19757");
   const [error, setError] = useState(null);
 
   async function login() {
@@ -33,13 +33,10 @@ function App() {
 
     setLoggedIn(true);
 
-    // Fetch franchise ID
     const leagues = await fetchMyLeagues();
     const myLeague = leagues.leagues.league;
 
     setMyFranchiseId(myLeague.franchise_id);
-
-    // Stay on standings page
     setPage("standings");
   }
 
@@ -49,9 +46,11 @@ function App() {
         background: "#000814",
         minHeight: "100vh",
         color: "white",
-        paddingTop: "80px"   // ⭐ FIXED: makes NavBar visible
+        paddingTop: "80px"   // ⭐ ALWAYS applied
       }}
     >
+      {loggedIn && <NavBar page={page} setPage={setPage} />}
+
       {!loggedIn ? (
         <div style={{ padding: "2rem" }}>
           <h1>Black & Blue League Login</h1>
@@ -77,8 +76,6 @@ function App() {
         </div>
       ) : (
         <>
-          <NavBar page={page} setPage={setPage} />
-
           {page === "standings" && (
             <Standings leagueId={leagueId} myFranchiseId={myFranchiseId} />
           )}
