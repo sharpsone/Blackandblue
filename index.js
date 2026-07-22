@@ -14,22 +14,24 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 
 const YEAR = '2026';
-const DEFAULT_HOST = 'www03.myfantasyleague.com';
 
-// ⭐ League-specific API key from MFL docs
+// ⭐ Use API host for ALL league data + API key
+const DEFAULT_HOST = 'api.myfantasyleague.com';
+
+// ⭐ League-specific API key
 const LEAGUE_API_KEY = 'ahVp3s+SvuWpx1emOVDGZDUeFKUtiQ==';
 
-// ⭐ Store logged-in user's cookie (for future commissioner ops)
+// ⭐ Store logged-in user's cookie (only needed for commissioner ops)
 let userCookie = null;
 
-// ⭐ Login route
+// ⭐ LOGIN — still uses cookie, but host must match later calls
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
     const tempClient = new MFLClient({
       year: YEAR,
-      host: DEFAULT_HOST
+      host: DEFAULT_HOST   // ⭐ FIXED: use API host consistently
     });
 
     const cookie = await tempClient.login(username, password);
@@ -44,7 +46,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// ⭐ Require login before league-specific data (optional guard)
+// ⭐ Require login before league-specific data
 function requireLogin(req, res, next) {
   if (!userCookie) {
     return res.status(401).json({ error: 'Not logged in' });
@@ -52,7 +54,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ League info (uses APIKEY)
+// ⭐ League info (API key only)
 app.get('/api/league/:leagueId', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -71,7 +73,7 @@ app.get('/api/league/:leagueId', requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Standings (uses APIKEY)
+// ⭐ Standings
 app.get('/api/league/:leagueId/standings', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const { week } = req.query;
@@ -91,7 +93,7 @@ app.get('/api/league/:leagueId/standings', requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Rosters (uses APIKEY)
+// ⭐ Rosters
 app.get('/api/league/:leagueId/rosters', requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -110,7 +112,7 @@ app.get('/api/league/:leagueId/rosters', requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ DB test route (unchanged)
+// ⭐ DB test
 const db = require('./db');
 
 app.get('/api/db-test', async (req, res) => {
@@ -122,10 +124,11 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
+// ⭐ My Leagues — requires cookie + API host
 app.get('/api/myleagues', requireLogin, async (req, res) => {
   const client = new MFLClient({
     year: YEAR,
-    host: "api.myfantasyleague.com",   // ⭐ IMPORTANT
+    host: DEFAULT_HOST,
     cookie: userCookie
   });
 
@@ -137,4 +140,3 @@ app.get('/api/myleagues', requireLogin, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch my leagues' });
   }
 });
-
