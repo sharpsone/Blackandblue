@@ -19,30 +19,55 @@ function App() {
     });
 
     const json = await res.json();
-    console.log("LOGIN RESPONSE:", json);   // ⭐ Debugging output
+    console.log("LOGIN RESPONSE:", json);
 
     if (json.success) {
-      setLoggedIn(true);                    // ⭐ Login success indicator
+      setLoggedIn(true);
     } else {
       setError(json.error || "Login failed");
     }
   }
 
-  // ⭐ LOAD STANDINGS
+  // ⭐ LOAD STANDINGS (with franchise names)
   async function loadStandings() {
     setError(null);
 
-    const res = await fetch(
-      `https://blackandblue.onrender.com/api/league/${leagueId}/standings`
-    );
+    try {
+      // 1. Get standings
+      const standingsRes = await fetch(
+        `https://blackandblue.onrender.com/api/league/${leagueId}/standings`
+      );
+      const standingsJson = await standingsRes.json();
+      console.log("STANDINGS RESPONSE:", standingsJson);
 
-    const json = await res.json();
-    console.log("STANDINGS RESPONSE:", json);  // ⭐ Debugging output
+      if (standingsJson.error) {
+        setError(standingsJson.error);
+        return;
+      }
 
-    if (json.error) {
-      setError(json.error);
-    } else {
-      setData(json);
+      // 2. Get league info (for franchise names)
+      const leagueRes = await fetch(
+        `https://blackandblue.onrender.com/api/league/${leagueId}`
+      );
+      const leagueJson = await leagueRes.json();
+      console.log("LEAGUE INFO RESPONSE:", leagueJson);
+
+      // 3. Build franchise ID → name map
+      const nameMap = {};
+      leagueJson.league.franchises.franchise.forEach(f => {
+        nameMap[f.id] = f.name;
+      });
+
+      // 4. Merge names into standings
+      const merged = standingsJson.leagueStandings.franchise.map(team => ({
+        ...team,
+        name: nameMap[team.id] || team.id
+      }));
+
+      setData(merged);
+    } catch (err) {
+      console.error("LOAD ERROR:", err);
+      setError("Failed to load standings");
     }
   }
 
@@ -98,17 +123,53 @@ function App() {
             </pre>
           )}
 
+          {/* ⭐ Modern NFL-style standings table */}
           {data && (
-            <pre
+            <table
               style={{
                 marginTop: "2rem",
-                background: "#222",
-                color: "#0f0",
-                padding: "1rem"
+                width: "100%",
+                background: "#111",
+                color: "white",
+                borderCollapse: "collapse",
+                fontFamily: "Arial, sans-serif",
+                fontSize: "14px",
+                borderRadius: "8px",
+                overflow: "hidden"
               }}
             >
-              {JSON.stringify(data, null, 2)}
-            </pre>
+              <thead style={{ background: "#1e1e1e" }}>
+                <tr>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Team</th>
+                  <th style={{ padding: "12px", textAlign: "center" }}>PF</th>
+                  <th style={{ padding: "12px", textAlign: "center" }}>PA</th>
+                  <th style={{ padding: "12px", textAlign: "center" }}>H2H</th>
+                  <th style={{ padding: "12px", textAlign: "center" }}>DIV</th>
+                  <th style={{ padding: "12px", textAlign: "center" }}>CONF</th>
+                  <th style={{ padding: "12px", textAlign: "center" }}>STRK</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {data.map(team => (
+                  <tr
+                    key={team.id}
+                    style={{
+                      borderBottom: "1px solid #333",
+                      background: "#181818"
+                    }}
+                  >
+                    <td style={{ padding: "12px" }}>{team.name}</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{team.pf}</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{team.pa}</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{team.h2hwlt}</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{team.divwlt}</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{team.confwlt}</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{team.strk}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}
