@@ -24,7 +24,6 @@ class MFLClient {
 
     const headers = {};
 
-    // ⭐ Send ALL cookies exactly as decoded
     if (this.cookie) {
       headers['Cookie'] = this.cookie;
     }
@@ -39,7 +38,9 @@ class MFLClient {
   }
 
   async login(username, password) {
-    const url = `https://www.myfantasyleague.com/${this.year}/login`;
+    // ⭐ FIXED: use the SAME host as authenticated requests
+    const url = `https://${this.host}/${this.year}/login`;
+
     const params = new URLSearchParams({
       USERNAME: username,
       PASSWORD: password,
@@ -53,18 +54,17 @@ class MFLClient {
 
     const setCookie = res.headers['set-cookie'];
     if (!setCookie) {
+      console.error("LOGIN ERROR: no cookie returned");
       throw new Error('Login failed: no cookie returned');
     }
 
     console.log("SET-COOKIE RAW:", setCookie);
 
-    // ⭐ Decode each cookie value
     const decodedCookies = setCookie.map(c => {
       const [name, value] = c.split(';')[0].split('=');
       return `${name}=${decodeURIComponent(value || '')}`;
     });
 
-    // ⭐ Join into a single Cookie header
     this.cookie = decodedCookies.join('; ');
 
     console.log("FINAL COOKIE HEADER:", this.cookie);
