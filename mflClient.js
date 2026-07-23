@@ -1,78 +1,116 @@
-const axios = require('axios');
+const fetch = global.fetch;
+
+// ⭐ Utility: build URL with query params
+function buildUrl(host, year, endpoint, params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return `https://${host}/${year}/${endpoint}${query ? "?" + query : ""}`;
+}
 
 class MFLClient {
-  constructor({
-    year,
-    host = 'www03.myfantasyleague.com',   // ⭐ Your league lives here
-    cookie = null,
-    apiKey = null
-  }) {
+  constructor({ year, host, cookie = null, apiKey = null }) {
     this.year = year;
-    this.host = host;
-    this.cookie = cookie;
-    this.apiKey = apiKey;
+    this.host = host;          // ⭐ dynamic host (www44, www03, etc.)
+    this.cookie = cookie;      // ⭐ login cookie
+    this.apiKey = apiKey;      // ⭐ league API key
   }
 
-  // ⭐ All EXPORT calls must use www03.myfantasyleague.com
-  async request(command, params = {}, { json = true } = {}) {
-    const baseUrl = `https://${this.host}/${this.year}/export`;
-    const query = new URLSearchParams(params);
-
-    if (json) query.set('JSON', '1');
-    if (this.apiKey) query.set('APIKEY', this.apiKey);
-
-    const url = `${baseUrl}?${query.toString()}`;
-
-    const headers = {};
-    if (this.cookie) headers['Cookie'] = this.cookie;
-
-    const res = await axios.get(url, { headers });
-    return res.data;
-  }
-
-  // ⭐ Login MUST use api.myfantasyleague.com
+  // ⭐ LOGIN — must use API host, not wwwXX
   async login(username, password) {
-    const loginHost = "api.myfantasyleague.com";
-    const url = `https://${loginHost}/${this.year}/login`;
+    const url = buildUrl(
+      "api.myfantasyleague.com",
+      this.year,
+      "login",
+      { USERNAME: username, PASSWORD: password }
+    );
 
-    const params = new URLSearchParams({
-      USERNAME: username,
-      PASSWORD: password,
-      XML: '1'
+    const res = await fetch(url, {
+      method: "GET",
+      redirect: "manual"
     });
 
-    const res = await axios.post(`${url}?${params.toString()}`);
+    const setCookie = res.headers.get("set-cookie");
+    if (!setCookie) {
+      throw new Error("No cookie returned from MFL login");
+    }
 
-    const setCookie = res.headers['set-cookie'];
-    if (!setCookie) throw new Error('Login failed: no cookie returned');
-
-    const decodedCookies = setCookie.map(c => {
-      const [name, value] = c.split(';')[0].split('=');
-      const decoded = decodeURIComponent(value || '');
-      const reencoded = encodeURIComponent(decoded);
-      return `${name}=${reencoded}`;
-    });
-
-    this.cookie = decodedCookies.join('; ');
-    return this.cookie;
+    this.cookie = setCookie;
+    return setCookie;
   }
 
+  // ⭐ Generic request helper
+  async request(endpoint, params = {}) {
+    const url = buildUrl(this.host, this.year, "export", {
+      ...params,
+      APIKEY: this.apiKey,
+      JSON: 1
+    });
+
+    const res = await fetch(url, {
+      headers: {
+        Cookie: this.cookie || ""
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`MFL request failed: ${res.status}`);
+    }
+
+    return res.json();
+  }
+
+  // ⭐ League Info
   async getLeague(leagueId) {
-    return this.request('export', { TYPE: 'league', L: leagueId });
+    return this.request("league", { L: leagueId });
   }
 
-  async getStandings(leagueId, week) {
-    const params = { TYPE: 'standings', L: leagueId };
-    if (week) params.W = week;
-    return this.request('export', params);
+  // ⭐ Standings
+  async getStandings(leagueId) {
+    return this.request("leagueStandings", { L: leagueId });
   }
 
+  // ⭐ Rosters
   async getRosters(leagueId) {
-    return this.request('export', { TYPE: 'rosters', L: leagueId });
+    return this.request("rosters", { L: leagueId });
   }
 
-  async getPlayers() {
-    return this.request('export', { TYPE: 'players' });
+  // ⭐ Live Scoring
+  async getLiveScoring(leagueId) {
+    return this.request("liveScoring", { L: leagueId });
+  }
+
+  // ⭐ Schedule / Matchups
+  async getSchedule(leagueId) {
+    return this.request("schedule", { L: leagueId });
+  }
+
+  // ⭐ Free Agents
+  async getFreeAgents(leagueId) {
+    return this.request("freeAgents", { L: leagueId });
+  }
+
+  // ⭐ Message Board
+  async getMessageBoard(leagueId) {
+    return this.request("messageBoard", { L: leagueId });
+  }
+
+  // ⭐ Transactions
+  async getTransactions(leagueId) {
+    return this.request("transactions", { L: leagueId });
+  }
+
+  // ⭐ Player Stats
+  async getPlayerStats(leagueId) {
+    return this.request("playerStats", { L: leagueId });
+  }
+
+  // ⭐ Draft Results
+  async getDraftResults(leagueId) {
+    return this.request("draftResults", { L: leagueId });
+  }
+
+  // ⭐ Playoff Bracket
+  async getPlayoffBracket(leagueId) {
+    return this.request("playoffBracket", { L: leagueId });
   }
 }
 
