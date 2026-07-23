@@ -27,15 +27,6 @@
   display: none;
 }
 
-/* ⭐ Logo inside NavBar */
-.navbar-logo {
-  height: 42px;
-  width: auto;
-  object-fit: contain;
-  margin-right: 0.5rem;
-}
-
-/* ⭐ Buttons */
 .navbar-links button {
   background: transparent;
   color: white;
@@ -59,7 +50,6 @@
   color: black;
 }
 
-/* ⭐ Push content below NavBar */
 .page-wrapper {
   padding-top: 65px;
 }
