@@ -50,10 +50,8 @@ export default function Standings({ leagueId, myFranchiseId }) {
         const divisionId = divisionIdMap[id];
         const conferenceId = conferenceIdMap[id];
 
-        const divisionName = divisionId ? divisionNameMap[divisionId] : "Division";
-        const conferenceName = conferenceId
-          ? conferenceNameMap[conferenceId]
-          : "Conference";
+        const divisionName = divisionNameMap[divisionId] || "";
+        const conferenceName = conferenceNameMap[conferenceId] || "";
 
         const initials = name
           .split(" ")
@@ -130,8 +128,8 @@ export default function Standings({ leagueId, myFranchiseId }) {
     const groups = {};
 
     sorted.forEach(team => {
-      const conf = team.conferenceName;
-      const div = team.divisionName;
+      const conf = team.conferenceName || "Conference";
+      const div = team.divisionName || "Division";
 
       if (!groups[conf]) groups[conf] = {};
       if (!groups[conf][div]) groups[conf][div] = [];
@@ -147,17 +145,25 @@ export default function Standings({ leagueId, myFranchiseId }) {
 
   return (
     <div style={{ padding: "1rem" }}>
-      <h1 className="fade-in" style={{ color: "#00aaff" }}>
-        Standings
-      </h1>
+      
+      {/* ⭐ League Logo Header */}
+      <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+        <img
+          src="/league-logo.png"
+          alt="League Logo"
+          style={{ height: "140px" }}
+          className="fade-in"
+        />
+      </div>
 
-      {/* Sorting Controls */}
+      {/* ⭐ Sorting Controls */}
       <div
         style={{
           display: "flex",
           gap: "0.5rem",
           marginBottom: "1rem",
-          flexWrap: "wrap"
+          flexWrap: "wrap",
+          alignItems: "center"
         }}
       >
         <span style={{ color: "#aaa" }}>Sort by:</span>
@@ -187,43 +193,47 @@ export default function Standings({ leagueId, myFranchiseId }) {
         ))}
       </div>
 
-      {/* Conference + Division Sections */}
+      {/* ⭐ Conference + Division Sections */}
       {Object.keys(grouped).map(conf => (
         <div key={conf} style={{ marginBottom: "2rem" }}>
-          <h2
-            className="slide-in"
-            style={{
-              color: conf.includes("Black") ? "#fff" : "#00aaff",
-              background: conf.includes("Black") ? "#111" : "#001f3f",
-              padding: "0.5rem 1rem",
-              borderRadius: "6px",
-              marginBottom: "1rem"
-            }}
-          >
-            {conf} Conference
-          </h2>
+          
+          {/* Conference Header (only if not empty) */}
+          {conf && (
+            <h2
+              className="slide-in"
+              style={{
+                color: "#00aaff",
+                background: "#001f3f",
+                padding: "0.5rem 1rem",
+                borderRadius: "6px",
+                marginBottom: "1rem"
+              }}
+            >
+              {conf}
+            </h2>
+          )}
 
           {Object.keys(grouped[conf]).map(div => (
             <div key={div} style={{ marginBottom: "1.5rem" }}>
-              <h3
-                className="slide-in"
-                style={{
-                  color: "#fff",
-                  background: "#003566",
-                  padding: "0.4rem 0.8rem",
-                  borderRadius: "4px",
-                  marginBottom: "0.75rem"
-                }}
-              >
-                {div}
-              </h3>
+              
+              {/* Division Header */}
+              {div && (
+                <h3
+                  className="slide-in"
+                  style={{
+                    color: "#fff",
+                    background: "#003566",
+                    padding: "0.4rem 0.8rem",
+                    borderRadius: "4px",
+                    marginBottom: "0.75rem"
+                  }}
+                >
+                  {div}
+                </h3>
+              )}
 
               {grouped[conf][div].map((team, index) => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  seed={index + 1}
-                />
+                <TeamCard key={team.id} team={team} seed={index + 1} />
               ))}
             </div>
           ))}
