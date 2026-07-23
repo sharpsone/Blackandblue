@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MFLClient = require("./mflClient");
-const fetch = require("node-fetch"); // Needed for host detection
 
 const app = express();
 
@@ -40,13 +39,12 @@ const hostCache = {};
 async function detectMFLHost(year, leagueId) {
   if (hostCache[year]) return hostCache[year];
 
-  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=league&L=${leagueId}&XML=1`;
+  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=franchises&L=${leagueId}&XML=1`;
 
   try {
     const res = await fetch(url);
     const xml = await res.text();
 
-    // Extract host="wwwXX.myfantasyleague.com"
     const match = xml.match(/host="([^"]+)"/);
     const detectedHost = match ? match[1] : "www.myfantasyleague.com";
 
@@ -66,7 +64,7 @@ function getYear(req) {
   return req.query.year || DEFAULT_YEAR;
 }
 
-// ⭐ LOGIN
+// ⭐ LOGIN (always uses API host)
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   const year = getYear(req);
@@ -103,7 +101,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ My Leagues
+// ⭐ My Leagues (API host only)
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
