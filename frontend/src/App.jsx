@@ -22,6 +22,7 @@ function App() {
   const [password, setPassword] = useState("");
   const [myFranchiseId, setMyFranchiseId] = useState(null);
   const [leagueId] = useState("19757");
+  const [year] = useState("2025"); // ⭐ NEW - Change this to the current year of your league
   const [error, setError] = useState(null);
 
   async function login() {
@@ -83,23 +84,23 @@ function App() {
         </div>
       ) : (
         <>
-          {page === "standings" && (
-            <Standings leagueId={leagueId} myFranchiseId={myFranchiseId} />
-          )}
-          {page === "roster" && (
-            <Roster leagueId={leagueId} myFranchiseId={myFranchiseId} />
-          )}
-          {page === "live" && (
-            <LiveScoring leagueId={leagueId} myFranchiseId={myFranchiseId} />
-          )}
-          {page === "matchups" && <Matchups leagueId={leagueId} />}
-          {page === "playerstats" && <PlayerStats leagueId={leagueId} />}
-          {page === "transactions" && <Transactions leagueId={leagueId} />}
-          {page === "draft" && <DraftResults leagueId={leagueId} />}
-          {page === "messages" && <MessageBoard leagueId={leagueId} />}
-          {page === "freeagents" && <FreeAgents leagueId={leagueId} />}
-          {page === "schedule" && <Schedule leagueId={leagueId} />}
-          {page === "playoffs" && <PlayoffBracket leagueId={leagueId} />}
+        {page === "standings" && (
+          <Standings leagueId={leagueId} year={year} myFranchiseId={myFranchiseId} />
+        )}
+        {page === "roster" && (
+          <Roster leagueId={leagueId} year={year} myFranchiseId={myFranchiseId} />
+        )}
+        {page === "live" && (
+          <LiveScoring leagueId={leagueId} year={year} myFranchiseId={myFranchiseId} />
+        )}
+        {page === "matchups" && <Matchups leagueId={leagueId} year={year} />}
+        {page === "playerstats" && <PlayerStats leagueId={leagueId} year={year} />}
+        {page === "transactions" && <Transactions leagueId={leagueId} year={year} />}
+        {page === "draft" && <DraftResults leagueId={leagueId} year={year} />}
+        {page === "messages" && <MessageBoard leagueId={leagueId} year={year} />}
+        {page === "freeagents" && <FreeAgents leagueId={leagueId} year={year} />}
+        {page === "schedule" && <Schedule leagueId={leagueId} year={year} />}
+        {page === "playoffs" && <PlayoffBracket leagueId={leagueId} year={year} />}
         </>
       )}
     </div>

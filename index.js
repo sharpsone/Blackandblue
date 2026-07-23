@@ -25,19 +25,26 @@ app.get("/health", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 
-const YEAR = "2026";
+// ⭐ Default year (fallback)
+const DEFAULT_YEAR = "2026";
 const DEFAULT_HOST = "api.myfantasyleague.com";
 const LEAGUE_API_KEY = "ahVp3s+SvuWpx1emOVDGZDUeFKUtiQ==";
 
 let userCookie = null;
 
+// ⭐ Helper: get year from query or fallback
+function getYear(req) {
+  return req.query.year || DEFAULT_YEAR;
+}
+
 // ⭐ LOGIN
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
+  const year = getYear(req);
 
   try {
     const tempClient = new MFLClient({
-      year: YEAR,
+      year,
       host: DEFAULT_HOST
     });
 
@@ -69,8 +76,10 @@ function requireLogin(req, res, next) {
 
 // ⭐ My Leagues
 app.get("/api/myleagues", requireLogin, async (req, res) => {
+  const year = getYear(req);
+
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     cookie: userCookie
   });
@@ -87,9 +96,10 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
 // ⭐ League Info
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -103,12 +113,13 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Standings (frontend expects this exact route)
-app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
+// ⭐ Standings
+app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -122,34 +133,33 @@ app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Roster (frontend expects this exact route)
-app.get("/api/roster/:leagueId/:franchiseId", requireLogin, async (req, res) => {
-  const { leagueId, franchiseId } = req.params;
+// ⭐ Rosters
+app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
+  const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
 
   try {
-    const rosters = await client.request("rosters", { L: leagueId });
-    const franchiseRoster = rosters.rosters.franchise.find(
-      f => f.id === franchiseId
-    );
-    res.json(franchiseRoster || {});
+    const rosters = await client.getRosters(leagueId);
+    res.json(rosters);
   } catch (err) {
-    console.error("ROSTER ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch roster" });
+    console.error("ROSTERS ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch rosters" });
   }
 });
 
 // ⭐ Live Scoring
 app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -166,9 +176,10 @@ app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Matchups
 app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -185,9 +196,10 @@ app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Free Agents
 app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -204,9 +216,10 @@ app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Message Board
 app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -223,9 +236,10 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Schedule
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -242,9 +256,10 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Transactions
 app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -261,9 +276,10 @@ app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Player Stats
 app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -280,9 +296,10 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Draft Results
 app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });
@@ -299,9 +316,10 @@ app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
 // ⭐ Playoff Bracket
 app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
+  const year = getYear(req);
 
   const client = new MFLClient({
-    year: YEAR,
+    year,
     host: DEFAULT_HOST,
     apiKey: LEAGUE_API_KEY
   });

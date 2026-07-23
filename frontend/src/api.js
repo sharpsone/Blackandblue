@@ -1,16 +1,22 @@
 export const API_BASE = "https://blackandblue.onrender.com";
 
-export async function getLeague(leagueId) {
-  const res = await fetch(`${API_BASE}/api/league/${leagueId}`);
+/**
+ * ⭐ All API calls now accept `year`
+ * This allows you to switch between 2025 and 2026 easily.
+ */
+
+export async function getLeague(leagueId, year) {
+  const res = await fetch(`${API_BASE}/api/league/${leagueId}?year=${year}`);
   return res.json();
 }
 
-export async function getStandings(leagueId) {
-  const res = await fetch(`${API_BASE}/api/league/${leagueId}/standings`);
+export async function getStandings(leagueId, year) {
+  const res = await fetch(`${API_BASE}/api/league/${leagueId}/standings?year=${year}`);
   return res.json();
 }
 
-export async function getRosters(leagueId) {
-  const res = await fetch(`${API_BASE}/api/league/${leagueId}/rosters`);
+export async function getRosters(leagueId, year) {
+  const res = await fetch(`${API_BASE}/api/league/${leagueId}/rosters?year=${year}`);
   return res.json();
 }
+
