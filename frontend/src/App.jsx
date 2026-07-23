@@ -32,10 +32,10 @@ function App() {
       return;
     }
 
-    // ⭐ Step 2 — NavBar must appear immediately
+    // ⭐ Step 2 — NavBar appears immediately
     setLoggedIn(true);
 
-    // Step 3 — Try to fetch leagues (but do NOT block NavBar)
+    // Step 3 — Fetch leagues (non-blocking)
     try {
       const leagues = await fetchMyLeagues();
       const myLeague = leagues.leagues.league;
@@ -51,6 +51,7 @@ function App() {
 
   return (
     <div
+      className="page-wrapper"
       style={{
         background: "#000814",
         minHeight: "100vh",
