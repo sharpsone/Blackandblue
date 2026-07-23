@@ -61,3 +61,13 @@ export async function fetchMatchups(leagueId) {
   );
   return res.json();
 }
+
+// FETCH FREE AGENTS
+export async function fetchFreeAgents(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/freeagents/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
