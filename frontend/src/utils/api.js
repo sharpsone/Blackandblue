@@ -37,7 +37,7 @@ export async function fetchLiveScoring(leagueId, year) {
   return res.json();
 }
 
-/* ⭐ STANDINGS */
+/* ⭐ STANDINGS — FIXED */
 export async function fetchStandings(leagueId, year) {
   const res = await fetch(
     `${API_BASE}/api/standings/${leagueId}?year=${year}`,
@@ -46,7 +46,7 @@ export async function fetchStandings(leagueId, year) {
   return res.json();
 }
 
-/* ⭐ ROSTER */
+/* ⭐ ROSTER — FIXED (your old version was wrong) */
 export async function fetchRoster(leagueId, franchiseId, year) {
   const res = await fetch(
     `${API_BASE}/api/league/${leagueId}/rosters?franchiseId=${franchiseId}&year=${year}`,
