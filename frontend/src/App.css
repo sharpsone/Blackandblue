@@ -27,6 +27,15 @@
   display: none;
 }
 
+/* ⭐ SMALL LOGO INSIDE NAVBAR */
+.navbar-logo {
+  height: 34px;        /* <<< This is the fix */
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
 .navbar-links button {
   background: transparent;
   color: white;
