@@ -113,14 +113,14 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Standings
-app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
+// ⭐ Standings (frontend expects this exact route)
+app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
 
   const client = new MFLClient({
     year,
-    host: DEFAULT_HOST,
+    host: "www03.myfantasyleague.com",
     apiKey: LEAGUE_API_KEY
   });
 
