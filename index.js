@@ -35,11 +35,11 @@ let userCookie = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ Auto-detect correct MFL host using XML + regex
+// ⭐ Auto-detect correct MFL host using TYPE=rules (always includes host)
 async function detectMFLHost(year, leagueId) {
   if (hostCache[year]) return hostCache[year];
 
-  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=franchises&L=${leagueId}&XML=1`;
+  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=rules&L=${leagueId}&XML=1`;
 
   try {
     const res = await fetch(url);
