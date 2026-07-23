@@ -9,7 +9,7 @@ export async function loginUser(username, password) {
   return res.json();
 }
 
-// FETCH MY LEAGUES (used after login)
+// FETCH MY LEAGUES
 export async function fetchMyLeagues() {
   const res = await fetch("https://blackandblue.onrender.com/api/myleagues", {
     credentials: "include"
@@ -17,7 +17,7 @@ export async function fetchMyLeagues() {
   return res.json();
 }
 
-// FETCH LEAGUE DETAILS (needed by several pages)
+// FETCH LEAGUE DETAILS
 export async function fetchLeague(leagueId) {
   const res = await fetch(
     `https://blackandblue.onrender.com/api/league/${leagueId}`,
@@ -26,7 +26,7 @@ export async function fetchLeague(leagueId) {
   return res.json();
 }
 
-// FETCH LIVE SCORING (needed by LiveScoring.jsx)
+// FETCH LIVE SCORING
 export async function fetchLiveScoring(leagueId) {
   const res = await fetch(
     `https://blackandblue.onrender.com/api/live/${leagueId}`,
@@ -35,10 +35,28 @@ export async function fetchLiveScoring(leagueId) {
   return res.json();
 }
 
-// FETCH STANDINGS (needed by Standings.jsx)
+// FETCH STANDINGS
 export async function fetchStandings(leagueId) {
   const res = await fetch(
     `https://blackandblue.onrender.com/api/standings/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH ROSTER
+export async function fetchRoster(leagueId, franchiseId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/roster/${leagueId}/${franchiseId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH MATCHUPS
+export async function fetchMatchups(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/matchups/${leagueId}`,
     { credentials: "include" }
   );
   return res.json();
