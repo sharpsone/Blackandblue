@@ -3,7 +3,7 @@ const axios = require('axios');
 class MFLClient {
   constructor({
     year,
-    host = 'www03.myfantasyleague.com',   // ⭐ export host
+    host = 'www03.myfantasyleague.com',   // ⭐ Your league lives here
     cookie = null,
     apiKey = null
   }) {
@@ -13,7 +13,7 @@ class MFLClient {
     this.apiKey = apiKey;
   }
 
-  // ⭐ All EXPORT calls must use wwwXX.myfantasyleague.com
+  // ⭐ All EXPORT calls must use www03.myfantasyleague.com
   async request(command, params = {}, { json = true } = {}) {
     const baseUrl = `https://${this.host}/${this.year}/export`;
     const query = new URLSearchParams(params);
