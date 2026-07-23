@@ -3,20 +3,22 @@ import TeamCard from "../components/TeamCard";
 import { fetchLeague, fetchStandings } from "../utils/api";
 import "../utils/animations.css";
 
-export default function Standings({ leagueId, myFranchiseId }) {
+export default function Standings({ leagueId, myFranchiseId, year }) {
   const [teams, setTeams] = useState([]);
   const [sortBy, setSortBy] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
   const [error, setError] = useState(null);
 
+  // ⭐ Re-run standings whenever leagueId or year changes
   useEffect(() => {
     loadStandings();
-  }, []);
+  }, [leagueId, year]);
 
   async function loadStandings() {
     try {
-      const standingsJson = await fetchStandings(leagueId);
-      const leagueJson = await fetchLeague(leagueId);
+      // ⭐ Pass year to backend API
+      const standingsJson = await fetchStandings(leagueId, year);
+      const leagueJson = await fetchLeague(leagueId, year);
 
       const franchiseList = leagueJson.league.franchises.franchise || [];
       const divisionList = leagueJson.league.divisions?.division || [];
@@ -187,7 +189,7 @@ export default function Standings({ leagueId, myFranchiseId }) {
       {Object.keys(grouped).map(conf => (
         <div key={conf} style={{ marginBottom: "2rem" }}>
           
-          {/* Conference Header (only if not empty) */}
+          {/* Conference Header */}
           {conf && (
             <h2
               className="slide-in"

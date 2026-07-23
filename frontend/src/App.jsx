@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./App.css";   // ⭐ REQUIRED — this was missing!
+import "./App.css";
 
 import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
@@ -13,6 +13,7 @@ import MessageBoard from "./pages/MessageBoard";
 import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
+
 import { fetchMyLeagues, loginUser } from "./utils/api";
 
 function App() {
@@ -21,8 +22,12 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [myFranchiseId, setMyFranchiseId] = useState(null);
+
   const [leagueId] = useState("19757");
-  const [year] = useState("2025"); // ⭐ NEW - Change this to the current year of your league
+
+  // ⭐ GLOBAL YEAR — change this once, entire site updates
+  const [year, setYear] = useState("2025");
+
   const [error, setError] = useState(null);
 
   async function login() {
@@ -57,7 +62,15 @@ function App() {
         color: "white"
       }}
     >
-      {loggedIn && <NavBar page={page} setPage={setPage} />}
+      {/* ⭐ NavBar appears after login */}
+      {loggedIn && (
+        <NavBar
+          page={page}
+          setPage={setPage}
+          year={year}
+          setYear={setYear}   // ⭐ Optional: allows year switching in NavBar later
+        />
+      )}
 
       {!loggedIn ? (
         <div style={{ padding: "2rem" }}>
@@ -84,23 +97,61 @@ function App() {
         </div>
       ) : (
         <>
-        {page === "standings" && (
-          <Standings leagueId={leagueId} year={year} myFranchiseId={myFranchiseId} />
-        )}
-        {page === "roster" && (
-          <Roster leagueId={leagueId} year={year} myFranchiseId={myFranchiseId} />
-        )}
-        {page === "live" && (
-          <LiveScoring leagueId={leagueId} year={year} myFranchiseId={myFranchiseId} />
-        )}
-        {page === "matchups" && <Matchups leagueId={leagueId} year={year} />}
-        {page === "playerstats" && <PlayerStats leagueId={leagueId} year={year} />}
-        {page === "transactions" && <Transactions leagueId={leagueId} year={year} />}
-        {page === "draft" && <DraftResults leagueId={leagueId} year={year} />}
-        {page === "messages" && <MessageBoard leagueId={leagueId} year={year} />}
-        {page === "freeagents" && <FreeAgents leagueId={leagueId} year={year} />}
-        {page === "schedule" && <Schedule leagueId={leagueId} year={year} />}
-        {page === "playoffs" && <PlayoffBracket leagueId={leagueId} year={year} />}
+          {page === "standings" && (
+            <Standings
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
+          )}
+
+          {page === "roster" && (
+            <Roster
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
+          )}
+
+          {page === "live" && (
+            <LiveScoring
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
+          )}
+
+          {page === "matchups" && (
+            <Matchups leagueId={leagueId} year={year} />
+          )}
+
+          {page === "playerstats" && (
+            <PlayerStats leagueId={leagueId} year={year} />
+          )}
+
+          {page === "transactions" && (
+            <Transactions leagueId={leagueId} year={year} />
+          )}
+
+          {page === "draft" && (
+            <DraftResults leagueId={leagueId} year={year} />
+          )}
+
+          {page === "messages" && (
+            <MessageBoard leagueId={leagueId} year={year} />
+          )}
+
+          {page === "freeagents" && (
+            <FreeAgents leagueId={leagueId} year={year} />
+          )}
+
+          {page === "schedule" && (
+            <Schedule leagueId={leagueId} year={year} />
+          )}
+
+          {page === "playoffs" && (
+            <PlayoffBracket leagueId={leagueId} year={year} />
+          )}
         </>
       )}
     </div>
@@ -108,3 +159,4 @@ function App() {
 }
 
 export default App;
+
