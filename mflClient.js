@@ -3,7 +3,7 @@ const axios = require('axios');
 class MFLClient {
   constructor({
     year,
-    host = 'www.myfantasyleague.com',   // ⭐ export host
+    host = 'www03.myfantasyleague.com',   // ⭐ export host
     cookie = null,
     apiKey = null
   }) {
