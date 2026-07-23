@@ -35,3 +35,11 @@ export async function fetchLiveScoring(leagueId) {
   return res.json();
 }
 
+// FETCH STANDINGS (needed by Standings.jsx)
+export async function fetchStandings(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/standings/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
