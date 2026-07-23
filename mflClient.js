@@ -9,12 +9,12 @@ function buildUrl(host, year, endpoint, params = {}) {
 class MFLClient {
   constructor({ year, host, cookie = null, apiKey = null }) {
     this.year = year;
-    this.host = host;          // ⭐ dynamic host (www44, www03, etc.)
-    this.cookie = cookie;      // ⭐ login cookie
-    this.apiKey = apiKey;      // ⭐ league API key
+    this.host = host;
+    this.cookie = cookie;
+    this.apiKey = apiKey;
   }
 
-  // ⭐ LOGIN — must use API host, not wwwXX
+  // ⭐ LOGIN — must use API host
   async login(username, password) {
     const url = buildUrl(
       "api.myfantasyleague.com",
@@ -43,7 +43,8 @@ class MFLClient {
       TYPE: type,
       ...params,
       APIKEY: this.apiKey,
-      JSON: 1
+      JSON: 1,
+      XML: 1
     });
 
     const res = await fetch(url, {
@@ -59,13 +60,13 @@ class MFLClient {
     return res.json();
   }
 
-  // ⭐ Correct MFL endpoints (TYPE=xxx)
+  // ⭐ Correct MFL endpoints
   async getLeague(leagueId) {
     return this.request("league", { L: leagueId });
   }
 
   async getStandings(leagueId) {
-    return this.request("standings", { L: leagueId });
+    return this.request("leagueStandings", { L: leagueId }); // ⭐ FIXED
   }
 
   async getRosters(leagueId) {
