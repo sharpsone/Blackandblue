@@ -1,4 +1,6 @@
 import { useState } from "react";
+import "./app.css";   // ⭐ REQUIRED — this was missing!
+
 import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
 import Roster from "./pages/Roster";
@@ -25,17 +27,14 @@ function App() {
   async function login() {
     setError(null);
 
-    // Step 1 — Login
     const res = await loginUser(username, password);
     if (!res.success) {
       setError("Login failed");
       return;
     }
 
-    // ⭐ Step 2 — NavBar appears immediately
     setLoggedIn(true);
 
-    // Step 3 — Fetch leagues (non-blocking)
     try {
       const leagues = await fetchMyLeagues();
       const myLeague = leagues.leagues.league;
@@ -45,7 +44,6 @@ function App() {
       setError("Could not load league data");
     }
 
-    // Step 4 — Go to standings
     setPage("standings");
   }
 
@@ -58,7 +56,6 @@ function App() {
         color: "white"
       }}
     >
-      {/* ⭐ NavBar appears immediately after login */}
       {loggedIn && <NavBar page={page} setPage={setPage} />}
 
       {!loggedIn ? (
