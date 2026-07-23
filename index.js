@@ -38,8 +38,16 @@ let userCookie = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ NEW: Auto-detect correct MFL host using TYPE=assets (always contains host)
+// ⭐ HARD-CODED HOST FOR 2025 (your league)
 async function detectMFLHost(year, leagueId) {
+  // ⭐ Hard-code known correct host for 2025
+  if (year === "2025") {
+    const fixedHost = "www44.myfantasyleague.com";
+    console.log(`Detected MFL host for 2025: ${fixedHost}`);
+    return fixedHost;
+  }
+
+  // ⭐ Otherwise use dynamic detection
   if (hostCache[year]) return hostCache[year];
 
   const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=assets&L=${leagueId}&XML=1`;
@@ -48,7 +56,6 @@ async function detectMFLHost(year, leagueId) {
     const res = await fetch(url);
     const xml = await res.text();
 
-    // ⭐ TYPE=assets ALWAYS includes host="wwwXX.myfantasyleague.com"
     const match = xml.match(/host="([^"]+)"/);
     const detectedHost = match ? match[1] : "www.myfantasyleague.com";
 
@@ -387,3 +394,4 @@ app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch playoff bracket" });
   }
 });
+
