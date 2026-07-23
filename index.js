@@ -34,6 +34,7 @@ const DEFAULT_API_HOST = "api.myfantasyleague.com";
 const LEAGUE_API_KEY = "ahVp3s+SvuWpx1emOVDGZDUeFKUtiQ==";
 
 let userCookie = null;
+let mflUsername = null;   // ⭐ store username globally
 
 // ⭐ Cache detected hosts per year
 const hostCache = {};
@@ -79,6 +80,8 @@ app.post("/api/login", async (req, res) => {
   const year = getYear(req);
 
   try {
+    mflUsername = username;   // ⭐ store username dynamically
+
     const tempClient = new MFLClient({
       year,
       host: DEFAULT_API_HOST
@@ -110,18 +113,23 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ My Leagues (API host only)
+// ⭐ My Leagues — FIXED (dynamic username)
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
   const client = new MFLClient({
     year,
     host: DEFAULT_API_HOST,
-    cookie: userCookie
+    cookie: userCookie,
+    apiKey: LEAGUE_API_KEY
   });
 
   try {
-    const leagues = await client.request("export", { TYPE: "myleagues" });
+    const leagues = await client.request("myleagues", {
+      USERNAME: mflUsername,   // ⭐ dynamic username
+      APIKEY: LEAGUE_API_KEY
+    });
+
     res.json(leagues);
   } catch (err) {
     console.error("MYLEAGUES ERROR:", err.message);
