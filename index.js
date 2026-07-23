@@ -5,7 +5,7 @@ const MFLClient = require("./mflClient");
 
 const app = express();
 
-// ⭐ FIXED CORS — allows cookies to pass through Render
+// ⭐ CORS for Vercel frontend
 app.use(
   cors({
     origin: "https://blackandblue.vercel.app",
@@ -46,7 +46,6 @@ app.post("/api/login", async (req, res) => {
 
     userCookie = cookie;
 
-    // ⭐ Send cookie to browser (Render requires secure + sameSite none)
     res.cookie("mfl_session", cookie, {
       httpOnly: false,
       secure: true,
@@ -60,71 +59,13 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// ⭐ Require login
+// ⭐ Require login middleware
 function requireLogin(req, res, next) {
   if (!userCookie) {
     return res.status(401).json({ error: "Not logged in" });
   }
   next();
 }
-
-// ⭐ League info
-app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
-  const { leagueId } = req.params;
-
-  const client = new MFLClient({
-    year: YEAR,
-    host: DEFAULT_HOST,
-    apiKey: LEAGUE_API_KEY
-  });
-
-  try {
-    const league = await client.getLeague(leagueId);
-    res.json(league);
-  } catch (err) {
-    console.error("LEAGUE ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch league" });
-  }
-});
-
-// ⭐ Standings
-app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
-  const { leagueId } = req.params;
-  const { week } = req.query;
-
-  const client = new MFLClient({
-    year: YEAR,
-    host: DEFAULT_HOST,
-    apiKey: LEAGUE_API_KEY
-  });
-
-  try {
-    const standings = await client.getStandings(leagueId, week);
-    res.json(standings);
-  } catch (err) {
-    console.error("STANDINGS ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch standings" });
-  }
-});
-
-// ⭐ Rosters
-app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
-  const { leagueId } = req.params;
-
-  const client = new MFLClient({
-    year: YEAR,
-    host: DEFAULT_HOST,
-    apiKey: LEAGUE_API_KEY
-  });
-
-  try {
-    const rosters = await client.getRosters(leagueId);
-    res.json(rosters);
-  } catch (err) {
-    console.error("ROSTERS ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch rosters" });
-  }
-});
 
 // ⭐ My Leagues
 app.get("/api/myleagues", requireLogin, async (req, res) => {
@@ -143,7 +84,67 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ LIVE SCORING
+// ⭐ League Info
+app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
+  const { leagueId } = req.params;
+
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    apiKey: LEAGUE_API_KEY
+  });
+
+  try {
+    const league = await client.getLeague(leagueId);
+    res.json(league);
+  } catch (err) {
+    console.error("LEAGUE ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch league" });
+  }
+});
+
+// ⭐ Standings (frontend expects this exact route)
+app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
+  const { leagueId } = req.params;
+
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    apiKey: LEAGUE_API_KEY
+  });
+
+  try {
+    const standings = await client.getStandings(leagueId);
+    res.json(standings);
+  } catch (err) {
+    console.error("STANDINGS ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch standings" });
+  }
+});
+
+// ⭐ Roster (frontend expects this exact route)
+app.get("/api/roster/:leagueId/:franchiseId", requireLogin, async (req, res) => {
+  const { leagueId, franchiseId } = req.params;
+
+  const client = new MFLClient({
+    year: YEAR,
+    host: DEFAULT_HOST,
+    apiKey: LEAGUE_API_KEY
+  });
+
+  try {
+    const rosters = await client.request("rosters", { L: leagueId });
+    const franchiseRoster = rosters.rosters.franchise.find(
+      f => f.id === franchiseId
+    );
+    res.json(franchiseRoster || {});
+  } catch (err) {
+    console.error("ROSTER ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch roster" });
+  }
+});
+
+// ⭐ Live Scoring
 app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -162,7 +163,7 @@ app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ MATCHUPS
+// ⭐ Matchups
 app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -181,7 +182,7 @@ app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ FREE AGENTS
+// ⭐ Free Agents
 app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -200,7 +201,7 @@ app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ MESSAGE BOARD
+// ⭐ Message Board
 app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -219,7 +220,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ SCHEDULE
+// ⭐ Schedule
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -238,7 +239,7 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ TRANSACTIONS
+// ⭐ Transactions
 app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -257,7 +258,7 @@ app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ PLAYER STATS
+// ⭐ Player Stats
 app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -276,7 +277,7 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ DRAFT RESULTS
+// ⭐ Draft Results
 app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
@@ -295,7 +296,7 @@ app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ PLAYOFF BRACKET
+// ⭐ Playoff Bracket
 app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
 
