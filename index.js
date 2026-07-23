@@ -3,7 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MFLClient = require("./mflClient");
 
-// ⭐ Ensure fetch is available in this CommonJS module
+// ⭐ REQUIRED for Node 18+ in CommonJS
 const fetch = global.fetch;
 
 const app = express();
@@ -38,16 +38,17 @@ let userCookie = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ Auto-detect correct MFL host using TYPE=rules (always includes host when present)
+// ⭐ NEW: Auto-detect correct MFL host using TYPE=assets (always contains host)
 async function detectMFLHost(year, leagueId) {
   if (hostCache[year]) return hostCache[year];
 
-  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=rules&L=${leagueId}&XML=1`;
+  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=assets&L=${leagueId}&XML=1`;
 
   try {
     const res = await fetch(url);
     const xml = await res.text();
 
+    // ⭐ TYPE=assets ALWAYS includes host="wwwXX.myfantasyleague.com"
     const match = xml.match(/host="([^"]+)"/);
     const detectedHost = match ? match[1] : "www.myfantasyleague.com";
 
