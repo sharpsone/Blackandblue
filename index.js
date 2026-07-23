@@ -334,4 +334,54 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   });
 
   try {
-    const stats = await client.request("playerStats", {
+    const stats = await client.request("playerStats", { L: leagueId });
+    res.json(stats);
+  } catch (err) {
+    console.error("PLAYER STATS ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch player stats" });
+  }
+});
+
+// ⭐ Draft Results
+app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
+  const { leagueId } = req.params;
+  const year = getYear(req);
+
+  const host = await detectMFLHost(year, leagueId);
+
+  const client = new MFLClient({
+    year,
+    host,
+    apiKey: LEAGUE_API_KEY
+  });
+
+  try {
+    const draft = await client.request("draftResults", { L: leagueId });
+    res.json(draft);
+  } catch (err) {
+    console.error("DRAFT RESULTS ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch draft results" });
+  }
+});
+
+// ⭐ Playoff Bracket
+app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
+  const { leagueId } = req.params;
+  const year = getYear(req);
+
+  const host = await detectMFLHost(year, leagueId);
+
+  const client = new MFLClient({
+    year,
+    host,
+    apiKey: LEAGUE_API_KEY
+  });
+
+  try {
+    const playoffs = await client.request("playoffBracket", { L: leagueId });
+    res.json(playoffs);
+  } catch (err) {
+    console.error("PLAYOFFS ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch playoff bracket" });
+  }
+});
