@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MFLClient = require("./mflClient");
-const fetch = require("node-fetch"); // Required for host detection
+const fetch = require("node-fetch"); // Needed for host detection
 
 const app = express();
 
@@ -36,17 +36,19 @@ let userCookie = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ Auto-detect correct MFL host for given year + league
+// ⭐ Auto-detect correct MFL host using XML + regex
 async function detectMFLHost(year, leagueId) {
   if (hostCache[year]) return hostCache[year];
 
-  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
+  const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=league&L=${leagueId}&XML=1`;
 
   try {
     const res = await fetch(url);
-    const json = await res.json();
+    const xml = await res.text();
 
-    const detectedHost = json.league.host || "www.myfantasyleague.com";
+    // Extract host="wwwXX.myfantasyleague.com"
+    const match = xml.match(/host="([^"]+)"/);
+    const detectedHost = match ? match[1] : "www.myfantasyleague.com";
 
     hostCache[year] = detectedHost;
 
@@ -332,54 +334,4 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   });
 
   try {
-    const stats = await client.request("playerStats", { L: leagueId });
-    res.json(stats);
-  } catch (err) {
-    console.error("PLAYER STATS ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch player stats" });
-  }
-});
-
-// ⭐ Draft Results
-app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
-  const { leagueId } = req.params;
-  const year = getYear(req);
-
-  const host = await detectMFLHost(year, leagueId);
-
-  const client = new MFLClient({
-    year,
-    host,
-    apiKey: LEAGUE_API_KEY
-  });
-
-  try {
-    const draft = await client.request("draftResults", { L: leagueId });
-    res.json(draft);
-  } catch (err) {
-    console.error("DRAFT RESULTS ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch draft results" });
-  }
-});
-
-// ⭐ Playoff Bracket
-app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
-  const { leagueId } = req.params;
-  const year = getYear(req);
-
-  const host = await detectMFLHost(year, leagueId);
-
-  const client = new MFLClient({
-    year,
-    host,
-    apiKey: LEAGUE_API_KEY
-  });
-
-  try {
-    const playoffs = await client.request("playoffBracket", { L: leagueId });
-    res.json(playoffs);
-  } catch (err) {
-    console.error("PLAYOFFS ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch playoff bracket" });
-  }
-});
+    const stats = await client.request("playerStats", {
