@@ -10,41 +10,51 @@
   flex-direction: row;
   align-items: center;
 
-  gap: 0.4rem;              /* reduced spacing */
-  padding: 0.4rem 0.6rem;   /* reduced padding */
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
 
   background: #003566;
   border-bottom: 2px solid #00aaff;
 
-  white-space: nowrap;      /* prevent wrapping */
-  overflow-x: auto;         /* allow scroll if needed */
-  scrollbar-width: none;    /* hide scrollbar (Firefox) */
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  /* ⭐ Sticky shadow */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
 }
 
 .navbar::-webkit-scrollbar {
-  display: none;            /* hide scrollbar (Chrome/Safari) */
+  display: none;
 }
 
-/* ⭐ Compact button styling */
+/* ⭐ Button styling */
 .navbar button {
   background: transparent;
   color: white;
   border: 1px solid #00aaff;
-  padding: 0.3rem 0.6rem;   /* smaller buttons */
+  padding: 0.3rem 0.6rem;
   border-radius: 4px;
-  font-size: 0.85rem;       /* smaller text */
+  font-size: 0.85rem;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
+/* ⭐ Hover animation */
+.navbar button:hover {
+  background: #00aaff;
+  color: black;
+  transform: translateY(-2px);
+}
+
+/* ⭐ Active tab */
 .navbar button.active {
   background: #00aaff;
   color: black;
 }
 
-/* ⭐ Page wrapper to push content below NavBar */
+/* ⭐ Page wrapper pushes content below NavBar */
 .page-wrapper {
-  padding-top: 60px; /* NavBar height is now ~50–55px */
+  padding-top: 65px;
 }
-
-/* ⭐ Your existing Vite demo styles remain unchanged below */
