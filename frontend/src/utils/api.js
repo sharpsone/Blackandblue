@@ -71,3 +71,56 @@ export async function fetchFreeAgents(leagueId) {
   return res.json();
 }
 
+// FETCH MESSAGE BOARD
+export async function fetchMessages(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/messages/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH SCHEDULE
+export async function fetchSchedule(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/schedule/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH TRANSACTIONS
+export async function fetchTransactions(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/transactions/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH PLAYER STATS
+export async function fetchPlayerStats(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/playerstats/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH DRAFT RESULTS
+export async function fetchDraftResults(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/draftresults/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+// FETCH PLAYOFF BRACKET
+export async function fetchPlayoffBracket(leagueId) {
+  const res = await fetch(
+    `https://blackandblue.onrender.com/api/playoffs/${leagueId}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
