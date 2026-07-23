@@ -38,16 +38,14 @@ let userCookie = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ HARD-CODED HOST FOR 2025 (your league)
+// ⭐ HARD-CODED HOST FOR 2025
 async function detectMFLHost(year, leagueId) {
-  // ⭐ Hard-code known correct host for 2025
   if (year === "2025") {
     const fixedHost = "www44.myfantasyleague.com";
     console.log(`Detected MFL host for 2025: ${fixedHost}`);
     return fixedHost;
   }
 
-  // ⭐ Otherwise use dynamic detection
   if (hostCache[year]) return hostCache[year];
 
   const url = `https://${DEFAULT_API_HOST}/${year}/export?TYPE=assets&L=${leagueId}&XML=1`;
@@ -141,7 +139,8 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -163,7 +162,8 @@ app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -185,7 +185,8 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -207,7 +208,8 @@ app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -229,7 +231,8 @@ app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -251,7 +254,8 @@ app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -273,7 +277,8 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -295,7 +300,8 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -317,7 +323,8 @@ app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -339,7 +346,8 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -361,7 +369,8 @@ app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -383,7 +392,8 @@ app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY
+    apiKey: LEAGUE_API_KEY,
+    cookie: userCookie
   });
 
   try {
@@ -394,4 +404,3 @@ app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch playoff bracket" });
   }
 });
-
