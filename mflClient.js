@@ -38,8 +38,9 @@ class MFLClient {
   }
 
   // ⭐ Generic request helper
-  async request(endpoint, params = {}) {
+  async request(type, params = {}) {
     const url = buildUrl(this.host, this.year, "export", {
+      TYPE: type,
       ...params,
       APIKEY: this.apiKey,
       JSON: 1
@@ -58,57 +59,47 @@ class MFLClient {
     return res.json();
   }
 
-  // ⭐ League Info
+  // ⭐ Correct MFL endpoints (TYPE=xxx)
   async getLeague(leagueId) {
     return this.request("league", { L: leagueId });
   }
 
-  // ⭐ Standings
   async getStandings(leagueId) {
-    return this.request("leagueStandings", { L: leagueId });
+    return this.request("standings", { L: leagueId });
   }
 
-  // ⭐ Rosters
   async getRosters(leagueId) {
     return this.request("rosters", { L: leagueId });
   }
 
-  // ⭐ Live Scoring
   async getLiveScoring(leagueId) {
     return this.request("liveScoring", { L: leagueId });
   }
 
-  // ⭐ Schedule / Matchups
   async getSchedule(leagueId) {
     return this.request("schedule", { L: leagueId });
   }
 
-  // ⭐ Free Agents
   async getFreeAgents(leagueId) {
     return this.request("freeAgents", { L: leagueId });
   }
 
-  // ⭐ Message Board
   async getMessageBoard(leagueId) {
     return this.request("messageBoard", { L: leagueId });
   }
 
-  // ⭐ Transactions
   async getTransactions(leagueId) {
     return this.request("transactions", { L: leagueId });
   }
 
-  // ⭐ Player Stats
   async getPlayerStats(leagueId) {
     return this.request("playerStats", { L: leagueId });
   }
 
-  // ⭐ Draft Results
   async getDraftResults(leagueId) {
     return this.request("draftResults", { L: leagueId });
   }
 
-  // ⭐ Playoff Bracket
   async getPlayoffBracket(leagueId) {
     return this.request("playoffBracket", { L: leagueId });
   }
