@@ -29,7 +29,7 @@
 
 /* ⭐ SMALL LOGO INSIDE NAVBAR */
 .navbar-logo {
-  height: 34px;        /* <<< This is the fix */
+  height: 40px;        /* <<< This is the fix */
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
