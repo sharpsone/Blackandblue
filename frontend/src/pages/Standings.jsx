@@ -149,12 +149,13 @@ export default function Standings({ leagueId, myFranchiseId }) {
       {/* ⭐ League Logo Header */}
       <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
         <img
-          src="/league-logo.png"
+          src="https://www44.myfantasyleague.com/fflnetdynamic2025/19757_league_logo.png"
           alt="League Logo"
           style={{ height: "140px" }}
           className="fade-in"
         />
       </div>
+
 
       {/* ⭐ Sorting Controls */}
       <div
