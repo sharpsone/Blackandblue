@@ -1,4 +1,4 @@
-/* ⭐ NAVBAR — compact, single row, logo included */
+/* ⭐ NAVBAR — logo + buttons in one compact row */
 .navbar {
   position: fixed;
   top: 0;
@@ -20,7 +20,6 @@
   overflow-x: auto;
   scrollbar-width: none;
 
-  /* ⭐ Sticky shadow */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
 }
 
@@ -36,7 +35,7 @@
   margin-right: 0.5rem;
 }
 
-/* ⭐ Button styling */
+/* ⭐ Buttons */
 .navbar-links button {
   background: transparent;
   color: white;
@@ -49,20 +48,18 @@
   transition: all 0.2s ease;
 }
 
-/* ⭐ Hover animation */
 .navbar-links button:hover {
   background: #00aaff;
   color: black;
   transform: translateY(-2px);
 }
 
-/* ⭐ Active tab */
 .navbar-links button.active {
   background: #00aaff;
   color: black;
 }
 
-/* ⭐ Page wrapper pushes content below NavBar */
+/* ⭐ Push content below NavBar */
 .page-wrapper {
   padding-top: 65px;
 }

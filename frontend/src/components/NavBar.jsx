@@ -16,14 +16,13 @@ export default function NavBar({ page, setPage }) {
   return (
     <div className="navbar">
       
-      {/* ⭐ League Logo inside NavBar */}
+      {/* ⭐ League Logo INSIDE the NavBar */}
       <img
         src="https://www44.myfantasyleague.com/fflnetdynamic2025/19757_league_logo.png"
         alt="League Logo"
         className="navbar-logo"
       />
 
-      {/* ⭐ Navigation Buttons */}
       <div className="navbar-links">
         {tabs.map((t) => (
           <button
