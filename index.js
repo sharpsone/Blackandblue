@@ -3,6 +3,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MFLClient = require("./mflClient");
 
+// ⭐ Ensure fetch is available in this CommonJS module
+const fetch = global.fetch;
+
 const app = express();
 
 // ⭐ CORS for Vercel frontend
@@ -35,7 +38,7 @@ let userCookie = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ Auto-detect correct MFL host using TYPE=rules (always includes host)
+// ⭐ Auto-detect correct MFL host using TYPE=rules (always includes host when present)
 async function detectMFLHost(year, leagueId) {
   if (hostCache[year]) return hostCache[year];
 
