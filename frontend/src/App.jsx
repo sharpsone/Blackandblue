@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./app.css";   // ⭐ REQUIRED — this was missing!
+import "./App.css";   // ⭐ REQUIRED — this was missing!
 
 import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
