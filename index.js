@@ -31,10 +31,11 @@ app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 // ⭐ Default year (fallback)
 const DEFAULT_YEAR = "2026";
 const DEFAULT_API_HOST = "api.myfantasyleague.com";
-const LEAGUE_API_KEY = "ahVp3s+SvuWpx1emOVDGZDUeFKUtiQ==";
+const LEAGUE_API_KEY = "ahVp3s+SvuWqx1qmOVDGZDUeFKUtiQ==";
 
 let userCookie = null;
 let mflUsername = null;   // ⭐ store username globally
+let mflPassword = null;   // ⭐ store password globally
 
 // ⭐ Cache detected hosts per year
 const hostCache = {};
@@ -80,7 +81,9 @@ app.post("/api/login", async (req, res) => {
   const year = getYear(req);
 
   try {
-    mflUsername = username;   // ⭐ store username dynamically
+    // ⭐ store credentials in memory for this session
+    mflUsername = username;
+    mflPassword = password;
 
     const tempClient = new MFLClient({
       year,
@@ -107,27 +110,27 @@ app.post("/api/login", async (req, res) => {
 
 // ⭐ Require login middleware
 function requireLogin(req, res, next) {
-  if (!userCookie) {
+  if (!userCookie || !mflUsername || !mflPassword) {
     return res.status(401).json({ error: "Not logged in" });
   }
   next();
 }
 
-// ⭐ My Leagues — FIXED (dynamic username)
+// ⭐ My Leagues — FIXED per MFL docs (USERNAME + PASSWORD + COOKIE, no APIKEY)
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
   const client = new MFLClient({
     year,
     host: DEFAULT_API_HOST,
-    cookie: userCookie,
-    apiKey: LEAGUE_API_KEY
+    cookie: userCookie
   });
 
   try {
-    const leagues = await client.request("myleagues", {
-      USERNAME: mflUsername,   // ⭐ dynamic username
-      APIKEY: LEAGUE_API_KEY
+    const leagues = await client.request("export", {
+      TYPE: "myleagues",
+      USERNAME: mflUsername,
+      PASSWORD: mflPassword
     });
 
     res.json(leagues);
