@@ -37,10 +37,10 @@ class MFLClient {
     return setCookie;
   }
 
-  // ⭐ Generic request helper
+  // ⭐ Generic request helper (FIXED)
   async request(type, params = {}) {
     const url = buildUrl(this.host, this.year, "export", {
-      TYPE: type,
+      TYPE: type,          // ⭐ type is now the actual TYPE
       ...params,
       APIKEY: this.apiKey,
       JSON: 1,
@@ -66,7 +66,7 @@ class MFLClient {
   }
 
   async getStandings(leagueId) {
-    return this.request("leagueStandings", { L: leagueId }); // ⭐ FIXED
+    return this.request("leagueStandings", { L: leagueId });
   }
 
   async getRosters(leagueId) {
