@@ -301,7 +301,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Schedule (FIXED)
+// ⭐ Schedule (FINAL FIX)
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -315,11 +315,8 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   });
 
   try {
-    const schedule = await client.request("export", {
-      TYPE: "schedule",
-      L: leagueId,
-      JSON: 1
-    });
+    // ⭐ USE THE CLIENT'S BUILT-IN METHOD
+    const schedule = await client.getSchedule(leagueId);
 
     res.json(schedule);
   } catch (err) {
