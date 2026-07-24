@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchSchedule } from "../api";
+import { fetchSchedule } from "../utils/api";
 
 export default function Schedule({ leagueId, year }) {
   const [schedule, setSchedule] = useState(null);
