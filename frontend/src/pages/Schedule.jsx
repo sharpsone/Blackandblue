@@ -42,6 +42,7 @@ function Schedule({ leagueId, year }) {
     async function loadSchedule() {
       try {
         const data = await fetchSchedule(leagueId, year);
+        console.log("SCHEDULE RAW:", data); //TEMPORARY REMOVE AFTER DEBUGGING
         setSchedule(data?.schedule?.week || []);
       } catch (err) {
         console.error("SCHEDULE LOAD ERROR:", err);
