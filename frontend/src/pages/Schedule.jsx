@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchSchedule, fetchLeague } from "../utils/api";
-import "./schedule.css"; // ⭐ Add this line for the CSS
+import "./schedule.css"; // correct path for your structure
 
 // Format YYYYMMDD → MM/DD/YYYY
 function formatDate(raw) {
@@ -24,11 +24,10 @@ function Schedule({ leagueId, year }) {
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // ⭐ Load franchise names + logos from fetchLeague (same as Standings)
+  // Load franchise names + logos from fetchLeague (same as Standings)
   useEffect(() => {
     async function loadFranchises() {
       const leagueJson = await fetchLeague(leagueId, year);
-      console.log("LEAGUE RAW:", leagueJson);
 
       const franchiseList = leagueJson.league.franchises.franchise || [];
 
@@ -47,12 +46,10 @@ function Schedule({ leagueId, year }) {
     loadFranchises();
   }, [leagueId, year]);
 
-  // ⭐ Load schedule
+  // Load schedule
   useEffect(() => {
     async function loadSchedule() {
       const data = await fetchSchedule(leagueId, year);
-      console.log("SCHEDULE RAW:", data);
-
       setWeeks(data?.schedule?.weeklySchedule || []);
       setLoading(false);
     }
@@ -69,7 +66,8 @@ function Schedule({ leagueId, year }) {
 
       {weeks.map((weekObj, idx) => (
         <div key={idx} style={{ marginBottom: "2rem" }}>
-          {/* ⭐ WEEK HEADER */}
+          
+          {/* WEEK HEADER */}
           <div className="week-header">WEEK {weekObj.week}</div>
 
           {weekObj.matchup.map((m, mIdx) => {
@@ -94,7 +92,7 @@ function Schedule({ leagueId, year }) {
             return (
               <div key={mIdx} className="matchup-card">
                 
-                {/* ⭐ Away Team Row */}
+                {/* Away Team Row */}
                 <div className="team-row">
                   <div className="team-info">
                     {awayLogo ? (
@@ -116,7 +114,7 @@ function Schedule({ leagueId, year }) {
                   </div>
                 </div>
 
-                {/* ⭐ Home Team Row */}
+                {/* Home Team Row */}
                 <div className="team-row">
                   <div className="team-info">
                     {homeLogo ? (
@@ -138,7 +136,16 @@ function Schedule({ leagueId, year }) {
                   </div>
                 </div>
 
-                {/* ⭐ Date */}
+                {/* Matchup Summary (completed games only) */}
+                {away.score && home.score && (
+                  <div className="match-summary">
+                    {awayWinner
+                      ? `${awayName} beat ${homeName} by ${(away.score - home.score).toFixed(2)} points`
+                      : `${homeName} beat ${awayName} by ${(home.score - away.score).toFixed(2)} points`}
+                  </div>
+                )}
+
+                {/* Date */}
                 {m.date && (
                   <div className="match-date">Date: {formatDate(m.date)}</div>
                 )}

@@ -12,6 +12,12 @@
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
+  transition: 0.15s ease;
+}
+
+.matchup-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 10px #003566;
 }
 
 .team-row {
@@ -37,7 +43,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #003566; /* ⭐ Sleeper Blue */
+  background: #003566; /* Sleeper Blue */
   color: white;
   display: flex;
   align-items: center;
@@ -55,9 +61,53 @@
   font-size: 1rem;
 }
 
+.match-summary {
+  margin-top: 0.5rem;
+  color: #ccc;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
 .match-date {
   opacity: 0.7;
   margin-top: 0.5rem;
   font-size: 0.9rem;
 }
-/*style schedule*/
+
+/* ⭐ Mobile Optimizations */
+@media (max-width: 600px) {
+  .matchup-card {
+    padding: 0.75rem;
+  }
+
+  .team-row {
+    margin-bottom: 0.5rem;
+  }
+
+  .team-logo,
+  .initials-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .team-name {
+    font-size: 0.9rem;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .team-score {
+    font-size: 0.9rem;
+  }
+
+  .match-summary {
+    font-size: 0.85rem;
+  }
+
+  .week-header {
+    font-size: 1.2rem;
+  }
+}
