@@ -37,28 +37,25 @@ class MFLClient {
     return setCookie;
   }
 
-  // ⭐ Generic request helper (FIXED)
-  async request(type, params = {}) {
-    const url = buildUrl(this.host, this.year, "export", {
-      TYPE: type,          // ⭐ type is now the actual TYPE
-      ...params,
-      APIKEY: this.apiKey,
-      JSON: 1,
-      XML: 1
-    });
+ async request(type, params = {}) {
+  const url = buildUrl(this.host, this.year, "export", {
+    TYPE: type,
+    ...params,
+    APIKEY: this.apiKey
+  });
 
-    const res = await fetch(url, {
-      headers: {
-        Cookie: this.cookie || ""
-      }
-    });
-
-    if (!res.ok) {
-      throw new Error(`MFL request failed: ${res.status}`);
+  const res = await fetch(url, {
+    headers: {
+      Cookie: this.cookie || ""
     }
+  });
 
-    return res.json();
+  if (!res.ok) {
+    throw new Error(`MFL request failed: ${res.status}`);
   }
+
+  return res.json();
+}
 
   // ⭐ Correct MFL endpoints
   async getLeague(leagueId) {
