@@ -83,4 +83,3 @@ function Schedule({ leagueId, year }) {
 }
 
 export default Schedule;
-v
