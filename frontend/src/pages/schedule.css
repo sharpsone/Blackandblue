@@ -7,6 +7,53 @@
   color: #00aaff;
 }
 
+/* ⭐ Week Selector */
+.week-selector {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.week-button {
+  background: #111;
+  color: white;
+  border: 1px solid #333;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.week-button:hover {
+  background: #003566;
+}
+
+.active-week {
+  background: #00509e;
+  border-color: #00aaff;
+}
+
+/* ⭐ Game Status */
+.game-status {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.status-final {
+  color: #00ff00;
+}
+
+.status-in\ progress {
+  color: #ffaa00;
+}
+
+.status-scheduled {
+  color: #00aaff;
+}
+
 .matchup-card {
   background: #111;
   border-radius: 10px;
@@ -43,7 +90,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #003566; /* Sleeper Blue */
+  background: #003566;
   color: white;
   display: flex;
   align-items: center;
