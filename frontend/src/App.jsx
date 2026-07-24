@@ -42,7 +42,7 @@ function App() {
     setLoggedIn(true);
 
     try {
-      const leagues = await fetchMyLeagues();
+      const leagues = await fetchMyLeagues(year);
       const myLeague = leagues.leagues.league;
       setMyFranchiseId(myLeague.franchise_id);
     } catch (err) {
