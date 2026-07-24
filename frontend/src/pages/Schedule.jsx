@@ -15,7 +15,7 @@ function Schedule({ leagueId, year }) {
     return `${m}/${d}/${y}`;
   }
 
-  // Load league info (team names)
+  // Load league info (team names + logos)
   useEffect(() => {
     async function loadLeague() {
       const league = await fetchLeague(leagueId, year);
@@ -23,7 +23,10 @@ function Schedule({ leagueId, year }) {
       const map = {};
       if (league?.franchises?.franchise) {
         league.franchises.franchise.forEach(f => {
-          map[f.id] = f.name;
+          map[f.id] = {
+            name: f.name,
+            logo: f.icon || null
+          };
         });
       }
 
@@ -57,27 +60,48 @@ function Schedule({ leagueId, year }) {
 
   return (
     <div style={{ padding: "1rem" }}>
-      <h1>Schedule</h1>
+      <h1 style={{ marginBottom: "1rem" }}>Schedule</h1>
 
       {weeks.map((weekObj, idx) => {
         const matchups = weekObj.matchup || [];
 
         return (
           <div key={idx} style={{ marginBottom: "2rem" }}>
-            <h2>Week {weekObj.week}</h2>
+            {/* ⭐ WEEK DIVIDER */}
+            <div
+              style={{
+                fontSize: "1.4rem",
+                fontWeight: "bold",
+                padding: "0.5rem 0",
+                borderBottom: "2px solid #444",
+                marginBottom: "1rem"
+              }}
+            >
+              Week {weekObj.week}
+            </div>
 
             {matchups.map((m, mIdx) => {
-              const homeTeam = m.franchise[1];
-              const awayTeam = m.franchise[0];
+              const home = m.franchise[1];
+              const away = m.franchise[0];
 
-              const homeName = franchiseMap[homeTeam.id] || `Franchise ${homeTeam.id}`;
-              const awayName = franchiseMap[awayTeam.id] || `Franchise ${awayTeam.id}`;
+              const homeInfo = franchiseMap[home.id] || {};
+              const awayInfo = franchiseMap[away.id] || {};
 
-              const homeScore = homeTeam.score;
-              const awayScore = awayTeam.score;
+              const homeName = homeInfo.name || `Franchise ${home.id}`;
+              const awayName = awayInfo.name || `Franchise ${away.id}`;
 
-              const homeResult = homeTeam.result;
-              const awayResult = awayTeam.result;
+              const homeScore = home.score;
+              const awayScore = away.score;
+
+              const homeResult = home.result;
+              const awayResult = away.result;
+
+              const homeLogo = homeInfo.logo;
+              const awayLogo = awayInfo.logo;
+
+              // ⭐ Winner highlight
+              const homeColor = homeResult === "W" ? "#0f0" : "#f44";
+              const awayColor = awayResult === "W" ? "#0f0" : "#f44";
 
               return (
                 <div
@@ -86,22 +110,48 @@ function Schedule({ leagueId, year }) {
                     background: "#111",
                     padding: "1rem",
                     marginBottom: "1rem",
-                    borderRadius: "8px"
+                    borderRadius: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem"
                   }}
                 >
-                  <div style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>
+                  {/* ⭐ Matchup header */}
+                  <div style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
                     {awayName} @ {homeName}
                   </div>
 
+                  {/* ⭐ Logos */}
+                  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                    {awayLogo && (
+                      <img
+                        src={awayLogo}
+                        alt={awayName}
+                        style={{ width: "40px", height: "40px", borderRadius: "6px" }}
+                      />
+                    )}
+                    {homeLogo && (
+                      <img
+                        src={homeLogo}
+                        alt={homeName}
+                        style={{ width: "40px", height: "40px", borderRadius: "6px" }}
+                      />
+                    )}
+                  </div>
+
+                  {/* ⭐ Date */}
                   {m.date && (
-                    <div>Date: {formatDate(m.date)}</div>
+                    <div style={{ opacity: 0.7 }}>Date: {formatDate(m.date)}</div>
                   )}
 
+                  {/* ⭐ Scores */}
                   <div style={{ marginTop: "0.5rem" }}>
-                    <strong>{awayName}</strong>: {awayScore} ({awayResult})
+                    <strong style={{ color: awayColor }}>{awayName}</strong>:{" "}
+                    {awayScore} ({awayResult})
                   </div>
                   <div>
-                    <strong>{homeName}</strong>: {homeScore} ({homeResult})
+                    <strong style={{ color: homeColor }}>{homeName}</strong>:{" "}
+                    {homeScore} ({homeResult})
                   </div>
                 </div>
               );
