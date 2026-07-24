@@ -1,41 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchSchedule, fetchLeague } from "../utils/api";
-
-// Extract franchise ID from logo/icon/sound filenames OR fallback to f.id
-function extractIdFromAssets(franchise) {
-  const fields = ["logo", "icon", "sound"];
-
-  for (const field of fields) {
-    const val = franchise[field];
-    if (val && typeof val === "string") {
-      const match = val.match(/franchise_(?:logo|icon|sound)(\d{4})/);
-      if (match) return match[1]; // return the 4-digit ID
-    }
-  }
-
-  return franchise.id || null;
-}
-
-// Extract franchise name from multiple possible fields
-function extractName(franchise, id) {
-  if (franchise.name) return franchise.name;
-  if (franchise.franchiseName) return franchise.franchiseName;
-  if (franchise.owner_name) return franchise.owner_name;
-  if (franchise.username) return franchise.username;
-  if (franchise.abbrev) return franchise.abbrev;
-
-  // Derive name from logo/icon filename if needed
-  const fields = ["logo", "icon"];
-  for (const field of fields) {
-    const val = franchise[field];
-    if (val && typeof val === "string") {
-      const match = val.match(/franchise_logo(\d{4})/);
-      if (match) return `Franchise ${match[1]}`;
-    }
-  }
-
-  return `Franchise ${id}`;
-}
+import { fetchSchedule, fetchLeague, fetchStandings } from "../utils/api";
 
 // Format YYYYMMDD → MM/DD/YYYY
 function formatDate(raw) {
@@ -48,28 +12,25 @@ function Schedule({ leagueId, year }) {
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Load league info (team names + logos)
+  // Load franchise names + logos from STANDINGS (most reliable)
   useEffect(() => {
-    async function loadLeague() {
-      const league = await fetchLeague(leagueId, year);
-      console.log("LEAGUE RAW:", league);
+    async function loadFranchises() {
+      const standings = await fetchStandings(leagueId, year);
+      console.log("STANDINGS RAW:", standings);
 
       const map = {};
 
-      league?.franchises?.franchise?.forEach(f => {
-        const id = extractIdFromAssets(f);
-        if (!id) return;
-
-        const name = extractName(f, id);
-        const logo = f.logo || f.icon || null;
-
-        map[id] = { name, logo };
+      standings?.franchise?.forEach(f => {
+        map[f.id] = {
+          name: f.name || `Franchise ${f.id}`,
+          logo: f.icon || f.logo || null
+        };
       });
 
       setFranchiseMap(map);
     }
 
-    loadLeague();
+    loadFranchises();
   }, [leagueId, year]);
 
   // Load schedule
