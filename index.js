@@ -305,7 +305,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Schedule (FINAL FIX)
+// ⭐ Schedule (FIXED)
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -315,13 +315,12 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
+    apiKey: LEAGUE_API_KEY,   // ⭐ REQUIRED
     cookie: userCookie
   });
 
   try {
-    // ⭐ USE THE CLIENT'S BUILT-IN METHOD
     const schedule = await client.getSchedule(leagueId);
-
     res.json(schedule);
   } catch (err) {
     console.error("SCHEDULE ERROR:", err.message);
