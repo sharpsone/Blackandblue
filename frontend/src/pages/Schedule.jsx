@@ -1,86 +1,65 @@
-import { useEffect, useState } from "react";
-import { fetchSchedule, fetchLeague } from "../utils/api";
+import React, { useEffect, useState } from "react";
+import { fetchSchedule } from "../utils/api";
 
-function Schedule({ leagueId, year }) {
-  const [schedule, setSchedule] = useState([]);
-  const [franchiseMap, setFranchiseMap] = useState({});
+export default function Schedule({ leagueId, year }) {
+  const [schedule, setSchedule] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ⭐ Format MFL date YYYYMMDD → MM/DD/YYYY
-  function formatDate(raw) {
-    if (!raw) return "";
-    const year = raw.substring(0, 4);
-    const month = raw.substring(4, 6);
-    const day = raw.substring(6, 8);
-    return `${month}/${day}/${year}`;
-  }
-
-  // ⭐ Load league info (team names)
-  useEffect(() => {
-    async function loadLeague() {
-      const league = await fetchLeague(leagueId, year);
-
-      const map = {};
-      league.franchises.franchise.forEach(f => {
-        map[f.id] = f.name;
-      });
-
-      setFranchiseMap(map);
-    }
-
-    loadLeague();
-  }, [leagueId, year]);
-
-  // ⭐ Load schedule
   useEffect(() => {
     async function loadSchedule() {
-      const data = await fetchSchedule(leagueId, year);
-      setSchedule(data.schedule.week);
+      try {
+        const data = await fetchSchedule(leagueId, year);
+
+        // MFL returns: { schedule: { weeklySchedule: [...] } }
+        if (data && data.schedule && data.schedule.weeklySchedule) {
+          setSchedule(data.schedule.weeklySchedule);
+        }
+      } catch (err) {
+        console.error("Failed to load schedule:", err);
+      } finally {
+        setLoading(false);
+      }
     }
+
     loadSchedule();
   }, [leagueId, year]);
 
+  if (loading) return <div>Loading schedule...</div>;
+  if (!schedule) return <div>No schedule data available.</div>;
+
   return (
-    <div style={{ padding: "1rem" }}>
+    <div className="schedule-page">
       <h1>Schedule</h1>
 
       {schedule.map((week) => (
-        <div key={week.week} style={{ marginBottom: "2rem" }}>
+        <div key={week.week} className="week-block">
           <h2>Week {week.week}</h2>
 
-          {week.matchup.map((m, idx) => {
-            const home = franchiseMap[m.home];
-            const away = franchiseMap[m.away];
+          {week.matchup.map((match, idx) => (
+            <div key={idx} className="matchup-row">
+              {match.franchise.map((fr) => (
+                <div key={fr.id} className="team-row">
+                  <div className="team-name">
+                    Franchise {fr.id}
+                  </div>
 
-            return (
-              <div
-                key={idx}
-                style={{
-                  background: "#111",
-                  padding: "1rem",
-                  marginBottom: "1rem",
-                  borderRadius: "8px"
-                }}
-              >
-                <div style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>
-                  {away} @ {home}
-                </div>
+                  <div className="team-score">
+                    {fr.score}
+                  </div>
 
-                <div>Date: {formatDate(m.date)}</div>
+                  <div className={`team-result ${fr.result}`}>
+                    {fr.result}
+                  </div>
 
-                <div style={{ marginTop: "0.5rem" }}>
-                  <strong>{away}</strong>: {m.awayScore} ({m.awayResult})
+                  <div className="team-homeaway">
+                    {fr.isHome === "1" ? "Home" : "Away"}
+                  </div>
                 </div>
-                <div>
-                  <strong>{home}</strong>: {m.homeScore} ({m.homeResult})
-                </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          ))}
         </div>
       ))}
     </div>
   );
 }
-
-export default Schedule;
-v
