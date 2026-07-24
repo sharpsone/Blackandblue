@@ -150,8 +150,8 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    cookie: userCookie,     // ⭐ REQUIRED
-    apiKey: null            // ⭐ REMOVE API KEY
+    cookie: userCookie,   // ⭐ REQUIRED
+    apiKey: null          // ⭐ REMOVE API KEY
   });
 
   try {
@@ -166,7 +166,6 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch league" });
   }
 });
-
 
 // ⭐ Standings
 app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
