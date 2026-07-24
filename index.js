@@ -122,7 +122,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
 
   const client = new MFLClient({
     year,
-    host: DEFAULT_API_HOST,
+    host: "api.myfantasyleague.com",   // ⭐ ALWAYS API HOST
     cookie: userCookie,
     username: mflUsername,
     password: mflPassword
