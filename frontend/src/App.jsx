@@ -14,7 +14,7 @@ import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
 
-import { fetchMyLeagues, loginUser } from "./utils/api";
+import { loginUser } from "./utils/api";
 
 function App() {
   const [page, setPage] = useState("standings");
@@ -39,16 +39,11 @@ function App() {
       return;
     }
 
+    // ⭐ Login succeeded
     setLoggedIn(true);
 
-    try {
-      const leagues = await fetchMyLeagues(year);
-      const myLeague = leagues.leagues.league;
-      setMyFranchiseId(myLeague.franchise_id);
-    } catch (err) {
-      console.error("MYLEAGUES ERROR:", err);
-      setError("Could not load league data");
-    }
+    // ⭐ IMPORTANT: Remove myleagues call (MFL 404s for past seasons)
+    // You already know leagueId and year, so nothing else is needed here.
 
     setPage("standings");
   }
@@ -68,7 +63,7 @@ function App() {
           page={page}
           setPage={setPage}
           year={year}
-          setYear={setYear}   // ⭐ Optional: allows year switching in NavBar later
+          setYear={setYear}
         />
       )}
 
@@ -159,4 +154,3 @@ function App() {
 }
 
 export default App;
-
