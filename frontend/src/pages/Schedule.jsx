@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchSchedule, fetchLeague } from "../utils/api";
 
-// Extract ID from logo/icon/sound filenames
+// Extract franchise ID from logo/icon/sound filenames OR fallback to f.id
 function extractIdFromAssets(franchise) {
   const fields = ["logo", "icon", "sound"];
 
@@ -9,11 +9,38 @@ function extractIdFromAssets(franchise) {
     const val = franchise[field];
     if (val && typeof val === "string") {
       const match = val.match(/franchise_(?:logo|icon|sound)(\d{4})/);
-      if (match) return match[1];
+      if (match) return match[1]; // return the 4-digit ID
     }
   }
 
   return franchise.id || null;
+}
+
+// Extract franchise name from multiple possible fields
+function extractName(franchise, id) {
+  if (franchise.name) return franchise.name;
+  if (franchise.franchiseName) return franchise.franchiseName;
+  if (franchise.owner_name) return franchise.owner_name;
+  if (franchise.username) return franchise.username;
+  if (franchise.abbrev) return franchise.abbrev;
+
+  // Derive name from logo/icon filename if needed
+  const fields = ["logo", "icon"];
+  for (const field of fields) {
+    const val = franchise[field];
+    if (val && typeof val === "string") {
+      const match = val.match(/franchise_logo(\d{4})/);
+      if (match) return `Franchise ${match[1]}`;
+    }
+  }
+
+  return `Franchise ${id}`;
+}
+
+// Format YYYYMMDD → MM/DD/YYYY
+function formatDate(raw) {
+  if (!raw) return "";
+  return `${raw.substring(4, 6)}/${raw.substring(6, 8)}/${raw.substring(0, 4)}`;
 }
 
 function Schedule({ leagueId, year }) {
@@ -21,12 +48,7 @@ function Schedule({ leagueId, year }) {
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  function formatDate(raw) {
-    if (!raw) return "";
-    return `${raw.substring(4, 6)}/${raw.substring(6, 8)}/${raw.substring(0, 4)}`;
-  }
-
-  // Load league info
+  // Load league info (team names + logos)
   useEffect(() => {
     async function loadLeague() {
       const league = await fetchLeague(leagueId, year);
@@ -38,10 +60,10 @@ function Schedule({ leagueId, year }) {
         const id = extractIdFromAssets(f);
         if (!id) return;
 
-        map[id] = {
-          name: f.name || `Franchise ${id}`,
-          logo: f.logo || f.icon || null
-        };
+        const name = extractName(f, id);
+        const logo = f.logo || f.icon || null;
+
+        map[id] = { name, logo };
       });
 
       setFranchiseMap(map);
@@ -63,15 +85,16 @@ function Schedule({ leagueId, year }) {
     loadSchedule();
   }, [leagueId, year]);
 
-  if (loading) return <div>Loading schedule...</div>;
-  if (!weeks.length) return <div>No schedule data found.</div>;
+  if (loading) return <div style={{ padding: "1rem" }}>Loading schedule...</div>;
+  if (!weeks.length) return <div style={{ padding: "1rem" }}>No schedule data found.</div>;
 
   return (
     <div style={{ padding: "1rem" }}>
-      <h1>Schedule</h1>
+      <h1 style={{ marginBottom: "1rem" }}>Schedule</h1>
 
       {weeks.map((weekObj, idx) => (
         <div key={idx} style={{ marginBottom: "2rem" }}>
+          {/* ⭐ WEEK DIVIDER */}
           <div
             style={{
               fontSize: "1.4rem",
@@ -91,6 +114,12 @@ function Schedule({ leagueId, year }) {
             const awayInfo = franchiseMap[away.id] || {};
             const homeInfo = franchiseMap[home.id] || {};
 
+            const awayName = awayInfo.name || `Franchise ${away.id}`;
+            const homeName = homeInfo.name || `Franchise ${home.id}`;
+
+            const awayLogo = awayInfo.logo;
+            const homeLogo = homeInfo.logo;
+
             const awayColor = away.result === "W" ? "#0f0" : "#f44";
             const homeColor = home.result === "W" ? "#0f0" : "#f44";
 
@@ -104,25 +133,43 @@ function Schedule({ leagueId, year }) {
                   borderRadius: "8px"
                 }}
               >
+                {/* ⭐ Matchup header */}
                 <div style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
-                  {awayInfo.name} @ {homeInfo.name}
+                  {awayName} @ {homeName}
                 </div>
 
+                {/* ⭐ Logos */}
                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                  {awayInfo.logo && (
-                    <img src={awayInfo.logo} alt="" style={{ width: 40, height: 40 }} />
+                  {awayLogo && (
+                    <img
+                      src={awayLogo}
+                      alt={awayName}
+                      style={{ width: 40, height: 40, borderRadius: "6px" }}
+                    />
                   )}
-                  {homeInfo.logo && (
-                    <img src={homeInfo.logo} alt="" style={{ width: 40, height: 40 }} />
+                  {homeLogo && (
+                    <img
+                      src={homeLogo}
+                      alt={homeName}
+                      style={{ width: 40, height: 40, borderRadius: "6px" }}
+                    />
                   )}
                 </div>
 
+                {/* ⭐ Date */}
+                {m.date && (
+                  <div style={{ opacity: 0.7, marginTop: "0.5rem" }}>
+                    Date: {formatDate(m.date)}
+                  </div>
+                )}
+
+                {/* ⭐ Scores */}
                 <div style={{ marginTop: "0.5rem" }}>
-                  <strong style={{ color: awayColor }}>{awayInfo.name}</strong>:{" "}
+                  <strong style={{ color: awayColor }}>{awayName}</strong>:{" "}
                   {away.score} ({away.result})
                 </div>
                 <div>
-                  <strong style={{ color: homeColor }}>{homeInfo.name}</strong>:{" "}
+                  <strong style={{ color: homeColor }}>{homeName}</strong>:{" "}
                   {home.score} ({home.result})
                 </div>
               </div>
