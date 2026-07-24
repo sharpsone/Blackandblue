@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchSchedule, fetchLeagueStandings } from "../utils/api";
+import { fetchSchedule, fetchLeague } from "../utils/api";
 
 // Format YYYYMMDD → MM/DD/YYYY
 function formatDate(raw) {
@@ -12,18 +12,19 @@ function Schedule({ leagueId, year }) {
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // ⭐ Load franchise names + logos from LEAGUE STANDINGS (most reliable)
+  // ⭐ Load franchise names + logos from fetchLeague (same as Standings)
   useEffect(() => {
     async function loadFranchises() {
-      const standings = await fetchLeagueStandings(leagueId, year);
-      console.log("LEAGUE STANDINGS RAW:", standings);
+      const leagueJson = await fetchLeague(leagueId, year);
+      console.log("LEAGUE RAW:", leagueJson);
+
+      const franchiseList = leagueJson.league.franchises.franchise || [];
 
       const map = {};
-
-      standings?.leagueStandings?.franchise?.forEach(f => {
+      franchiseList.forEach(f => {
         map[f.id] = {
           name: f.name || `Franchise ${f.id}`,
-          logo: f.icon || f.logo || null
+          logo: f.icon || null
         };
       });
 
