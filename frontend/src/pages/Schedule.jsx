@@ -25,6 +25,8 @@ function Schedule({ leagueId, year }) {
     async function loadLeague() {
       const league = await fetchLeague(leagueId, year);
 
+      console.log("LEAGUE RAW:", league);
+
       const map = {};
       if (league?.franchises?.franchise) {
         league.franchises.franchise.forEach(f => {
