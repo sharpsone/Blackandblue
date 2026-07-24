@@ -116,23 +116,20 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ My Leagues — FIXED per MFL docs (USERNAME + PASSWORD + COOKIE, no APIKEY)
+// ⭐ My Leagues — FIXED
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
   const client = new MFLClient({
     year,
     host: DEFAULT_API_HOST,
-    cookie: userCookie
+    cookie: userCookie,
+    username: mflUsername,
+    password: mflPassword
   });
 
   try {
-    const leagues = await client.request("export", {
-      TYPE: "myleagues",
-      USERNAME: mflUsername,
-      PASSWORD: mflPassword
-    });
-
+    const leagues = await client.getMyLeagues();
     res.json(leagues);
   } catch (err) {
     console.error("MYLEAGUES ERROR:", err.message);
@@ -140,7 +137,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ League Info (FINAL FIX)
+// ⭐ League Info — FIXED
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -150,22 +147,20 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    cookie: userCookie,   // ⭐ REQUIRED
-    apiKey: null          // ⭐ REMOVE API KEY
+    cookie: userCookie,
+    username: mflUsername,
+    password: mflPassword
   });
 
   try {
-    const league = await client.request("league", {
-      L: leagueId,
-      JSON: 1
-    });
-
+    const league = await client.getLeague(leagueId);
     res.json(league);
   } catch (err) {
     console.error("LEAGUE ERROR:", err.message);
     res.status(500).json({ error: "Failed to fetch league" });
   }
 });
+
 
 // ⭐ Standings
 app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
@@ -305,7 +300,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Schedule (FIXED)
+// ⭐ Schedule — FIXED
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -315,7 +310,7 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY,   // ⭐ REQUIRED
+    apiKey: LEAGUE_API_KEY,
     cookie: userCookie
   });
 
@@ -327,7 +322,6 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch schedule" });
   }
 });
-
 
 // ⭐ Transactions
 app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
