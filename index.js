@@ -301,7 +301,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Schedule
+// ⭐ Schedule (FIXED)
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -311,18 +311,23 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY,
     cookie: userCookie
   });
 
   try {
-    const schedule = await client.request("schedule", { L: leagueId });
+    const schedule = await client.request("export", {
+      TYPE: "schedule",
+      L: leagueId,
+      JSON: 1
+    });
+
     res.json(schedule);
   } catch (err) {
     console.error("SCHEDULE ERROR:", err.message);
     res.status(500).json({ error: "Failed to fetch schedule" });
   }
 });
+
 
 // ⭐ Transactions
 app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
