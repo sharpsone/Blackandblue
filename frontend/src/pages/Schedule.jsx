@@ -126,4 +126,20 @@ function Schedule({ leagueId, year }) {
 
                 {/* ⭐ Scores */}
                 <div style={{ marginTop: "0.5rem" }}>
-                  <strong style={{ color: awayColor }}>{awayName}</strong>
+                  <strong style={{ color: awayColor }}>{awayName}</strong>:{" "}
+                  {away.score} ({away.result})
+                </div>
+                <div>
+                  <strong style={{ color: homeColor }}>{homeName}</strong>:{" "}
+                  {home.score} ({home.result})
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default Schedule;
