@@ -140,7 +140,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ League Info
+// ⭐ League Info (FINAL FIX)
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -150,18 +150,23 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const client = new MFLClient({
     year,
     host,
-    apiKey: LEAGUE_API_KEY,
-    cookie: userCookie
+    cookie: userCookie,     // ⭐ REQUIRED
+    apiKey: null            // ⭐ REMOVE API KEY
   });
 
   try {
-    const league = await client.getLeague(leagueId);
+    const league = await client.request("league", {
+      L: leagueId,
+      JSON: 1
+    });
+
     res.json(league);
   } catch (err) {
     console.error("LEAGUE ERROR:", err.message);
     res.status(500).json({ error: "Failed to fetch league" });
   }
 });
+
 
 // ⭐ Standings
 app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
