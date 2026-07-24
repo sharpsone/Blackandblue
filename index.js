@@ -34,8 +34,8 @@ const DEFAULT_API_HOST = "api.myfantasyleague.com";
 const LEAGUE_API_KEY = "ahVp3s+SvuWqx1qmOVDGZDUeFKUtiQ==";
 
 let userCookie = null;
-let mflUsername = null;   // ⭐ store username globally
-let mflPassword = null;   // ⭐ store password globally
+let mflUsername = null;
+let mflPassword = null;
 
 // ⭐ Cache detected hosts per year
 const hostCache = {};
@@ -81,7 +81,6 @@ app.post("/api/login", async (req, res) => {
   const year = getYear(req);
 
   try {
-    // ⭐ store credentials in memory for this session
     mflUsername = username;
     mflPassword = password;
 
@@ -116,7 +115,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ My Leagues — FINAL FIX
+// ⭐ My Leagues — FINAL FIX (ONLY THIS VERSION)
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
@@ -137,8 +136,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
   }
 });
 
-
-// ⭐ League Info — FIXED
+// ⭐ League Info
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -161,7 +159,6 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch league" });
   }
 });
-
 
 // ⭐ Standings
 app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
@@ -301,7 +298,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Schedule — FIXED
+// ⭐ Schedule
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
