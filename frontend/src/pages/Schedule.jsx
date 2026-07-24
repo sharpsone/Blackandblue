@@ -15,18 +15,17 @@ function Schedule({ leagueId, year }) {
   // Load franchise names + logos from STANDINGS (most reliable)
   useEffect(() => {
     async function loadFranchises() {
-      const standings = await fetchStandings(leagueId, year);
-      console.log("STANDINGS RAW:", standings);
+    const standings = await fetchLeagueStandings(leagueId, year);
+    console.log("LEAGUE STANDINGS RAW:", standings);
 
-      const map = {};
-
-      standings?.franchise?.forEach(f => {
-        map[f.id] = {
-          name: f.name || `Franchise ${f.id}`,
-          logo: f.icon || f.logo || null
-        };
-      });
-
+    const map = {};
+    standings?.leagueStandings?.franchise?.forEach(f => {
+      map[f.id] = {
+        name: f.name,
+        logo: f.icon || f.logo || null
+      };
+    });
+    
       setFranchiseMap(map);
     }
 

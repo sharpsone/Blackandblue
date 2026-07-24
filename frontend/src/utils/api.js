@@ -46,6 +46,16 @@ export async function fetchStandings(leagueId, year) {
   return res.json();
 }
 
+/* ⭐ LEAGUE STANDINGS — SAFE NEW FUNCTION */
+export async function fetchLeagueStandings(leagueId, year) {
+  const res = await fetch(
+    `${API_BASE}/api/leagueStandings/${leagueId}?year=${year}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+
 /* ⭐ ROSTER — FIXED (your old version was wrong) */
 export async function fetchRoster(leagueId, franchiseId, year) {
   const res = await fetch(
