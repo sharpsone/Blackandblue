@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchSchedule, fetchLeague, fetchStandings } from "../utils/api";
+import { fetchSchedule, fetchLeagueStandings } from "../utils/api";
 
 // Format YYYYMMDD → MM/DD/YYYY
 function formatDate(raw) {
@@ -12,27 +12,28 @@ function Schedule({ leagueId, year }) {
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Load franchise names + logos from STANDINGS (most reliable)
+  // ⭐ Load franchise names + logos from LEAGUE STANDINGS (most reliable)
   useEffect(() => {
     async function loadFranchises() {
-    const standings = await fetchLeagueStandings(leagueId, year);
-    console.log("LEAGUE STANDINGS RAW:", standings);
+      const standings = await fetchLeagueStandings(leagueId, year);
+      console.log("LEAGUE STANDINGS RAW:", standings);
 
-    const map = {};
-    standings?.leagueStandings?.franchise?.forEach(f => {
-      map[f.id] = {
-        name: f.name,
-        logo: f.icon || f.logo || null
-      };
-    });
-    
+      const map = {};
+
+      standings?.leagueStandings?.franchise?.forEach(f => {
+        map[f.id] = {
+          name: f.name || `Franchise ${f.id}`,
+          logo: f.icon || f.logo || null
+        };
+      });
+
       setFranchiseMap(map);
     }
 
     loadFranchises();
   }, [leagueId, year]);
 
-  // Load schedule
+  // ⭐ Load schedule
   useEffect(() => {
     async function loadSchedule() {
       const data = await fetchSchedule(leagueId, year);
@@ -125,20 +126,4 @@ function Schedule({ leagueId, year }) {
 
                 {/* ⭐ Scores */}
                 <div style={{ marginTop: "0.5rem" }}>
-                  <strong style={{ color: awayColor }}>{awayName}</strong>:{" "}
-                  {away.score} ({away.result})
-                </div>
-                <div>
-                  <strong style={{ color: homeColor }}>{homeName}</strong>:{" "}
-                  {home.score} ({home.result})
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export default Schedule;
+                  <strong style={{ color: awayColor }}>{awayName}</strong>
