@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { fetchSchedule, fetchLeague } from "../utils/api";
 
+// Normalize IDs so "12" becomes "0012"
+function normalizeId(id) {
+  return id.toString().padStart(4, "0");
+}
+
 function Schedule({ leagueId, year }) {
   const [weeks, setWeeks] = useState([]);
   const [franchiseMap, setFranchiseMap] = useState({});
@@ -23,7 +28,8 @@ function Schedule({ leagueId, year }) {
       const map = {};
       if (league?.franchises?.franchise) {
         league.franchises.franchise.forEach(f => {
-          map[f.id] = {
+          const normalized = normalizeId(f.id);
+          map[normalized] = {
             name: f.name,
             logo: f.icon || null
           };
@@ -84,8 +90,8 @@ function Schedule({ leagueId, year }) {
               const home = m.franchise[1];
               const away = m.franchise[0];
 
-              const homeInfo = franchiseMap[home.id] || {};
-              const awayInfo = franchiseMap[away.id] || {};
+              const homeInfo = franchiseMap[normalizeId(home.id)] || {};
+              const awayInfo = franchiseMap[normalizeId(away.id)] || {};
 
               const homeName = homeInfo.name || `Franchise ${home.id}`;
               const awayName = awayInfo.name || `Franchise ${away.id}`;
