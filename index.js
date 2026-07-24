@@ -116,7 +116,7 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ My Leagues — FIXED
+// ⭐ My Leagues — FINAL FIX
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
@@ -136,6 +136,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch my leagues" });
   }
 });
+
 
 // ⭐ League Info — FIXED
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
