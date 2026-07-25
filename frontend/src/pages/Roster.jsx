@@ -5,7 +5,12 @@ import { fetchRoster } from "../utils/api";
 
 export default function Roster({ leagueId, myFranchiseId }) {
   const [players, setPlayers] = useState([]);
-  const [grouped, setGrouped] = useState({});
+  const [grouped, setGrouped] = useState({
+    starters: [],
+    bench: [],
+    ir: [],
+    taxi: []
+  });
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -16,11 +21,18 @@ export default function Roster({ leagueId, myFranchiseId }) {
     try {
       const rosterJson = await fetchRoster(leagueId, myFranchiseId);
 
-      // ⭐ DEBUG: Show the real backend response
+      // ⭐ DEBUG: Always show the raw backend response
       console.log("ROSTER RAW:", rosterJson);
 
+      // ⭐ SAFE PARSING — prevents undefined.length crash
       const list =
-        rosterJson?.rosters?.franchise?.players?.player || [];
+        rosterJson?.rosters?.franchise?.players?.player ??
+        rosterJson?.roster?.players ??
+        rosterJson?.players ??
+        [];
+
+      // Ensure list is always an array
+      const safeList = Array.isArray(list) ? list : [list];
 
       const groupedPlayers = {
         starters: [],
@@ -29,7 +41,9 @@ export default function Roster({ leagueId, myFranchiseId }) {
         taxi: []
       };
 
-      list.forEach(p => {
+      safeList.forEach(p => {
+        if (!p) return;
+
         const slot = p.status?.toLowerCase() || "bench";
 
         if (slot.includes("starter")) groupedPlayers.starters.push(p);
@@ -38,7 +52,7 @@ export default function Roster({ leagueId, myFranchiseId }) {
         else groupedPlayers.bench.push(p);
       });
 
-      setPlayers(list);
+      setPlayers(safeList);
       setGrouped(groupedPlayers);
     } catch (err) {
       console.error("ROSTER ERROR:", err);
@@ -62,11 +76,11 @@ export default function Roster({ leagueId, myFranchiseId }) {
           {title}
         </h2>
 
-        {list.length === 0 && (
+        {(!list || list.length === 0) && (
           <p style={{ color: "#aaa" }}>No players in this group</p>
         )}
 
-        {list.map(player => (
+        {list?.map(player => (
           <PlayerCard key={player.id} player={player} />
         ))}
       </div>
@@ -90,6 +104,8 @@ export default function Roster({ leagueId, myFranchiseId }) {
 }
 
 function PlayerCard({ player }) {
+  if (!player) return null;
+
   const {
     id,
     name,
@@ -118,10 +134,12 @@ function PlayerCard({ player }) {
     >
       {/* Player Name + Badges */}
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{ fontWeight: "bold", fontSize: "16px" }}>{name}</span>
+        <span style={{ fontWeight: "bold", fontSize: "16px" }}>
+          {name || "Unknown Player"}
+        </span>
 
         <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.25rem" }}>
-          <Badge text={position} color="#00aaff" />
+          <Badge text={position || "?"} color="#00aaff" />
           <Badge text={team || "FA"} color="#003566" />
         </div>
       </div>
