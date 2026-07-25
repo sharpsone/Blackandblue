@@ -1,6 +1,6 @@
 const API_BASE = "https://blackandblue.onrender.com";
 
-/* ⭐ LOGIN — NOW INCLUDES YEAR */
+/* ⭐ LOGIN — includes year */
 export async function loginUser(username, password, year = "2025") {
   const res = await fetch(`${API_BASE}/api/login?year=${year}`, {
     method: "POST",
@@ -11,15 +11,7 @@ export async function loginUser(username, password, year = "2025") {
   return res.json();
 }
 
-/* ⭐ MY LEAGUES */
-export async function fetchMyLeagues(year = "2025") {
-  const res = await fetch(`${API_BASE}/api/myleagues?year=${year}`, {
-    credentials: "include"
-  });
-  return res.json();
-}
-
-/* ⭐ LEAGUE DETAILS */
+/* ⭐ LEAGUE INFO */
 export async function fetchLeague(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/league/${leagueId}?year=${year}`,
@@ -37,7 +29,8 @@ export async function fetchRoster(leagueId, franchiseId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ OTHER ENDPOINTS (unchanged except default year) */
+/* ⭐ OTHER ENDPOINTS */
+
 export async function fetchStandings(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/standings/${leagueId}?year=${year}`,

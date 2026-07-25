@@ -3,12 +3,10 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MFLClient = require("./mflClient");
 
-// ⭐ REQUIRED for Node 18+ in CommonJS
 const fetch = global.fetch;
 
 const app = express();
 
-// ⭐ CORS for Vercel frontend
 app.use(
   cors({
     origin: "https://blackandblue.vercel.app",
@@ -21,16 +19,13 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// ⭐ Health Check
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// ⭐ Server Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 
-// ⭐ Defaults
 const DEFAULT_YEAR = "2026";
 const DEFAULT_API_HOST = "api.myfantasyleague.com";
 const LEAGUE_API_KEY = "ahVp3s+SvuWqx1qmOVDGZDUeFKUtiQ==";
@@ -39,10 +34,8 @@ let userCookie = null;
 let mflUsername = null;
 let mflPassword = null;
 
-// ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ Host Detection
 async function detectMFLHost(year, leagueId) {
   if (year === "2025") {
     const fixedHost = "www44.myfantasyleague.com";
@@ -72,12 +65,10 @@ async function detectMFLHost(year, leagueId) {
   }
 }
 
-// ⭐ Helper: get year from query or fallback
 function getYear(req) {
   return req.query.year || DEFAULT_YEAR;
 }
 
-// ⭐ LOGIN
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   const year = getYear(req);
@@ -109,7 +100,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// ⭐ Require login middleware
 function requireLogin(req, res, next) {
   if (!userCookie || !mflUsername || !mflPassword) {
     return res.status(401).json({ error: "Not logged in" });
@@ -117,58 +107,47 @@ function requireLogin(req, res, next) {
   next();
 }
 
-/* ============================================================
-   ⭐ ROUTES — ORDER MATTERS
-   ============================================================ */
+/* ⭐ ROSTERS */
+app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
+  try {
+    const { leagueId } = req.params;
+    const { franchiseId } = req.query;
+    const year = getYear(req);
 
-/* ============================================================
-   ⭐ ROSTERS — MUST BE ABOVE /api/league/:leagueId
-   ============================================================ */
-  app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
-    try {
-      const { leagueId } = req.params;
-      const { franchiseId } = req.query;
-      const year = getYear(req);
+    const host = await detectMFLHost(year, leagueId);
 
-      // ⭐ Correct host detection
-      const host = await detectMFLHost(year, leagueId);
+    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 
-      // ⭐ Correct MFL JSON endpoint
-      const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
+    console.log("ROSTER URL:", url);
 
-      console.log("ROSTER URL:", url);
+    const response = await fetch(url);
+    const text = await response.text();
 
-      const response = await fetch(url);
-      const text = await response.text();
+    if (text.startsWith("<")) {
+      console.error("MFL returned HTML instead of JSON:", text.slice(0, 200));
+      return res
+        .status(500)
+        .json({ error: "MFL returned HTML instead of JSON" });
+    }
 
-      // ⭐ Detect HTML error page
-      if (text.startsWith("<")) {
-        console.error("MFL returned HTML instead of JSON:", text.slice(0, 200));
-        return res.status(500).json({ error: "MFL returned HTML instead of JSON" });
-      }
+    const data = JSON.parse(text);
 
-      const data = JSON.parse(text);
-
-      return res.json({
-        rosters: {
-          franchise: {
-            players: {
-              player: data?.rosters?.franchise?.players?.player || []
-            }
+    return res.json({
+      rosters: {
+        franchise: {
+          players: {
+            player: data?.rosters?.franchise?.players?.player || []
           }
         }
-      });
+      }
+    });
+  } catch (error) {
+    console.error("ROSTER BACKEND ERROR:", error);
+    res.status(500).json({ error: "Failed to fetch rosters" });
+  }
+});
 
-    } catch (error) {
-      console.error("ROSTER BACKEND ERROR:", error);
-      res.status(500).json({ error: "Failed to fetch rosters" });
-    }
-  });
-
-
-/* ============================================================
-   ⭐ LEAGUE INFO
-   ============================================================ */
+/* ⭐ LEAGUE INFO */
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -192,9 +171,7 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ MY LEAGUES
-   ============================================================ */
+/* ⭐ MY LEAGUES (still available, but no longer critical) */
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   const year = getYear(req);
 
@@ -215,9 +192,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ STANDINGS
-   ============================================================ */
+/* ⭐ STANDINGS */
 app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -240,9 +215,7 @@ app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ LIVE SCORING
-   ============================================================ */
+/* ⭐ LIVE SCORING */
 app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -265,9 +238,7 @@ app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ MATCHUPS
-   ============================================================ */
+/* ⭐ MATCHUPS */
 app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -290,9 +261,7 @@ app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ FREE AGENTS
-   ============================================================ */
+/* ⭐ FREE AGENTS */
 app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -315,9 +284,7 @@ app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ MESSAGE BOARD
-   ============================================================ */
+/* ⭐ MESSAGE BOARD */
 app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -340,9 +307,7 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ SCHEDULE
-   ============================================================ */
+/* ⭐ SCHEDULE */
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -365,9 +330,7 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ TRANSACTIONS
-   ============================================================ */
+/* ⭐ TRANSACTIONS */
 app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -390,9 +353,7 @@ app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ PLAYER STATS
-   ============================================================ */
+/* ⭐ PLAYER STATS */
 app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -415,9 +376,7 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ DRAFT RESULTS
-   ============================================================ */
+/* ⭐ DRAFT RESULTS */
 app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -440,9 +399,7 @@ app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-/* ============================================================
-   ⭐ PLAYOFF BRACKET
-   ============================================================ */
+/* ⭐ PLAYOFF BRACKET */
 app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -464,4 +421,3 @@ app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch playoff bracket" });
   }
 });
-

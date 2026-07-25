@@ -81,8 +81,6 @@ class MFLClient {
   async getMyLeagues() {
     const raw = await this.request("myleagues", {});
 
-    console.log("BACKEND RAW MYLEAGUES:", raw);
-
     if (raw?.myleagues?.league) {
       return raw;
     }

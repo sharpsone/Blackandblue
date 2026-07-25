@@ -14,7 +14,10 @@ import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
 
-import { loginUser, fetchMyLeagues } from "./utils/api";
+import {
+  loginUser,
+  fetchLeague
+} from "./utils/api";
 
 function App() {
   const [page, setPage] = useState("standings");
@@ -49,29 +52,31 @@ function App() {
     setLoggedIn(true);
 
     try {
-      const leagues = await fetchMyLeagues(year);
+      const leagueInfo = await fetchLeague(leagueId, year);
 
-      console.log("MYLEAGUES RAW:", leagues);
-      console.log("NORMALIZED LEAGUES:", leagues?.myleagues?.league);
+      const franchises =
+        leagueInfo?.league?.franchises?.franchise || [];
 
-      const myLeague = leagues?.myleagues?.league?.find(
-        (l) => l.id === leagueId
+      const myFranchise = franchises.find(
+        (f) =>
+          f.username?.toLowerCase() === username.toLowerCase() ||
+          f.email?.toLowerCase() === username.toLowerCase()
       );
 
-      if (!myLeague) {
-        console.error("❌ Could not find league in myleagues response");
+      if (!myFranchise) {
+        console.error("❌ Could not match username/email to any franchise");
         setError("Could not determine franchise ID");
         return;
       }
 
-      const franchise = myLeague.franchise;
+      const franchise = myFranchise.id;
 
       console.log("✔ DETECTED FRANCHISE ID:", franchise);
 
       setMyFranchiseId(franchise);
       localStorage.setItem("myFranchiseId", franchise);
     } catch (err) {
-      console.error("MYLEAGUES ERROR:", err);
+      console.error("FRANCHISE DETECTION ERROR:", err);
       setError("Failed to load league info");
     }
 
@@ -101,7 +106,7 @@ function App() {
           <h1>Black & Blue League Login</h1>
 
           <input
-            placeholder="MFL Username"
+            placeholder="MFL Username or Email"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             style={{ display: "block", marginBottom: "1rem" }}
@@ -122,25 +127,60 @@ function App() {
       ) : (
         <>
           {page === "standings" && (
-            <Standings leagueId={leagueId} myFranchiseId={myFranchiseId} year={year} />
+            <Standings
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
           )}
 
           {page === "roster" && (
-            <Roster leagueId={leagueId} myFranchiseId={myFranchiseId} year={year} />
+            <Roster
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
           )}
 
           {page === "live" && (
-            <LiveScoring leagueId={leagueId} myFranchiseId={myFranchiseId} year={year} />
+            <LiveScoring
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
           )}
 
-          {page === "matchups" && <Matchups leagueId={leagueId} year={year} />}
-          {page === "playerstats" && <PlayerStats leagueId={leagueId} year={year} />}
-          {page === "transactions" && <Transactions leagueId={leagueId} year={year} />}
-          {page === "draft" && <DraftResults leagueId={leagueId} year={year} />}
-          {page === "messages" && <MessageBoard leagueId={leagueId} year={year} />}
-          {page === "freeagents" && <FreeAgents leagueId={leagueId} year={year} />}
-          {page === "schedule" && <Schedule leagueId={leagueId} year={year} />}
-          {page === "playoffs" && <PlayoffBracket leagueId={leagueId} year={year} />}
+          {page === "matchups" && (
+            <Matchups leagueId={leagueId} year={year} />
+          )}
+
+          {page === "playerstats" && (
+            <PlayerStats leagueId={leagueId} year={year} />
+          )}
+
+          {page === "transactions" && (
+            <Transactions leagueId={leagueId} year={year} />
+          )}
+
+          {page === "draft" && (
+            <DraftResults leagueId={leagueId} year={year} />
+          )}
+
+          {page === "messages" && (
+            <MessageBoard leagueId={leagueId} year={year} />
+          )}
+
+          {page === "freeagents" && (
+            <FreeAgents leagueId={leagueId} year={year} />
+          )}
+
+          {page === "schedule" && (
+            <Schedule leagueId={leagueId} year={year} />
+          )}
+
+          {page === "playoffs" && (
+            <PlayoffBracket leagueId={leagueId} year={year} />
+          )}
         </>
       )}
     </div>
