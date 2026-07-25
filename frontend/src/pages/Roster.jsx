@@ -16,7 +16,11 @@ export default function Roster({ leagueId, myFranchiseId }) {
     try {
       const rosterJson = await fetchRoster(leagueId, myFranchiseId);
 
-      const list = rosterJson.rosters.franchise.players.player || [];
+      // ⭐ DEBUG: Show the real backend response
+      console.log("ROSTER RAW:", rosterJson);
+
+      const list =
+        rosterJson?.rosters?.franchise?.players?.player || [];
 
       const groupedPlayers = {
         starters: [],
