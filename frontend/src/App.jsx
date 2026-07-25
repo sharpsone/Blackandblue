@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 import NavBar from "./components/NavBar";
@@ -14,21 +14,32 @@ import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
 
-import { loginUser } from "./utils/api";
+import { loginUser, fetchMyLeagues } from "./utils/api";
 
 function App() {
   const [page, setPage] = useState("standings");
   const [loggedIn, setLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [myFranchiseId, setMyFranchiseId] = useState(null);
+
+  // ⭐ Load stored franchise ID if available
+  const [myFranchiseId, setMyFranchiseId] = useState(
+    localStorage.getItem("myFranchiseId") || null
+  );
 
   const [leagueId] = useState("19757");
 
-  // ⭐ GLOBAL YEAR — change this once, entire site updates
+  // ⭐ GLOBAL YEAR
   const [year, setYear] = useState("2025");
 
   const [error, setError] = useState(null);
+
+  // ⭐ If franchise ID was stored earlier, auto-login UI
+  useEffect(() => {
+    if (localStorage.getItem("myFranchiseId")) {
+      setLoggedIn(true);
+    }
+  }, []);
 
   async function login() {
     setError(null);
@@ -42,8 +53,32 @@ function App() {
     // ⭐ Login succeeded
     setLoggedIn(true);
 
-    // ⭐ IMPORTANT: Remove myleagues call (MFL 404s for past seasons)
-    // You already know leagueId and year, so nothing else is needed here.
+    // ⭐ Fetch user's leagues to determine franchise ID
+    try {
+      const leagues = await fetchMyLeagues(year);
+
+      console.log("MYLEAGUES RAW:", leagues);
+
+      const myLeague = leagues?.myleagues?.league?.find(
+        (l) => l.id === leagueId
+      );
+
+      if (!myLeague) {
+        console.error("❌ Could not find league in myleagues response");
+        setError("Could not determine franchise ID");
+        return;
+      }
+
+      const franchise = myLeague.franchise;
+
+      console.log("✔ DETECTED FRANCHISE ID:", franchise);
+
+      setMyFranchiseId(franchise);
+      localStorage.setItem("myFranchiseId", franchise);
+    } catch (err) {
+      console.error("MYLEAGUES ERROR:", err);
+      setError("Failed to load league info");
+    }
 
     setPage("standings");
   }
@@ -154,3 +189,4 @@ function App() {
 }
 
 export default App;
+
