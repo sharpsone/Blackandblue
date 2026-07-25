@@ -1,18 +1,11 @@
 const fetch = global.fetch;
 
-// ⭐ Utility: build URL with query params
 function buildUrl(host, year, endpoint, params = {}) {
   const query = new URLSearchParams(params).toString();
   return `https://${host}/${year}/${endpoint}${query ? "?" + query : ""}`;
 }
 
-// ⭐ Endpoints that require USERNAME + PASSWORD + COOKIE (no APIKEY)
-const PRIVATE_TYPES = new Set([
-  "league",
-  "myleagues"
-]);
-
-// ⭐ Endpoints that allow APIKEY + COOKIE
+const PRIVATE_TYPES = new Set(["league", "myleagues"]);
 const PUBLIC_TYPES = new Set([
   "leagueStandings",
   "schedule",
@@ -36,7 +29,6 @@ class MFLClient {
     this.password = password;
   }
 
-  // ⭐ LOGIN — must use API host
   async login(username, password) {
     this.username = username;
     this.password = password;
@@ -48,72 +40,58 @@ class MFLClient {
       { USERNAME: username, PASSWORD: password }
     );
 
-    const res = await fetch(url, {
-      method: "GET",
-      redirect: "manual"
-    });
-
+    const res = await fetch(url, { method: "GET", redirect: "manual" });
     const setCookie = res.headers.get("set-cookie");
-    if (!setCookie) {
-      throw new Error("No cookie returned from MFL login");
-    }
+
+    if (!setCookie) throw new Error("No cookie returned from MFL login");
 
     this.cookie = setCookie;
     return setCookie;
   }
 
-  // ⭐ Automatic mode detection
   async request(type, params = {}) {
     let finalParams = { TYPE: type, ...params };
 
-    // ⭐ PRIVATE MODE (league, myleagues)
     if (PRIVATE_TYPES.has(type)) {
       finalParams.USERNAME = this.username;
       finalParams.PASSWORD = this.password;
     }
 
-    // ⭐ PUBLIC MODE (standings, schedule, rosters, etc.)
-    if (PUBLIC_TYPES.has(type)) {
-      if (this.apiKey) {
-        finalParams.APIKEY = this.apiKey;
-      }
+    if (PUBLIC_TYPES.has(type) && this.apiKey) {
+      finalParams.APIKEY = this.apiKey;
     }
 
-    // ⭐ Always return JSON
     finalParams.JSON = 1;
 
     const url = buildUrl(this.host, this.year, "export", finalParams);
 
     const res = await fetch(url, {
-      headers: {
-        Cookie: this.cookie || ""
-      }
+      headers: { Cookie: this.cookie || "" }
     });
 
-    if (!res.ok) {
-      throw new Error(`MFL request failed: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`MFL request failed: ${res.status}`);
 
     return res.json();
   }
 
-  // ⭐ Correct MFL endpoints
   async getLeague(leagueId) {
     return this.request("league", { L: leagueId });
   }
 
-  // ⭐ FIXED — normalize legacy + modern formats
+  // ⭐ FINAL FIX — ALWAYS NORMALIZE
   async getMyLeagues() {
     const raw = await this.request("myleagues", {});
 
-    // ⭐ Case 1: Modern JSON format (2026+)
+    console.log("BACKEND RAW MYLEAGUES:", raw);
+
+    // Modern format
     if (raw?.myleagues?.league) {
       return raw;
     }
 
-    // ⭐ Case 2: Legacy JSON format (2025 and earlier)
+    // Legacy format
     if (raw?.Leagues?.League) {
-      const normalized = {
+      return {
         myleagues: {
           league: raw.Leagues.League.map((l) => ({
             id: l.league_id,
@@ -124,11 +102,9 @@ class MFLClient {
           }))
         }
       };
-
-      return normalized;
     }
 
-    // ⭐ Unknown format fallback
+    // Fallback
     return { myleagues: { league: [] } };
   }
 
