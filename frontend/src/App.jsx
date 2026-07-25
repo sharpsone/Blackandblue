@@ -25,19 +25,18 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const [myFranchiseId, setMyFranchiseId] = useState(
-    localStorage.getItem("myFranchiseId") || null
-  );
+  const [myFranchiseId, setMyFranchiseId] = useState(null);
 
   const [leagueId] = useState("19757");
   const [year, setYear] = useState("2025");
 
   const [error, setError] = useState(null);
 
+  // ⭐ FIX: Always start logged out on refresh
   useEffect(() => {
-    if (localStorage.getItem("myFranchiseId")) {
-      setLoggedIn(true);
-    }
+    setLoggedIn(false);
+    setMyFranchiseId(null);
+    localStorage.removeItem("myFranchiseId");
   }, []);
 
   async function login() {
