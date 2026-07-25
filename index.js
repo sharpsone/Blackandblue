@@ -184,27 +184,33 @@ app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
 });
 
 // ⭐ Rosters
-app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
-  const { leagueId } = req.params;
-  const year = getYear(req);
-
-  const host = await detectMFLHost(year, leagueId);
-
-  const client = new MFLClient({
-    year,
-    host,
-    apiKey: LEAGUE_API_KEY,
-    cookie: userCookie
-  });
-
+app.get("/api/league/:leagueId/rosters", async (req, res) => {
   try {
-    const rosters = await client.getRosters(leagueId);
-    res.json(rosters);
+    const { leagueId } = req.params;
+    const { franchiseId, year } = req.query;
+
+    const url = `https://www.myfantasyleague.com/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // Return EXACT shape your frontend expects
+    return res.json({
+      rosters: {
+        franchise: {
+          players: {
+            player: data.rosters?.franchise?.players?.player || []
+          }
+        }
+      }
+    });
+
   } catch (err) {
-    console.error("ROSTERS ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch rosters" });
+    console.error("ROSTER BACKEND ERROR:", err);
+    res.json({ error: "Failed to fetch rosters" });
   }
 });
+
 
 // ⭐ Live Scoring
 app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
