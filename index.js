@@ -124,34 +124,47 @@ function requireLogin(req, res, next) {
 /* ============================================================
    ⭐ ROSTERS — MUST BE ABOVE /api/league/:leagueId
    ============================================================ */
-app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
-  try {
-    const { leagueId } = req.params;
-    const { franchiseId } = req.query;
-    const year = getYear(req);
+  app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
+    try {
+      const { leagueId } = req.params;
+      const { franchiseId } = req.query;
+      const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+      // ⭐ Correct host detection
+      const host = await detectMFLHost(year, leagueId);
 
-    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
+      // ⭐ Correct MFL JSON endpoint
+      const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 
-    const response = await fetch(url);
-    const data = await response.json();
+      console.log("ROSTER URL:", url);
 
-    return res.json({
-      rosters: {
-        franchise: {
-          players: {
-            player: data?.rosters?.franchise?.players?.player || []
+      const response = await fetch(url);
+      const text = await response.text();
+
+      // ⭐ Detect HTML error page
+      if (text.startsWith("<")) {
+        console.error("MFL returned HTML instead of JSON:", text.slice(0, 200));
+        return res.status(500).json({ error: "MFL returned HTML instead of JSON" });
+      }
+
+      const data = JSON.parse(text);
+
+      return res.json({
+        rosters: {
+          franchise: {
+            players: {
+              player: data?.rosters?.franchise?.players?.player || []
+            }
           }
         }
-      }
-    });
+      });
 
-  } catch (error) {
-    console.error("ROSTER BACKEND ERROR:", error);
-    res.status(500).json({ error: "Failed to fetch rosters" });
-  }
-});
+    } catch (error) {
+      console.error("ROSTER BACKEND ERROR:", error);
+      res.status(500).json({ error: "Failed to fetch rosters" });
+    }
+  });
+
 
 /* ============================================================
    ⭐ LEAGUE INFO
