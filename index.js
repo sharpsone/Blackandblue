@@ -108,7 +108,7 @@ function requireLogin(req, res, next) {
 }
 
 /* ============================================================
-   ⭐ UPDATED ROSTER ROUTE — USES LEAGUE baseURL (CORRECT HOST)
+   ⭐ FINAL ROSTER ROUTE — MULTI-HOST RETRY SYSTEM
    ============================================================ */
 app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
@@ -116,45 +116,75 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
     const { franchiseId } = req.query;
     const year = getYear(req);
 
-    /* ⭐ STEP 1 — Fetch league info to get correct host */
+    /* ⭐ STEP 1 — Fetch league info to get baseURL */
     const leagueInfo = await fetch(
       `https://blackandblue.onrender.com/api/league/${leagueId}?year=${year}`,
-      {
-        headers: { Cookie: userCookie }
-      }
+      { headers: { Cookie: userCookie } }
     ).then(r => r.json());
 
-    /* ⭐ STEP 2 — Extract baseURL host */
-    let host =
-      leagueInfo?.league?.baseURL?.replace("https://", "") ||
-      await detectMFLHost(year, leagueId);
+    const baseURLHost = leagueInfo?.league?.baseURL?.replace("https://", "");
 
-    console.log("✔ USING HOST FOR ROSTERS:", host);
+    /* ⭐ STEP 2 — Detect host */
+    const detectedHost = await detectMFLHost(year, leagueId);
 
-    /* ⭐ STEP 3 — Build correct roster URL */
-    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
+    /* ⭐ STEP 3 — Known MFL hosts to try */
+    const hostsToTry = [
+      baseURLHost,
+      detectedHost,
+      "www44.myfantasyleague.com",
+      "www45.myfantasyleague.com",
+      "www48.myfantasyleague.com",
+      "api.myfantasyleague.com",
+      "www.myfantasyleague.com"
+    ].filter(Boolean);
 
-    console.log("ROSTER URL:", url);
+    console.log("🔍 HOSTS TO TRY:", hostsToTry);
 
-    /* ⭐ STEP 4 — Fetch roster JSON */
-    const response = await fetch(url);
-    const text = await response.text();
+    /* ⭐ STEP 4 — Try each host until one returns players */
+    for (const host of hostsToTry) {
+      const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 
-    /* ⭐ STEP 5 — Detect HTML error page */
-    if (text.startsWith("<")) {
-      console.error("❌ MFL returned HTML instead of JSON:", text.slice(0, 200));
-      return res.status(500).json({ error: "MFL returned HTML instead of JSON" });
+      console.log("🔎 TRYING HOST:", host);
+      console.log("ROSTER URL:", url);
+
+      const response = await fetch(url);
+      const text = await response.text();
+
+      if (text.startsWith("<")) {
+        console.log("⚠️ HTML returned, skipping host:", host);
+        continue;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("⚠️ JSON parse failed, skipping host:", host);
+        continue;
+      }
+
+      const players = data?.rosters?.franchise?.players?.player || [];
+
+      if (players.length > 0) {
+        console.log("✔ SUCCESS — PLAYERS FOUND ON HOST:", host);
+        return res.json({
+          rosters: {
+            franchise: {
+              players: { player: players }
+            }
+          }
+        });
+      }
+
+      console.log("❌ No players on host:", host);
     }
 
-    const data = JSON.parse(text);
-
-    /* ⭐ STEP 6 — Return normalized roster */
+    /* ⭐ If all hosts fail */
+    console.log("❌ ALL HOSTS FAILED — NO PLAYERS FOUND");
     return res.json({
       rosters: {
         franchise: {
-          players: {
-            player: data?.rosters?.franchise?.players?.player || []
-          }
+          players: { player: [] }
         }
       }
     });
