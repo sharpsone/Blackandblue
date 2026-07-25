@@ -194,20 +194,19 @@ app.get("/api/league/:leagueId/rosters", async (req, res) => {
     const response = await fetch(url);
     const data = await response.json();
 
-    // Return EXACT shape your frontend expects
     return res.json({
       rosters: {
         franchise: {
           players: {
-            player: data.rosters?.franchise?.players?.player || []
+            player: data?.rosters?.franchise?.players?.player || []
           }
         }
       }
     });
 
-  } catch (err) {
-    console.error("ROSTER BACKEND ERROR:", err);
-    res.json({ error: "Failed to fetch rosters" });
+  } catch (error) {
+    console.error("ROSTER BACKEND ERROR:", error);
+    res.status(500).json({ error: "Failed to fetch rosters" });
   }
 });
 
