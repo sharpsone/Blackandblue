@@ -70,7 +70,6 @@ class MFLClient {
     if (PRIVATE_TYPES.has(type)) {
       finalParams.USERNAME = this.username;
       finalParams.PASSWORD = this.password;
-      // APIKEY forbidden
     }
 
     // ⭐ PUBLIC MODE (standings, schedule, rosters, etc.)
@@ -103,8 +102,34 @@ class MFLClient {
     return this.request("league", { L: leagueId });
   }
 
+  // ⭐ FIXED — normalize legacy + modern formats
   async getMyLeagues() {
-    return this.request("myleagues", {});
+    const raw = await this.request("myleagues", {});
+
+    // ⭐ Case 1: Modern JSON format (2026+)
+    if (raw?.myleagues?.league) {
+      return raw;
+    }
+
+    // ⭐ Case 2: Legacy JSON format (2025 and earlier)
+    if (raw?.Leagues?.League) {
+      const normalized = {
+        myleagues: {
+          league: raw.Leagues.League.map((l) => ({
+            id: l.league_id,
+            franchise: l.franchise_id,
+            franchiseName: l.franchise_name || "",
+            name: l.name || "",
+            commissioner: l.is_commissioner === "1"
+          }))
+        }
+      };
+
+      return normalized;
+    }
+
+    // ⭐ Unknown format fallback
+    return { myleagues: { league: [] } };
   }
 
   async getStandings(leagueId) {
