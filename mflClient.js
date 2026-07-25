@@ -78,18 +78,15 @@ class MFLClient {
     return this.request("league", { L: leagueId });
   }
 
-  // ⭐ FINAL FIX — ALWAYS NORMALIZE
   async getMyLeagues() {
     const raw = await this.request("myleagues", {});
 
     console.log("BACKEND RAW MYLEAGUES:", raw);
 
-    // Modern format
     if (raw?.myleagues?.league) {
       return raw;
     }
 
-    // Legacy format
     if (raw?.Leagues?.League) {
       return {
         myleagues: {
@@ -104,7 +101,6 @@ class MFLClient {
       };
     }
 
-    // Fallback
     return { myleagues: { league: [] } };
   }
 
