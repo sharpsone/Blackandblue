@@ -58,6 +58,7 @@ function App() {
       const leagues = await fetchMyLeagues(year);
 
       console.log("MYLEAGUES RAW:", leagues);
+      console.log("NORMALIZED LEAGUES:", leagues?.myleagues?.league);
 
       const myLeague = leagues?.myleagues?.league?.find(
         (l) => l.id === leagueId
