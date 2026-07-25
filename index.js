@@ -21,14 +21,16 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// ⭐ Health Check
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// ⭐ Server Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend running on ${PORT}`));
 
-// ⭐ Default year (fallback)
+// ⭐ Defaults
 const DEFAULT_YEAR = "2026";
 const DEFAULT_API_HOST = "api.myfantasyleague.com";
 const LEAGUE_API_KEY = "ahVp3s+SvuWqx1qmOVDGZDUeFKUtiQ==";
@@ -40,7 +42,7 @@ let mflPassword = null;
 // ⭐ Cache detected hosts per year
 const hostCache = {};
 
-// ⭐ HARD-CODED HOST FOR 2025
+// ⭐ Host Detection
 async function detectMFLHost(year, leagueId) {
   if (year === "2025") {
     const fixedHost = "www44.myfantasyleague.com";
@@ -75,7 +77,7 @@ function getYear(req) {
   return req.query.year || DEFAULT_YEAR;
 }
 
-// ⭐ LOGIN (always uses API host)
+// ⭐ LOGIN
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   const year = getYear(req);
@@ -115,28 +117,45 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// ⭐ My Leagues — FINAL FIX (ONLY THIS VERSION)
-app.get("/api/myleagues", requireLogin, async (req, res) => {
-  const year = getYear(req);
+/* ============================================================
+   ⭐ ROUTES — ORDER MATTERS
+   ============================================================ */
 
-  const client = new MFLClient({
-    year,
-    host: "api.myfantasyleague.com",   // ⭐ ALWAYS API HOST
-    cookie: userCookie,
-    username: mflUsername,
-    password: mflPassword
-  });
-
+/* ============================================================
+   ⭐ ROSTERS — MUST BE ABOVE /api/league/:leagueId
+   ============================================================ */
+app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
-    const leagues = await client.getMyLeagues();
-    res.json(leagues);
-  } catch (err) {
-    console.error("MYLEAGUES ERROR:", err.message);
-    res.status(500).json({ error: "Failed to fetch my leagues" });
+    const { leagueId } = req.params;
+    const { franchiseId } = req.query;
+    const year = getYear(req);
+
+    const host = await detectMFLHost(year, leagueId);
+
+    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    return res.json({
+      rosters: {
+        franchise: {
+          players: {
+            player: data?.rosters?.franchise?.players?.player || []
+          }
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("ROSTER BACKEND ERROR:", error);
+    res.status(500).json({ error: "Failed to fetch rosters" });
   }
 });
 
-// ⭐ League Info
+/* ============================================================
+   ⭐ LEAGUE INFO
+   ============================================================ */
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -160,7 +179,32 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Standings
+/* ============================================================
+   ⭐ MY LEAGUES
+   ============================================================ */
+app.get("/api/myleagues", requireLogin, async (req, res) => {
+  const year = getYear(req);
+
+  const client = new MFLClient({
+    year,
+    host: DEFAULT_API_HOST,
+    cookie: userCookie,
+    username: mflUsername,
+    password: mflPassword
+  });
+
+  try {
+    const leagues = await client.getMyLeagues();
+    res.json(leagues);
+  } catch (err) {
+    console.error("MYLEAGUES ERROR:", err.message);
+    res.status(500).json({ error: "Failed to fetch my leagues" });
+  }
+});
+
+/* ============================================================
+   ⭐ STANDINGS
+   ============================================================ */
 app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -183,35 +227,9 @@ app.get("/api/standings/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Rosters
-app.get("/api/league/:leagueId/rosters", async (req, res) => {
-  try {
-    const { leagueId } = req.params;
-    const { franchiseId, year } = req.query;
-
-    const url = `https://www.myfantasyleague.com/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    return res.json({
-      rosters: {
-        franchise: {
-          players: {
-            player: data?.rosters?.franchise?.players?.player || []
-          }
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error("ROSTER BACKEND ERROR:", error);
-    res.status(500).json({ error: "Failed to fetch rosters" });
-  }
-});
-
-
-// ⭐ Live Scoring
+/* ============================================================
+   ⭐ LIVE SCORING
+   ============================================================ */
 app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -234,7 +252,9 @@ app.get("/api/live/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Matchups
+/* ============================================================
+   ⭐ MATCHUPS
+   ============================================================ */
 app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -257,7 +277,9 @@ app.get("/api/matchups/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Free Agents
+/* ============================================================
+   ⭐ FREE AGENTS
+   ============================================================ */
 app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -280,7 +302,9 @@ app.get("/api/freeagents/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Message Board
+/* ============================================================
+   ⭐ MESSAGE BOARD
+   ============================================================ */
 app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -303,7 +327,9 @@ app.get("/api/messages/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Schedule
+/* ============================================================
+   ⭐ SCHEDULE
+   ============================================================ */
 app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -326,7 +352,9 @@ app.get("/api/schedule/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Transactions
+/* ============================================================
+   ⭐ TRANSACTIONS
+   ============================================================ */
 app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -349,7 +377,9 @@ app.get("/api/transactions/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Player Stats
+/* ============================================================
+   ⭐ PLAYER STATS
+   ============================================================ */
 app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -372,7 +402,9 @@ app.get("/api/playerstats/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Draft Results
+/* ============================================================
+   ⭐ DRAFT RESULTS
+   ============================================================ */
 app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -395,7 +427,9 @@ app.get("/api/draftresults/:leagueId", requireLogin, async (req, res) => {
   }
 });
 
-// ⭐ Playoff Bracket
+/* ============================================================
+   ⭐ PLAYOFF BRACKET
+   ============================================================ */
 app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
   const { leagueId } = req.params;
   const year = getYear(req);
@@ -417,3 +451,4 @@ app.get("/api/playoffs/:leagueId", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch playoff bracket" });
   }
 });
+
