@@ -14,24 +14,34 @@ export default function Roster({ leagueId, myFranchiseId }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!myFranchiseId) {
+      console.log("❌ No franchise ID provided to Roster.jsx");
+      return;
+    }
     loadRoster();
   }, [myFranchiseId]);
 
   async function loadRoster() {
     try {
-      const rosterJson = await fetchRoster(leagueId, myFranchiseId);
+      const year = "2025"; // ⭐ Force correct year for testing
+      const franchise = String(myFranchiseId); // ⭐ Ensure franchiseId is a string
 
-      // ⭐ DEBUG: Always show the raw backend response
+      console.log("📌 ROSTER REQUEST PARAMS:", {
+        leagueId,
+        franchise,
+        year
+      });
+
+      const rosterJson = await fetchRoster(leagueId, franchise, year);
+
       console.log("ROSTER RAW:", rosterJson);
 
-      // ⭐ SAFE PARSING — prevents undefined.length crash
       const list =
         rosterJson?.rosters?.franchise?.players?.player ??
         rosterJson?.roster?.players ??
         rosterJson?.players ??
         [];
 
-      // Ensure list is always an array
       const safeList = Array.isArray(list) ? list : [list];
 
       const groupedPlayers = {
@@ -132,7 +142,6 @@ function PlayerCard({ player }) {
         border: "1px solid #222"
       }}
     >
-      {/* Player Name + Badges */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <span style={{ fontWeight: "bold", fontSize: "16px" }}>
           {name || "Unknown Player"}
@@ -144,7 +153,6 @@ function PlayerCard({ player }) {
         </div>
       </div>
 
-      {/* Stats */}
       <div
         style={{
           textAlign: "right",
@@ -164,3 +172,4 @@ function PlayerCard({ player }) {
     </div>
   );
 }
+
