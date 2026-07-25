@@ -107,31 +107,48 @@ function requireLogin(req, res, next) {
   next();
 }
 
-/* ⭐ ROSTERS */
+/* ============================================================
+   ⭐ UPDATED ROSTER ROUTE — USES LEAGUE baseURL (CORRECT HOST)
+   ============================================================ */
 app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
     const { leagueId } = req.params;
     const { franchiseId } = req.query;
     const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+    /* ⭐ STEP 1 — Fetch league info to get correct host */
+    const leagueInfo = await fetch(
+      `https://blackandblue.onrender.com/api/league/${leagueId}?year=${year}`,
+      {
+        headers: { Cookie: userCookie }
+      }
+    ).then(r => r.json());
 
+    /* ⭐ STEP 2 — Extract baseURL host */
+    let host =
+      leagueInfo?.league?.baseURL?.replace("https://", "") ||
+      await detectMFLHost(year, leagueId);
+
+    console.log("✔ USING HOST FOR ROSTERS:", host);
+
+    /* ⭐ STEP 3 — Build correct roster URL */
     const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 
     console.log("ROSTER URL:", url);
 
+    /* ⭐ STEP 4 — Fetch roster JSON */
     const response = await fetch(url);
     const text = await response.text();
 
+    /* ⭐ STEP 5 — Detect HTML error page */
     if (text.startsWith("<")) {
-      console.error("MFL returned HTML instead of JSON:", text.slice(0, 200));
-      return res
-        .status(500)
-        .json({ error: "MFL returned HTML instead of JSON" });
+      console.error("❌ MFL returned HTML instead of JSON:", text.slice(0, 200));
+      return res.status(500).json({ error: "MFL returned HTML instead of JSON" });
     }
 
     const data = JSON.parse(text);
 
+    /* ⭐ STEP 6 — Return normalized roster */
     return res.json({
       rosters: {
         franchise: {
@@ -141,11 +158,13 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
         }
       }
     });
+
   } catch (error) {
-    console.error("ROSTER BACKEND ERROR:", error);
+    console.error("❌ ROSTER BACKEND ERROR:", error);
     res.status(500).json({ error: "Failed to fetch rosters" });
   }
 });
+
 
 /* ⭐ LEAGUE INFO */
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
