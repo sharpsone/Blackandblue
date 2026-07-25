@@ -1,8 +1,8 @@
 const API_BASE = "https://blackandblue.onrender.com";
 
-/* ⭐ LOGIN — MUST NOT include ?year= */
-export async function loginUser(username, password) {
-  const res = await fetch(`${API_BASE}/api/login`, {
+/* ⭐ LOGIN — NOW INCLUDES YEAR */
+export async function loginUser(username, password, year = "2025") {
+  const res = await fetch(`${API_BASE}/api/login?year=${year}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
@@ -11,7 +11,7 @@ export async function loginUser(username, password) {
   return res.json();
 }
 
-/* ⭐ MY LEAGUES — DEFAULT YEAR */
+/* ⭐ MY LEAGUES */
 export async function fetchMyLeagues(year = "2025") {
   const res = await fetch(`${API_BASE}/api/myleagues?year=${year}`, {
     credentials: "include"
@@ -28,16 +28,16 @@ export async function fetchLeague(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ LIVE SCORING */
-export async function fetchLiveScoring(leagueId, year = "2025") {
+/* ⭐ ROSTER */
+export async function fetchRoster(leagueId, franchiseId, year = "2025") {
   const res = await fetch(
-    `${API_BASE}/api/live/${leagueId}?year=${year}`,
+    `${API_BASE}/api/league/${leagueId}/rosters?franchiseId=${franchiseId}&year=${year}`,
     { credentials: "include" }
   );
   return res.json();
 }
 
-/* ⭐ STANDINGS */
+/* ⭐ OTHER ENDPOINTS (unchanged except default year) */
 export async function fetchStandings(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/standings/${leagueId}?year=${year}`,
@@ -46,19 +46,14 @@ export async function fetchStandings(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ ROSTER — FIXED */
-export async function fetchRoster(leagueId, franchiseId, year = "2025") {
-  console.log("📌 FETCHROSTER PARAMS:", { leagueId, franchiseId, year });
-
+export async function fetchLiveScoring(leagueId, year = "2025") {
   const res = await fetch(
-    `${API_BASE}/api/league/${leagueId}/rosters?franchiseId=${franchiseId}&year=${year}`,
+    `${API_BASE}/api/live/${leagueId}?year=${year}`,
     { credentials: "include" }
   );
-
   return res.json();
 }
 
-/* ⭐ MATCHUPS */
 export async function fetchMatchups(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/matchups/${leagueId}?year=${year}`,
@@ -67,7 +62,6 @@ export async function fetchMatchups(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ FREE AGENTS */
 export async function fetchFreeAgents(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/freeagents/${leagueId}?year=${year}`,
@@ -76,7 +70,6 @@ export async function fetchFreeAgents(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ MESSAGE BOARD */
 export async function fetchMessages(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/messages/${leagueId}?year=${year}`,
@@ -85,7 +78,6 @@ export async function fetchMessages(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ SCHEDULE */
 export async function fetchSchedule(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/schedule/${leagueId}?year=${year}`,
@@ -94,7 +86,6 @@ export async function fetchSchedule(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ TRANSACTIONS */
 export async function fetchTransactions(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/transactions/${leagueId}?year=${year}`,
@@ -103,7 +94,6 @@ export async function fetchTransactions(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ PLAYER STATS */
 export async function fetchPlayerStats(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/playerstats/${leagueId}?year=${year}`,
@@ -112,7 +102,6 @@ export async function fetchPlayerStats(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ DRAFT RESULTS */
 export async function fetchDraftResults(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/draftresults/${leagueId}?year=${year}`,
@@ -121,7 +110,6 @@ export async function fetchDraftResults(leagueId, year = "2025") {
   return res.json();
 }
 
-/* ⭐ PLAYOFF BRACKET */
 export async function fetchPlayoffBracket(leagueId, year = "2025") {
   const res = await fetch(
     `${API_BASE}/api/playoffs/${leagueId}?year=${year}`,

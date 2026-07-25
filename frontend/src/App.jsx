@@ -22,19 +22,15 @@ function App() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // ⭐ Load stored franchise ID if available
   const [myFranchiseId, setMyFranchiseId] = useState(
     localStorage.getItem("myFranchiseId") || null
   );
 
   const [leagueId] = useState("19757");
-
-  // ⭐ GLOBAL YEAR
   const [year, setYear] = useState("2025");
 
   const [error, setError] = useState(null);
 
-  // ⭐ If franchise ID was stored earlier, auto-login UI
   useEffect(() => {
     if (localStorage.getItem("myFranchiseId")) {
       setLoggedIn(true);
@@ -44,16 +40,14 @@ function App() {
   async function login() {
     setError(null);
 
-    const res = await loginUser(username, password);
+    const res = await loginUser(username, password, year);
     if (!res.success) {
       setError("Login failed");
       return;
     }
 
-    // ⭐ Login succeeded
     setLoggedIn(true);
 
-    // ⭐ Fetch user's leagues to determine franchise ID
     try {
       const leagues = await fetchMyLeagues(year);
 
@@ -93,7 +87,6 @@ function App() {
         color: "white"
       }}
     >
-      {/* ⭐ NavBar appears after login */}
       {loggedIn && (
         <NavBar
           page={page}
@@ -129,60 +122,25 @@ function App() {
       ) : (
         <>
           {page === "standings" && (
-            <Standings
-              leagueId={leagueId}
-              myFranchiseId={myFranchiseId}
-              year={year}
-            />
+            <Standings leagueId={leagueId} myFranchiseId={myFranchiseId} year={year} />
           )}
 
           {page === "roster" && (
-            <Roster
-              leagueId={leagueId}
-              myFranchiseId={myFranchiseId}
-              year={year}
-            />
+            <Roster leagueId={leagueId} myFranchiseId={myFranchiseId} year={year} />
           )}
 
           {page === "live" && (
-            <LiveScoring
-              leagueId={leagueId}
-              myFranchiseId={myFranchiseId}
-              year={year}
-            />
+            <LiveScoring leagueId={leagueId} myFranchiseId={myFranchiseId} year={year} />
           )}
 
-          {page === "matchups" && (
-            <Matchups leagueId={leagueId} year={year} />
-          )}
-
-          {page === "playerstats" && (
-            <PlayerStats leagueId={leagueId} year={year} />
-          )}
-
-          {page === "transactions" && (
-            <Transactions leagueId={leagueId} year={year} />
-          )}
-
-          {page === "draft" && (
-            <DraftResults leagueId={leagueId} year={year} />
-          )}
-
-          {page === "messages" && (
-            <MessageBoard leagueId={leagueId} year={year} />
-          )}
-
-          {page === "freeagents" && (
-            <FreeAgents leagueId={leagueId} year={year} />
-          )}
-
-          {page === "schedule" && (
-            <Schedule leagueId={leagueId} year={year} />
-          )}
-
-          {page === "playoffs" && (
-            <PlayoffBracket leagueId={leagueId} year={year} />
-          )}
+          {page === "matchups" && <Matchups leagueId={leagueId} year={year} />}
+          {page === "playerstats" && <PlayerStats leagueId={leagueId} year={year} />}
+          {page === "transactions" && <Transactions leagueId={leagueId} year={year} />}
+          {page === "draft" && <DraftResults leagueId={leagueId} year={year} />}
+          {page === "messages" && <MessageBoard leagueId={leagueId} year={year} />}
+          {page === "freeagents" && <FreeAgents leagueId={leagueId} year={year} />}
+          {page === "schedule" && <Schedule leagueId={leagueId} year={year} />}
+          {page === "playoffs" && <PlayoffBracket leagueId={leagueId} year={year} />}
         </>
       )}
     </div>
@@ -190,4 +148,3 @@ function App() {
 }
 
 export default App;
-
