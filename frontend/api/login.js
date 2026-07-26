@@ -1,8 +1,9 @@
 const xml2js = require("xml2js");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
 
   try {
@@ -28,7 +29,8 @@ export default async function handler(req, res) {
     const statusAttrs = parsed?.status?.$;
 
     if (!statusAttrs) {
-      return res.json({ success: false });
+      res.json({ success: false });
+      return;
     }
 
     let cookieName = null;
@@ -50,7 +52,8 @@ export default async function handler(req, res) {
     }
 
     if (!cookieName || !cookieValue) {
-      return res.json({ success: false });
+      res.json({ success: false });
+      return;
     }
 
     res.setHeader(
@@ -58,11 +61,11 @@ export default async function handler(req, res) {
       `${cookieName}=${cookieValue}; Path=/; HttpOnly; Secure; SameSite=None`
     );
 
-    return res.json({ success: true });
+    res.json({ success: true });
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    return res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Server error" });
   }
-}
+};
 
