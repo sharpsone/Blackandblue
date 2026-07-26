@@ -175,6 +175,9 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 /* ============================================================
    ⭐ FIXED STANDINGS ROUTE — now uses correct host + cookie
    ============================================================ */
+/* ============================================================
+   STANDINGS ROUTE — return raw MFL JSON
+   ============================================================ */
 app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   try {
     const { leagueId } = req.params;
@@ -182,9 +185,7 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
 
     const host = await detectMFLHost(year, leagueId);
 
-    const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1${
-      MFL_APIKEY ? `&APIKEY=${encodeURIComponent(MFL_APIKEY)}` : ""
-    }`;
+    const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
 
     console.log("STANDINGS URL:", url);
 
@@ -194,53 +195,12 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
 
     const data = await response.json();
 
-    return res.json({
-      success: true,
-      data
-    });
+    // 🔹 Return exactly what MFL sends
+    return res.json(data);
 
   } catch (err) {
     console.error("STANDINGS ERROR:", err);
     res.status(500).json({ error: "Failed to fetch standings" });
-  }
-});
-
-/* ============================================================
-   SCHEDULE ROUTE — normalized
-   ============================================================ */
-app.get("/api/league/:leagueId/schedule", requireLogin, async (req, res) => {
-  try {
-    const { leagueId } = req.params;
-    const year = getYear(req);
-
-    const host = await detectMFLHost(year, leagueId);
-
-    const url = `https://${host}/${year}/export?TYPE=schedule&L=${leagueId}&JSON=1${
-      MFL_APIKEY ? `&APIKEY=${encodeURIComponent(MFL_APIKEY)}` : ""
-    }`;
-
-    console.log("SCHEDULE URL:", url);
-
-    const response = await fetch(url, {
-      headers: buildAuthHeaders(req)
-    });
-
-    const raw = await response.json();
-
-    const weeklySchedule =
-      raw?.schedule?.weeklySchedule ||
-      raw?.weeklySchedule ||
-      [];
-
-    return res.json({
-      schedule: {
-        weeklySchedule
-      }
-    });
-
-  } catch (err) {
-    console.error("SCHEDULE ERROR:", err);
-    res.status(500).json({ error: "Failed to fetch schedule" });
   }
 });
 

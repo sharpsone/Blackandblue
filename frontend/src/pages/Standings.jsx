@@ -11,9 +11,8 @@ function Standings({ leagueId, myFranchiseId, year }) {
 
       try {
         const res = await getStandings(leagueId, year);
-
-        // MFL data is inside res.data
-        setStandings(res?.data || null);
+        // 🔹 res is the raw MFL JSON
+        setStandings(res || null);
       } catch (err) {
         console.error("STANDINGS ERROR:", err);
       }
@@ -36,7 +35,6 @@ function Standings({ leagueId, myFranchiseId, year }) {
     );
   }
 
-  // Correct MFL path:
   const rows = standings?.standings?.franchise || [];
 
   return (
@@ -78,4 +76,3 @@ function Standings({ leagueId, myFranchiseId, year }) {
 }
 
 export default Standings;
-
