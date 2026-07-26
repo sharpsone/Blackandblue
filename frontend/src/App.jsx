@@ -15,7 +15,6 @@ import PlayoffBracket from "./pages/PlayoffBracket";
 
 import {
   loginUser,
-  fetchLeague,
   fetchMyLeagues
 } from "./utils/api";
 
@@ -27,7 +26,8 @@ function App() {
 
   const [myFranchiseId, setMyFranchiseId] = useState(null);
 
-  const [leagueId] = useState("19757");
+  // IMPORTANT: leagueId must be a NUMBER, not a string
+  const [leagueId] = useState(19757);
   const [year, setYear] = useState("2026");
 
   const [error, setError] = useState(null);
@@ -42,7 +42,7 @@ function App() {
   async function login() {
     setError(null);
 
-    // Step 1: Login
+    // Step 1 — Login
     const res = await loginUser(username, password, year);
     if (!res.success) {
       setError("Login failed");
@@ -52,11 +52,11 @@ function App() {
     setLoggedIn(true);
 
     try {
-      // Step 2: Get all leagues the user belongs to
+      // Step 2 — Detect franchise ID using myleagues
       const myLeagues = await fetchMyLeagues(year);
 
       const leagueEntry = myLeagues?.myleagues?.league?.find(
-        (l) => l.id === leagueId
+        (l) => Number(l.id) === Number(leagueId)
       );
 
       if (!leagueEntry) {
