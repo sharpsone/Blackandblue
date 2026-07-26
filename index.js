@@ -173,16 +173,17 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   ⭐ FIXED STANDINGS ROUTE — now uses correct host + cookie
+   ⭐ FIXED STANDINGS ROUTE 
    ============================================================ */
 /* ============================================================
-   STANDINGS ROUTE — return raw MFL JSON
+   FIXED STANDINGS ROUTE — always uses login cookie, never APIKEY
    ============================================================ */
 app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   try {
     const { leagueId } = req.params;
     const year = getYear(req);
 
+    // Detect correct host (www60, www61, etc.)
     const host = await detectMFLHost(year, leagueId);
 
     const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
@@ -190,19 +191,18 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
     console.log("STANDINGS URL:", url);
 
     const response = await fetch(url, {
-      headers: buildAuthHeaders(req)
+      headers: buildAuthHeaders(req)   // ⭐ THIS IS THE FIX
     });
 
     const data = await response.json();
 
-    // 🔹 Return exactly what MFL sends
-    return res.json(data);
-
+    return res.json(data);            // ⭐ Return raw MFL JSON
   } catch (err) {
     console.error("STANDINGS ERROR:", err);
     res.status(500).json({ error: "Failed to fetch standings" });
   }
 });
+
 
 /* ============================================================
    MYLEAGUES ROUTE — franchise detection
