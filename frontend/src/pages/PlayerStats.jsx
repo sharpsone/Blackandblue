@@ -1,225 +1,138 @@
 import { useEffect, useState } from "react";
-import Badge from "../components/Badge";
-import "../utils/animations.css";
-import { fetchPlayerStats } from "../utils/api";
+import { getLeagueInfo } from "../utils/api";
 
-export default function PlayerStats({ leagueId }) {
-  const [players, setPlayers] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [positionFilter, setPositionFilter] = useState("ALL");
-  const [sortBy, setSortBy] = useState("points");
-  const [sortDir, setSortDir] = useState("desc");
-  const [error, setError] = useState(null);
+function PlayerStats({ leagueId, year }) {
+  const [league, setLeague] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadStats();
-  }, []);
+  // UI state for future real stats
+  const [week, setWeek] = useState(1);
+  const [position, setPosition] = useState("ALL");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    applyFilters();
-  }, [players, positionFilter, sortBy, sortDir]);
+    async function load() {
+      setLoading(true);
 
-  async function loadStats() {
-    try {
-      const statsJson = await fetchPlayerStats(leagueId);
-      const list = statsJson.playerStats.player || [];
-
-      setPlayers(list);
-    } catch (err) {
-      console.error("PLAYER STATS ERROR:", err);
-      setError("Failed to load player stats");
-    }
-  }
-
-  function applyFilters() {
-    let list = [...players];
-
-    if (positionFilter !== "ALL") {
-      list = list.filter(p => p.position === positionFilter);
-    }
-
-    list.sort((a, b) => {
-      let av, bv;
-
-      switch (sortBy) {
-        case "points":
-          av = parseFloat(a.fantasy_points || "0");
-          bv = parseFloat(b.fantasy_points || "0");
-          break;
-        case "name":
-          av = a.name.toLowerCase();
-          bv = b.name.toLowerCase();
-          break;
-        case "team":
-          av = (a.team || "").toLowerCase();
-          bv = (b.team || "").toLowerCase();
-          break;
-        case "position":
-          av = a.position || "";
-          bv = b.position || "";
-          break;
-        default:
-          av = 0;
-          bv = 0;
+      try {
+        const data = await getLeagueInfo(leagueId, year);
+        setLeague(data);
+      } catch (err) {
+        console.error("PLAYER STATS ERROR:", err);
       }
 
-      if (av < bv) return sortDir === "asc" ? -1 : 1;
-      if (av > bv) return sortDir === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    setFiltered(list);
-  }
-
-  function toggleSort(field) {
-    if (sortBy === field) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortDir("asc");
+      setLoading(false);
     }
+
+    load();
+  }, [leagueId, year]);
+
+  if (loading) {
+    return <p style={{ padding: "1rem" }}>Loading player stats...</p>;
   }
 
-  const positions = ["ALL", "QB", "RB", "WR", "TE", "K", "DEF"];
+  if (!league) {
+    return (
+      <p style={{ padding: "1rem", color: "red" }}>
+        Could not load league info.
+      </p>
+    );
+  }
 
   return (
     <div style={{ padding: "1rem" }}>
-      <h1 className="fade-in" style={{ color: "#00aaff" }}>
-        Player Stats
-      </h1>
+      <h1>Player Stats</h1>
 
-      {/* Position Filter */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          marginBottom: "1rem",
-          flexWrap: "wrap"
-        }}
-      >
-        {positions.map(pos => (
-          <button
-            key={pos}
-            onClick={() => setPositionFilter(pos)}
-            style={{
-              padding: "0.25rem 0.75rem",
-              borderRadius: "999px",
-              border:
-                positionFilter === pos
-                  ? "1px solid #00aaff"
-                  : "1px solid #333",
-              background: positionFilter === pos ? "#001f3f" : "#111",
-              color: "white",
-              cursor: "pointer",
-              fontSize: "12px"
-            }}
+      {/* Filters */}
+      <div style={{ marginBottom: "1rem" }}>
+        <label style={{ marginRight: "1rem" }}>
+          Week:
+          <select
+            value={week}
+            onChange={(e) => setWeek(Number(e.target.value))}
+            style={{ marginLeft: "0.5rem" }}
           >
-            {pos}
-          </button>
-        ))}
+            {Array.from({ length: 18 }, (_, i) => i + 1).map((w) => (
+              <option key={w} value={w}>
+                Week {w}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ marginRight: "1rem" }}>
+          Position:
+          <select
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+            style={{ marginLeft: "0.5rem" }}
+          >
+            <option value="ALL">All</option>
+            <option value="QB">QB</option>
+            <option value="RB">RB</option>
+            <option value="WR">WR</option>
+            <option value="TE">TE</option>
+            <option value="K">K</option>
+            <option value="DEF">DEF</option>
+          </select>
+        </label>
+
+        <input
+          placeholder="Search players..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            padding: "0.3rem",
+            borderRadius: "4px",
+            border: "1px solid #333",
+            background: "#111",
+            color: "white"
+          }}
+        />
       </div>
 
-      {/* Sorting Controls */}
-      <div
+      {/* Placeholder table */}
+      <table
         style={{
-          display: "flex",
-          gap: "0.5rem",
-          marginBottom: "1rem",
-          flexWrap: "wrap"
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "1rem"
         }}
       >
-        <span style={{ color: "#aaa" }}>Sort by:</span>
+        <thead>
+          <tr style={{ background: "#001f3f" }}>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Player
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Team
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Position
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Week {week} Points
+            </th>
+          </tr>
+        </thead>
 
-        {[
-          { key: "points", label: "Points" },
-          { key: "name", label: "Name" },
-          { key: "team", label: "Team" },
-          { key: "position", label: "Position" }
-        ].map(opt => (
-          <button
-            key={opt.key}
-            onClick={() => toggleSort(opt.key)}
-            style={{
-              padding: "0.25rem 0.75rem",
-              borderRadius: "999px",
-              border: sortBy === opt.key ? "1px solid #00aaff" : "1px solid #333",
-              background: sortBy === opt.key ? "#001f3f" : "#111",
-              color: "white",
-              cursor: "pointer",
-              fontSize: "12px"
-            }}
-          >
-            {opt.label}
-            {sortBy === opt.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-          </button>
-        ))}
-      </div>
-
-      {/* Player List */}
-      {filtered.map(p => (
-        <PlayerCard key={p.id} player={p} />
-      ))}
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        <tbody>
+          <tr>
+            <td
+              colSpan="4"
+              style={{
+                padding: "1rem",
+                textAlign: "center",
+                color: "#aaa"
+              }}
+            >
+              Player stats endpoint not yet implemented — backend route needed.
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function PlayerCard({ player }) {
-  const {
-    name,
-    position,
-    team,
-    fantasy_points,
-    bye,
-    id
-  } = player;
-
-  return (
-    <div
-      className="fade-in hover-grow"
-      style={{
-        background: "#111",
-        borderRadius: "10px",
-        padding: "0.75rem",
-        marginBottom: "0.75rem",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        border: "1px solid #222"
-      }}
-    >
-      {/* Player Name + Badges */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{ fontWeight: "bold", fontSize: "16px" }}>{name}</span>
-
-        <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.25rem" }}>
-          <Badge text={position} color="#00aaff" />
-          <Badge text={team || "FA"} color="#003566" />
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div
-        style={{
-          textAlign: "right",
-          minWidth: "100px"
-        }}
-      >
-        <div style={{ fontSize: "12px", color: "#aaa" }}>Points</div>
-        <div style={{ fontWeight: "bold", color: "#00aaff" }}>
-          {fantasy_points || 0}
-        </div>
-
-        <div style={{ fontSize: "12px", color: "#aaa", marginTop: "0.5rem" }}>
-          Bye Week
-        </div>
-        <div style={{ fontWeight: "bold", color: "white" }}>
-          {bye || "-"}
-        </div>
-      </div>
-    </div>
-  );
-}
+export default PlayerStats;
