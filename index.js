@@ -84,7 +84,6 @@ app.post("/api/login", async (req, res) => {
       return res.json({ success: false });
     }
 
-    // MFL returns: <status MFL_USER_ID="cookieValue">OK</status>
     const cookieName = Object.keys(statusAttrs)[0];
     const cookieValue = statusAttrs[cookieName];
 
@@ -110,7 +109,19 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* ============================================================
-   LEAGUE INFO ROUTE — APIKEY hybrid auth
+   Helper: Build headers with cookie + APIKEY
+   ============================================================ */
+function buildAuthHeaders(req) {
+  const cookieName = Object.keys(req.cookies)[0];
+  const cookieValue = req.cookies[cookieName];
+
+  return {
+    Cookie: `${cookieName}=${cookieValue}`
+  };
+}
+
+/* ============================================================
+   LEAGUE INFO ROUTE — Cookie forwarded
    ============================================================ */
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   try {
@@ -125,7 +136,10 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 
     console.log("LEAGUE URL:", url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: buildAuthHeaders(req)
+    });
+
     const data = await response.json();
 
     return res.json(data);
@@ -136,7 +150,7 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   ROSTER ROUTE — APIKEY hybrid auth
+   ROSTER ROUTE — Cookie forwarded
    ============================================================ */
 app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
@@ -152,7 +166,10 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
 
     console.log("ROSTER URL:", url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: buildAuthHeaders(req)
+    });
+
     const text = await response.text();
 
     if (text.startsWith("<")) {
@@ -178,7 +195,7 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   STANDINGS ROUTE — APIKEY hybrid auth
+   STANDINGS ROUTE — Cookie forwarded
    ============================================================ */
 app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   try {
@@ -193,7 +210,10 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
 
     console.log("STANDINGS URL:", url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: buildAuthHeaders(req)
+    });
+
     const data = await response.json();
 
     return res.json(data);
