@@ -1,4 +1,4 @@
-import { fetch, getYear, buildAuthHeaders, detectMFLHost } from "./_utils";
+import { fetch, getYear, buildAuthHeaders, detectMFLHost } from "./_utils.js";
 
 export default async function handler(req, res) {
   const { leagueId, franchiseId } = req.query;

@@ -1,4 +1,4 @@
-import { fetch, getYear, buildAuthHeaders } from "./_utils";
+import { fetch, getYear, buildAuthHeaders } from "./_utils.js";
 
 export default async function handler(req, res) {
   const year = getYear(req);
