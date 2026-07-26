@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStandings } from "../utils/api";
 
-// ⭐ Add your CSS file here
-import "./standings.css";
-
 function Standings({ leagueId, myFranchiseId, year }) {
   const [standings, setStandings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,17 +38,33 @@ function Standings({ leagueId, myFranchiseId, year }) {
     standings?.standings?.franchise || standings?.franchise || [];
 
   return (
-    <div className="standings-container">
+    <div style={{ padding: "1rem" }}>
       <h1>Standings</h1>
 
-      <table className="standings-table">
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "1rem"
+        }}
+      >
         <thead>
-          <tr>
-            <th>Franchise</th>
-            <th>Wins</th>
-            <th>Losses</th>
-            <th>Points For</th>
-            <th>Points Against</th>
+          <tr style={{ background: "#001f3f" }}>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Franchise
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Wins
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Losses
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Points For
+            </th>
+            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
+              Points Against
+            </th>
           </tr>
         </thead>
 
@@ -59,17 +72,26 @@ function Standings({ leagueId, myFranchiseId, year }) {
           {rows.map((f) => (
             <tr
               key={f.id}
-              className={
-                f.id === String(myFranchiseId)
-                  ? "standings-row highlight"
-                  : "standings-row"
-              }
+              style={{
+                background:
+                  f.id === String(myFranchiseId) ? "#003366" : "#000"
+              }}
             >
-              <td>{f.name}</td>
-              <td>{f.wins}</td>
-              <td>{f.losses}</td>
-              <td>{f.points_for}</td>
-              <td>{f.points_against}</td>
+              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
+                {f.name}
+              </td>
+              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
+                {f.wins}
+              </td>
+              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
+                {f.losses}
+              </td>
+              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
+                {f.points_for}
+              </td>
+              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
+                {f.points_against}
+              </td>
             </tr>
           ))}
         </tbody>
