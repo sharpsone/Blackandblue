@@ -66,32 +66,26 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   LOGIN ROUTE — FIXED COOKIE EXTRACTION
+   LOGIN ROUTE — JSON LOGIN + FIXED COOKIE EXTRACTION
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password, year } = req.body;
     const season = year || DEFAULT_YEAR;
 
+    // ⭐ SWITCHED FROM XML TO JSON
     const url = `https://api.myfantasyleague.com/${season}/login?USERNAME=${encodeURIComponent(
       username
-    )}&PASSWORD=${encodeURIComponent(password)}&XML=1`;
+    )}&PASSWORD=${encodeURIComponent(password)}&JSON=1`;
 
     console.log("LOGIN URL:", url);
 
     const response = await fetch(url);
-    const xml = await response.text();
+    const json = await response.json();
 
-    console.log("LOGIN XML RESPONSE:", xml);
+    console.log("LOGIN JSON RESPONSE:", json);
 
-    const parsed = await xml2js.parseStringPromise(xml);
-
-    if (parsed.error) {
-      console.log("❌ MFL Login Error:", parsed.error);
-      return res.json({ success: false });
-    }
-
-    const statusAttrs = parsed.status?.$;
+    const statusAttrs = json.status;
     if (!statusAttrs) {
       console.log("❌ No status attributes found");
       return res.json({ success: false });
