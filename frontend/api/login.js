@@ -1,4 +1,4 @@
-import { fetch, xml2js } from "./_utils";
+const xml2js = require("xml2js");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -28,7 +28,6 @@ export default async function handler(req, res) {
     const statusAttrs = parsed?.status?.$;
 
     if (!statusAttrs) {
-      console.log("❌ No status attributes found");
       return res.json({ success: false });
     }
 
@@ -51,20 +50,19 @@ export default async function handler(req, res) {
     }
 
     if (!cookieName || !cookieValue) {
-      console.log("❌ Could not extract cookie name/value");
       return res.json({ success: false });
     }
 
     res.setHeader(
       "Set-Cookie",
-      `${cookieName}=${cookieValue}; Path=/; SameSite=None; Secure; HttpOnly`
+      `${cookieName}=${cookieValue}; Path=/; HttpOnly; Secure; SameSite=None`
     );
 
-    console.log("✔ MFL COOKIE SET:", cookieName, cookieValue);
-
     return res.json({ success: true });
+
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    res.json({ success: false });
+    return res.status(500).json({ error: "Server error" });
   }
 }
+
