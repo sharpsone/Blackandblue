@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import cookieParser from "cookie-parser";
+import xml2js from "xml2js";
 
 const app = express();
 
@@ -15,7 +16,6 @@ app.use(
   })
 );
 
-// Allow preflight requests
 app.options("*", cors());
 
 app.use(express.json());
@@ -65,34 +65,33 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   LOGIN ROUTE — JSON LOGIN + FIXED COOKIE EXTRACTION
+   LOGIN ROUTE — XML LOGIN + FIXED COOKIE EXTRACTION
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password, year } = req.body;
     const season = year || DEFAULT_YEAR;
 
-    // ⭐ SWITCHED FROM XML TO JSON
     const url = `https://api.myfantasyleague.com/${season}/login?USERNAME=${encodeURIComponent(
       username
-    )}&PASSWORD=${encodeURIComponent(password)}&JSON=1`;
+    )}&PASSWORD=${encodeURIComponent(password)}&XML=1`;
 
     console.log("LOGIN URL:", url);
 
     const response = await fetch(url);
-    const json = await response.json();
+    const xml = await response.text();
 
-    console.log("LOGIN JSON RESPONSE:", json);
+    console.log("LOGIN XML RESPONSE:", xml);
 
-    // JSON login puts cookie fields at the top level
-    const statusAttrs = json;
+    const parsed = await xml2js.parseStringPromise(xml);
 
-    if (!statusAttrs || typeof statusAttrs !== "object") {
-      console.log("❌ Invalid login response");
+    const statusAttrs = parsed?.status?.$;
+    if (!statusAttrs) {
+      console.log("❌ No status attributes found");
       return res.json({ success: false });
     }
 
-    // ⭐ FIX: Prefer MFL_GLOBAL → fallback to MFL_USER → fallback to session → fallback to first attribute
+    // ⭐ FIX: Prefer MFL_GLOBAL → fallback to MFL_USER → fallback to first attribute
     let cookieName = null;
     let cookieValue = null;
 
@@ -102,9 +101,6 @@ app.post("/api/login", async (req, res) => {
     } else if (statusAttrs.MFL_USER) {
       cookieName = "MFL_USER";
       cookieValue = statusAttrs.MFL_USER;
-    } else if (statusAttrs.session_id) {
-      cookieName = "MFL_SESSION_ID";
-      cookieValue = statusAttrs.session_id;
     } else {
       const firstKey = Object.keys(statusAttrs)[0];
       cookieName = firstKey;
