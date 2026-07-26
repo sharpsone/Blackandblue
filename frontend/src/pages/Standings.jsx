@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getStandings } from "../utils/api";
-import "./standings.css";
 
 function Standings({ leagueId, myFranchiseId, year }) {
   const [standings, setStandings] = useState(null);
