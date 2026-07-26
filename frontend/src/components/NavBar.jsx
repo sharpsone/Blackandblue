@@ -1,3 +1,4 @@
+import "./App.css";
 export default function NavBar({ page, setPage }) {
   const tabs = [
     { id: "standings", label: "Standings" },
