@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { fetchSchedule, fetchLeague } from "../utils/api";
+//import { fetchSchedule, fetchLeague } from "../utils/api";
+import { getSchedule } from "../utils/api";
+
 import "./schedule.css";
 
 // Safe date formatter

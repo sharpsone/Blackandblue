@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchRoster } from "../utils/api";
+import { getRoster } from "../utils/api";
 import "./roster.css";
 
 function Roster({ leagueId, year, myFranchiseId }) {

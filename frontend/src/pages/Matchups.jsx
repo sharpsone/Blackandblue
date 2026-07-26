@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Badge from "../components/Badge";
 import "../utils/animations.css";
-import { fetchMatchups, fetchLeague } from "../utils/api";
+import { getSchedule } from "../utils/api";
 
 export default function Matchups({ leagueId, myFranchiseId }) {
   const [matchups, setMatchups] = useState([]);

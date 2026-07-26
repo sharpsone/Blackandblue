@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import TeamCard from "../components/TeamCard";
-import { fetchLeague, fetchStandings } from "../utils/api";
+import { getStandings } from "../utils/api";
 import "../utils/animations.css";
 
 export default function Standings({ leagueId, myFranchiseId, year }) {
