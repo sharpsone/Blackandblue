@@ -49,7 +49,7 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   ⭐ LOGIN ROUTE
+   ⭐ LOGIN ROUTE — FIXED FOR node-fetch v3 + ESM
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
@@ -57,10 +57,15 @@ app.post("/api/login", async (req, res) => {
 
     const url = `https://api.myfantasyleague.com/${year}/export?TYPE=login&USERNAME=${username}&PASSWORD=${password}&JSON=1`;
 
+    console.log("LOGIN URL:", url);
+
     const response = await fetch(url);
     const data = await response.json();
 
-    if (!data || !data.login || data.login.status !== "success") {
+    console.log("LOGIN RESPONSE:", data);
+
+    if (!data?.login || data.login.status !== "success") {
+      console.log("❌ MFL Login Failed");
       return res.json({ success: false });
     }
 
@@ -72,7 +77,7 @@ app.post("/api/login", async (req, res) => {
       secure: true
     });
 
-    console.log("MFL COOKIE RECEIVED:", userCookie);
+    console.log("✔ MFL COOKIE RECEIVED:", userCookie);
 
     return res.json({ success: true });
   } catch (err) {
@@ -104,7 +109,7 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   ⭐ UPDATED ROSTER ROUTE — 2026 JSON API
+   ⭐ ROSTER ROUTE — 2026 JSON API
    ============================================================ */
 app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
@@ -122,7 +127,7 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
     const text = await response.text();
 
     if (text.startsWith("<")) {
-      console.error("MFL returned HTML instead of JSON:", text.slice(0, 200));
+      console.error("❌ MFL returned HTML instead of JSON:", text.slice(0, 200));
       return res.status(500).json({ error: "MFL returned HTML instead of JSON" });
     }
 
@@ -165,12 +170,6 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch standings" });
   }
 });
-
-/* ============================================================
-   ⭐ OTHER ROUTES (unchanged)
-   ============================================================ */
-// You can keep your other routes exactly as they were.
-// They already work correctly for 2026.
 
 /* ============================================================
    ⭐ START SERVER
