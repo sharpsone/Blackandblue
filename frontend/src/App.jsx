@@ -14,9 +14,10 @@ import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
 
+// ⭐ FIXED IMPORTS — matching your updated api.js
 import {
-  loginUser,
-  fetchMyLeagues
+  login as loginUser,
+  getMyLeagues as fetchMyLeagues
 } from "./utils/api";
 
 function App() {
