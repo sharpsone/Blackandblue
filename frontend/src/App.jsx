@@ -28,11 +28,11 @@ function App() {
   const [myFranchiseId, setMyFranchiseId] = useState(null);
 
   const [leagueId] = useState("19757");
-  const [year, setYear] = useState("2025");
+  const [year, setYear] = useState("2026");
 
   const [error, setError] = useState(null);
 
-  // ⭐ FIX: Always start logged out on refresh
+  // Always start logged out on refresh
   useEffect(() => {
     setLoggedIn(false);
     setMyFranchiseId(null);
