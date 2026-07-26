@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { fetchSchedule, fetchLeague } from "../utils/api";
 import "./schedule.css";
 
-// Format YYYYMMDD → MM/DD/YYYY
+// Safe date formatter
 function formatDate(raw) {
-  if (!raw) return "";
+  if (!raw || raw.length !== 8) return "TBD";
   return `${raw.substring(4, 6)}/${raw.substring(6, 8)}/${raw.substring(0, 4)}`;
 }
 
-// Generate initials (Sleeper-style)
+// Generate initials
 function getInitials(name) {
   if (!name) return "";
   return name
@@ -19,15 +19,18 @@ function getInitials(name) {
     .slice(0, 3);
 }
 
-// Determine game status
+// Safe game status
 function getGameStatus(awayScore, homeScore, dateRaw) {
-  if (awayScore && homeScore) return "Final";
+  if (!dateRaw || dateRaw.length !== 8) {
+    return awayScore && homeScore ? "Final" : "Scheduled";
+  }
 
   const today = new Date();
   const gameDate = new Date(
     `${dateRaw.substring(0, 4)}-${dateRaw.substring(4, 6)}-${dateRaw.substring(6, 8)}`
   );
 
+  if (awayScore && homeScore) return "Final";
   if (gameDate > today) return "Scheduled";
   return "In Progress";
 }
@@ -64,6 +67,7 @@ function Schedule({ leagueId, year }) {
     async function loadSchedule() {
       const data = await fetchSchedule(leagueId, year);
       const weekly = data?.schedule?.weeklySchedule || [];
+
       setWeeks(weekly);
 
       if (weekly.length > 0) {
@@ -85,7 +89,7 @@ function Schedule({ leagueId, year }) {
     <div style={{ padding: "1rem" }}>
       <h1 style={{ marginBottom: "1rem" }}>Schedule</h1>
 
-      {/* ⭐ Week Selector */}
+      {/* Week Selector */}
       <div className="week-selector">
         {weeks.map(w => (
           <button
@@ -98,14 +102,14 @@ function Schedule({ leagueId, year }) {
         ))}
       </div>
 
-      {/* ⭐ Selected Week Display */}
+      {/* Selected Week Display */}
       {filteredWeeks.map((weekObj, idx) => (
         <div key={idx} style={{ marginBottom: "2rem" }}>
           <div className="week-header">WEEK {weekObj.week}</div>
 
-          {weekObj.matchup.map((m, mIdx) => {
-            const away = m.franchise[0];
-            const home = m.franchise[1];
+          {(weekObj.matchup || []).map((m, mIdx) => {
+            const away = m.franchise?.[0] || {};
+            const home = m.franchise?.[1] || {};
 
             const awayInfo = franchiseMap[away.id] || {};
             const homeInfo = franchiseMap[home.id] || {};
@@ -127,12 +131,11 @@ function Schedule({ leagueId, year }) {
             return (
               <div key={mIdx} className="matchup-card">
 
-                {/* ⭐ Game Status */}
                 <div className={`game-status status-${status.toLowerCase()}`}>
                   {status}
                 </div>
 
-                {/* Away Team Row */}
+                {/* Away Team */}
                 <div className="team-row">
                   <div className="team-info">
                     {awayLogo ? (
@@ -154,7 +157,7 @@ function Schedule({ leagueId, year }) {
                   </div>
                 </div>
 
-                {/* Home Team Row */}
+                {/* Home Team */}
                 <div className="team-row">
                   <div className="team-info">
                     {homeLogo ? (
@@ -176,7 +179,7 @@ function Schedule({ leagueId, year }) {
                   </div>
                 </div>
 
-                {/* Matchup Summary */}
+                {/* Summary */}
                 {away.score && home.score && (
                   <div className="match-summary">
                     {awayWinner
@@ -186,9 +189,7 @@ function Schedule({ leagueId, year }) {
                 )}
 
                 {/* Date */}
-                {m.date && (
-                  <div className="match-date">Date: {formatDate(m.date)}</div>
-                )}
+                <div className="match-date">Date: {formatDate(m.date)}</div>
               </div>
             );
           })}
