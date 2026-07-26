@@ -1,6 +1,6 @@
-const xml2js = require("xml2js");
-//
-module.exports = async function handler(req, res) {
+import { parseStringPromise } from "xml2js";
+
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
 
     console.log("LOGIN XML RESPONSE:", xml);
 
-    const parsed = await xml2js.parseStringPromise(xml);
+    const parsed = await parseStringPromise(xml);
     const statusAttrs = parsed?.status?.$;
 
     if (!statusAttrs) {
@@ -67,5 +67,4 @@ module.exports = async function handler(req, res) {
     console.error("LOGIN ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
-};
-
+}
