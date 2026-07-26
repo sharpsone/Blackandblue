@@ -1,10 +1,10 @@
-const API_BASE = "https://blackandblue.onrender.com";
+const API_BASE = "/api";
 
 // LOGIN
 export async function login(username, password, year = "2026") {
-  const response = await fetch(`${API_BASE}/api/login`, {
+  const response = await fetch(`${API_BASE}/login`, {
     method: "POST",
-    credentials: "include",   // ⭐ REQUIRED
+    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },
@@ -14,10 +14,10 @@ export async function login(username, password, year = "2026") {
   return response.json();
 }
 
-// GET MY LEAGUES (detect franchise)
+// GET MY LEAGUES
 export async function getMyLeagues(year = "2026") {
-  const response = await fetch(`${API_BASE}/api/myleagues?year=${year}`, {
-    credentials: "include"     // ⭐ REQUIRED
+  const response = await fetch(`${API_BASE}/myleagues?year=${year}`, {
+    credentials: "include"
   });
 
   return response.json();
@@ -26,9 +26,9 @@ export async function getMyLeagues(year = "2026") {
 // GET LEAGUE INFO
 export async function getLeagueInfo(leagueId, year = "2026") {
   const response = await fetch(
-    `${API_BASE}/api/league/${leagueId}?year=${year}`,
+    `${API_BASE}/league?leagueId=${leagueId}&year=${year}`,
     {
-      credentials: "include"   // ⭐ REQUIRED
+      credentials: "include"
     }
   );
 
@@ -38,9 +38,9 @@ export async function getLeagueInfo(leagueId, year = "2026") {
 // GET STANDINGS
 export async function getStandings(leagueId, year = "2026") {
   const response = await fetch(
-    `${API_BASE}/api/league/${leagueId}/standings?year=${year}`,
+    `${API_BASE}/standings?leagueId=${leagueId}&year=${year}`,
     {
-      credentials: "include"   // ⭐ REQUIRED
+      credentials: "include"
     }
   );
 
@@ -50,9 +50,9 @@ export async function getStandings(leagueId, year = "2026") {
 // GET SCHEDULE
 export async function getSchedule(leagueId, year = "2026") {
   const response = await fetch(
-    `${API_BASE}/api/league/${leagueId}/schedule?year=${year}`,
+    `${API_BASE}/schedule?leagueId=${leagueId}&year=${year}`,
     {
-      credentials: "include"   // ⭐ REQUIRED
+      credentials: "include"
     }
   );
 
@@ -62,9 +62,9 @@ export async function getSchedule(leagueId, year = "2026") {
 // GET ROSTER
 export async function getRoster(leagueId, franchiseId, year = "2026") {
   const response = await fetch(
-    `${API_BASE}/api/league/${leagueId}/rosters?franchiseId=${franchiseId}&year=${year}`,
+    `${API_BASE}/rosters?leagueId=${leagueId}&franchiseId=${franchiseId}&year=${year}`,
     {
-      credentials: "include"   // ⭐ REQUIRED
+      credentials: "include"
     }
   );
 
