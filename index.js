@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import cookieParser from "cookie-parser";
+import xml2js from "xml2js";
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
@@ -9,9 +10,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 const DEFAULT_YEAR = "2026";
-
-// ⚠️ Set this in your environment on Render, not hard-coded.
-// e.g. MFL_APIKEY=ahVp3s+SvuWpx1emOVDGZDUeFKUtiQ==
 const MFL_APIKEY = process.env.MFL_APIKEY;
 
 /* ============================================================
@@ -23,10 +21,8 @@ function getYear(req) {
 
 /* ============================================================
    Helper: Require Login Middleware
-   - Checks for the MFL user cookie
    ============================================================ */
 function requireLogin(req, res, next) {
-  // MFL docs: cookie name is typically MFL_USER_ID
   const hasCookie = Object.keys(req.cookies || {}).length > 0;
 
   if (!hasCookie) {
@@ -57,42 +53,40 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   LOGIN ROUTE — Correct /login command + cookie
+   LOGIN ROUTE — Correct XML login + cookie extraction
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password, year } = req.body;
     const season = year || DEFAULT_YEAR;
 
-    // Correct login endpoint per MFL docs:
-    // https://api.myfantasyleague.com/2026/login?USERNAME=...&PASSWORD=...&XML=1
     const url = `https://api.myfantasyleague.com/${season}/login?USERNAME=${encodeURIComponent(
       username
-    )}&PASSWORD=${encodeURIComponent(password)}&JSON=1`;
+    )}&PASSWORD=${encodeURIComponent(password)}&XML=1`;
 
     console.log("LOGIN URL:", url);
 
     const response = await fetch(url);
-    const data = await response.json();
+    const xml = await response.text();
 
-    console.log("LOGIN RESPONSE:", data);
+    console.log("LOGIN XML RESPONSE:", xml);
 
-    // MFL docs: valid login returns <status cookie_name="..." cookie_value="...">
-    if (data.error) {
-      console.log("❌ MFL Login Error:", data.error);
+    const parsed = await xml2js.parseStringPromise(xml);
+
+    if (parsed.error) {
+      console.log("❌ MFL Login Error:", parsed.error);
       return res.json({ success: false });
     }
 
-    const status = data.status;
+    const status = parsed.status?.$;
     if (!status || !status.cookie_name || !status.cookie_value) {
-      console.log("❌ MFL Login Missing Cookie Info");
+      console.log("❌ Missing cookie info in login response");
       return res.json({ success: false });
     }
 
-    const cookieName = status.cookie_name;   // e.g. "MFL_USER_ID"
-    const cookieValue = status.cookie_value; // base64 value
+    const cookieName = status.cookie_name;
+    const cookieValue = status.cookie_value;
 
-    // Set the MFL user cookie for subsequent requests
     res.cookie(cookieName, cookieValue, {
       httpOnly: true,
       sameSite: "none",
@@ -102,6 +96,7 @@ app.post("/api/login", async (req, res) => {
     console.log("✔ MFL COOKIE SET:", cookieName, cookieValue);
 
     return res.json({ success: true });
+
   } catch (err) {
     console.error("LOGIN ERROR:", err);
     res.json({ success: false });
@@ -109,7 +104,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* ============================================================
-   LEAGUE INFO ROUTE — uses APIKEY for auth
+   LEAGUE INFO ROUTE — APIKEY hybrid auth
    ============================================================ */
 app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
   try {
@@ -135,7 +130,7 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   ROSTER ROUTE — 2026 JSON API + APIKEY
+   ROSTER ROUTE — APIKEY hybrid auth
    ============================================================ */
 app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
@@ -177,7 +172,7 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   STANDINGS ROUTE — 2026 JSON API + APIKEY
+   STANDINGS ROUTE — APIKEY hybrid auth
    ============================================================ */
 app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   try {
