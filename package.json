@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "node-fetch": "^3.3.2",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
