@@ -26,7 +26,7 @@ function App() {
 
   const [myFranchiseId, setMyFranchiseId] = useState(null);
 
-  // IMPORTANT: leagueId must be a NUMBER, not a string
+  // IMPORTANT: leagueId must be a NUMBER
   const [leagueId] = useState(19757);
   const [year, setYear] = useState("2026");
 
