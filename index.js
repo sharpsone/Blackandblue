@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import cookieParser from "cookie-parser";
-import xml2js from "xml2js";
 
 const app = express();
 
@@ -85,13 +84,15 @@ app.post("/api/login", async (req, res) => {
 
     console.log("LOGIN JSON RESPONSE:", json);
 
-    const statusAttrs = json.status;
-    if (!statusAttrs) {
-      console.log("❌ No status attributes found");
+    // JSON login puts cookie fields at the top level
+    const statusAttrs = json;
+
+    if (!statusAttrs || typeof statusAttrs !== "object") {
+      console.log("❌ Invalid login response");
       return res.json({ success: false });
     }
 
-    // ⭐ FIX: Prefer MFL_GLOBAL → fallback to MFL_USER → fallback to first attribute
+    // ⭐ FIX: Prefer MFL_GLOBAL → fallback to MFL_USER → fallback to session → fallback to first attribute
     let cookieName = null;
     let cookieValue = null;
 
@@ -101,9 +102,13 @@ app.post("/api/login", async (req, res) => {
     } else if (statusAttrs.MFL_USER) {
       cookieName = "MFL_USER";
       cookieValue = statusAttrs.MFL_USER;
+    } else if (statusAttrs.session_id) {
+      cookieName = "MFL_SESSION_ID";
+      cookieValue = statusAttrs.session_id;
     } else {
-      cookieName = Object.keys(statusAttrs)[0];
-      cookieValue = statusAttrs[cookieName];
+      const firstKey = Object.keys(statusAttrs)[0];
+      cookieName = firstKey;
+      cookieValue = statusAttrs[firstKey];
     }
 
     if (!cookieName || !cookieValue) {
