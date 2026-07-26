@@ -5,7 +5,20 @@ import cookieParser from "cookie-parser";
 import xml2js from "xml2js";
 
 const app = express();
-app.use(cors({ origin: true, credentials: true }));
+
+/* ============================================================
+   CORS — REQUIRED FOR LOGIN COOKIE TO WORK
+   ============================================================ */
+app.use(
+  cors({
+    origin: "https://blackandblue.vercel.app",
+    credentials: true
+  })
+);
+
+// Allow preflight requests
+app.options("*", cors());
+
 app.use(express.json());
 app.use(cookieParser());
 
