@@ -65,16 +65,21 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   LOGIN ROUTE — XML LOGIN + FIXED COOKIE EXTRACTION
+   LOGIN ROUTE — XML LOGIN + FIXED PASSWORD ENCODING
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password, year } = req.body;
     const season = year || DEFAULT_YEAR;
 
-    const url = `https://api.myfantasyleague.com/${season}/login?USERNAME=${encodeURIComponent(
-      username
-    )}&PASSWORD=${encodeURIComponent(password)}&XML=1`;
+    // ⭐ FIX: Use URLSearchParams so special characters (like !) are encoded correctly
+    const params = new URLSearchParams({
+      USERNAME: username,
+      PASSWORD: password,
+      XML: "1"
+    });
+
+    const url = `https://api.myfantasyleague.com/${season}/login?${params.toString()}`;
 
     console.log("LOGIN URL:", url);
 
