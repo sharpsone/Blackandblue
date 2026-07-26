@@ -53,7 +53,7 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   LOGIN ROUTE — Correct XML login + cookie extraction
+   LOGIN ROUTE — Correct XML login + dynamic cookie extraction
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
@@ -78,14 +78,20 @@ app.post("/api/login", async (req, res) => {
       return res.json({ success: false });
     }
 
-    const status = parsed.status?.$;
-    if (!status || !status.cookie_name || !status.cookie_value) {
-      console.log("❌ Missing cookie info in login response");
+    const statusAttrs = parsed.status?.$;
+    if (!statusAttrs) {
+      console.log("❌ No status attributes found");
       return res.json({ success: false });
     }
 
-    const cookieName = status.cookie_name;
-    const cookieValue = status.cookie_value;
+    // MFL returns: <status MFL_USER_ID="cookieValue">OK</status>
+    const cookieName = Object.keys(statusAttrs)[0];
+    const cookieValue = statusAttrs[cookieName];
+
+    if (!cookieName || !cookieValue) {
+      console.log("❌ Could not extract cookie name/value");
+      return res.json({ success: false });
+    }
 
     res.cookie(cookieName, cookieValue, {
       httpOnly: true,
