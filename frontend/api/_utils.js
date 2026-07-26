@@ -10,11 +10,20 @@ export function getYear(req) {
 export function getCookies(req) {
   const cookieHeader = req.headers.cookie || "";
   const cookies = {};
+
   cookieHeader.split(";").forEach((part) => {
     const [name, ...rest] = part.trim().split("=");
     if (!name) return;
-    cookies[name] = rest.join("=");
+
+    const rawValue = rest.join("=");
+
+    // Always decode cookie values
+    const decodedValue = decodeURIComponent(rawValue);
+
+    // Prefer decoded value if duplicates exist
+    cookies[name] = decodedValue;
   });
+
   return cookies;
 }
 
@@ -34,6 +43,8 @@ export function buildAuthHeaders(req) {
     console.log("❌ No MFL cookie found in request");
     return {};
   }
+
+  console.log("COOKIE SENT TO MFL:", cookieName, cookies[cookieName]);
 
   return {
     Cookie: `${cookieName}=${cookies[cookieName]}`
