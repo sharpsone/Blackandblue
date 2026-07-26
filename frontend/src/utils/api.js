@@ -17,6 +17,29 @@ export async function fetchLeague(leagueId, year = "2026") {
   return res.json();
 }
 
+export async function fetchStandings(leagueId, year = "2026") {
+  const res = await fetch(
+    `${API_BASE}/api/league/${leagueId}/standings?year=${year}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+export async function fetchSchedule(leagueId, year = "2026") {
+  const res = await fetch(
+    `${API_BASE}/api/league/${leagueId}/schedule?year=${year}`,
+    { credentials: "include" }
+  );
+  return res.json();
+}
+
+export async function fetchMyLeagues(year = "2026") {
+  const res = await fetch(`${API_BASE}/api/myleagues?year=${year}`, {
+    credentials: "include"
+  });
+  return res.json();
+}
+
 export async function fetchRoster(leagueId, franchiseId, year = "2026") {
   const res = await fetch(
     `${API_BASE}/api/league/${leagueId}/rosters?franchiseId=${franchiseId}&year=${year}`,
@@ -25,13 +48,7 @@ export async function fetchRoster(leagueId, franchiseId, year = "2026") {
   return res.json();
 }
 
-export async function fetchStandings(leagueId, year = "2026") {
-  const res = await fetch(
-    `${API_BASE}/api/league/${leagueId}/standings?year=${year}`,
-    { credentials: "include" }
-  );
-  return res.json();
-}
+// (keep your other endpoints as-is, just ensure credentials: "include")
 
 export async function fetchLiveScoring(leagueId, franchiseId, year = "2026") {
   const res = await fetch(
@@ -89,7 +106,7 @@ export async function fetchFreeAgents(leagueId, year = "2026") {
   return res.json();
 }
 
-export async function fetchSchedule(leagueId, year = "2026") {
+export async function fetchScheduleFull(leagueId, year = "2026") {
   const res = await fetch(
     `${API_BASE}/api/league/${leagueId}/schedule?year=${year}`,
     { credentials: "include" }

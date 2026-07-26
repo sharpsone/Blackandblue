@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import "./App.css";
+import { useEffect, useState } from "react";
 
 import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
@@ -16,7 +15,8 @@ import PlayoffBracket from "./pages/PlayoffBracket";
 
 import {
   loginUser,
-  fetchLeague
+  fetchLeague,
+  fetchMyLeagues
 } from "./utils/api";
 
 function App() {
@@ -42,6 +42,7 @@ function App() {
   async function login() {
     setError(null);
 
+    // Step 1: Login
     const res = await loginUser(username, password, year);
     if (!res.success) {
       setError("Login failed");
@@ -51,32 +52,29 @@ function App() {
     setLoggedIn(true);
 
     try {
-      const leagueInfo = await fetchLeague(leagueId, year);
+      // Step 2: Get all leagues the user belongs to
+      const myLeagues = await fetchMyLeagues(year);
 
-      const franchises =
-        leagueInfo?.league?.franchises?.franchise || [];
-
-      const myFranchise = franchises.find(
-        (f) =>
-          f.username?.toLowerCase() === username.toLowerCase() ||
-          f.email?.toLowerCase() === username.toLowerCase()
+      const leagueEntry = myLeagues?.myleagues?.league?.find(
+        (l) => l.id === leagueId
       );
 
-      if (!myFranchise) {
-        console.error("❌ Could not match username/email to any franchise");
+      if (!leagueEntry) {
+        console.error("❌ User does not belong to this league");
         setError("Could not determine franchise ID");
         return;
       }
 
-      const franchise = myFranchise.id;
+      const franchise = leagueEntry.franchise;
 
       console.log("✔ DETECTED FRANCHISE ID:", franchise);
 
       setMyFranchiseId(franchise);
       localStorage.setItem("myFranchiseId", franchise);
+
     } catch (err) {
       console.error("FRANCHISE DETECTION ERROR:", err);
-      setError("Failed to load league info");
+      setError("Failed to detect franchise ID");
     }
 
     setPage("standings");
