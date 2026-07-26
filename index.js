@@ -72,7 +72,6 @@ app.post("/api/login", async (req, res) => {
     const { username, password, year } = req.body;
     const season = year || DEFAULT_YEAR;
 
-    // ⭐ FIX: Use URLSearchParams so special characters (like !) are encoded correctly
     const params = new URLSearchParams({
       USERNAME: username,
       PASSWORD: password,
@@ -96,7 +95,6 @@ app.post("/api/login", async (req, res) => {
       return res.json({ success: false });
     }
 
-    // ⭐ FIX: Prefer MFL_GLOBAL → fallback to MFL_USER → fallback to first attribute
     let cookieName = null;
     let cookieValue = null;
 
@@ -175,22 +173,23 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   STANDINGS ROUTE
+   ⭐ FIXED STANDINGS ROUTE — now uses correct host + cookie
    ============================================================ */
-app.get("/api/league/:leagueId/standings", async (req, res) => {
-  const { leagueId } = req.params;
-  const year = req.query.year || "2026";
-
+app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   try {
-    const cookieName = Object.keys(req.cookies)[0];
-    const cookieValue = req.cookies[cookieName];
+    const { leagueId } = req.params;
+    const year = getYear(req);
 
-    const url = `https://api.myfantasyleague.com/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
+    const host = await detectMFLHost(year, leagueId);
+
+    const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1${
+      MFL_APIKEY ? `&APIKEY=${encodeURIComponent(MFL_APIKEY)}` : ""
+    }`;
+
+    console.log("STANDINGS URL:", url);
 
     const response = await fetch(url, {
-      headers: {
-        Cookie: `${cookieName}=${cookieValue}`
-      }
+      headers: buildAuthHeaders(req)
     });
 
     const data = await response.json();
@@ -202,13 +201,9 @@ app.get("/api/league/:leagueId/standings", async (req, res) => {
 
   } catch (err) {
     console.error("STANDINGS ERROR:", err);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to load standings"
-    });
+    res.status(500).json({ error: "Failed to fetch standings" });
   }
 });
-
 
 /* ============================================================
    SCHEDULE ROUTE — normalized
