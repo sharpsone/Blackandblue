@@ -22,7 +22,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 const DEFAULT_YEAR = "2026";
-const MFL_APIKEY = process.env.MFL_APIKEY;
 
 /* ============================================================
    Helper: Determine Year
@@ -98,12 +97,15 @@ app.post("/api/login", async (req, res) => {
     let cookieName = null;
     let cookieValue = null;
 
-    if (statusAttrs.MFL_GLOBAL) {
-      cookieName = "MFL_GLOBAL";
-      cookieValue = statusAttrs.MFL_GLOBAL;
+    if (statusAttrs.MFL_USER_ID) {
+      cookieName = "MFL_USER_ID";
+      cookieValue = statusAttrs.MFL_USER_ID;
     } else if (statusAttrs.MFL_USER) {
       cookieName = "MFL_USER";
       cookieValue = statusAttrs.MFL_USER;
+    } else if (statusAttrs.MFL_GLOBAL) {
+      cookieName = "MFL_GLOBAL";
+      cookieValue = statusAttrs.MFL_GLOBAL;
     } else {
       const firstKey = Object.keys(statusAttrs)[0];
       cookieName = firstKey;
@@ -132,14 +134,27 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* ============================================================
-   Helper: Build headers with cookie
+   ⭐ FIXED AUTH HEADER — ALWAYS FINDS THE REAL LOGIN COOKIE
    ============================================================ */
 function buildAuthHeaders(req) {
-  const cookieName = Object.keys(req.cookies)[0];
-  const cookieValue = req.cookies[cookieName];
+  const cookies = req.cookies || {};
+
+  const cookieName =
+    cookies.MFL_USER_ID
+      ? "MFL_USER_ID"
+      : cookies.MFL_USER
+      ? "MFL_USER"
+      : cookies.MFL_GLOBAL
+      ? "MFL_GLOBAL"
+      : null;
+
+  if (!cookieName) {
+    console.log("❌ No MFL cookie found in request");
+    return {};
+  }
 
   return {
-    Cookie: `${cookieName}=${cookieValue}`
+    Cookie: `${cookieName}=${cookies[cookieName]}`
   };
 }
 
@@ -153,9 +168,7 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 
     const host = await detectMFLHost(year, leagueId);
 
-    const url = `https://${host}/${year}/export?TYPE=league&L=${leagueId}&JSON=1${
-      MFL_APIKEY ? `&APIKEY=${encodeURIComponent(MFL_APIKEY)}` : ""
-    }`;
+    const url = `https://${host}/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
 
     console.log("LEAGUE URL:", url);
 
@@ -173,17 +186,13 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   ⭐ FIXED STANDINGS ROUTE 
-   ============================================================ */
-/* ============================================================
-   FIXED STANDINGS ROUTE — always uses login cookie, never APIKEY
+   ⭐ FIXED STANDINGS ROUTE — COOKIE FORWARDING WORKS NOW
    ============================================================ */
 app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
   try {
     const { leagueId } = req.params;
     const year = getYear(req);
 
-    // Detect correct host (www60, www61, etc.)
     const host = await detectMFLHost(year, leagueId);
 
     const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
@@ -191,18 +200,55 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
     console.log("STANDINGS URL:", url);
 
     const response = await fetch(url, {
-      headers: buildAuthHeaders(req)   // ⭐ THIS IS THE FIX
+      headers: buildAuthHeaders(req)
     });
 
     const data = await response.json();
 
-    return res.json(data);            // ⭐ Return raw MFL JSON
+    return res.json(data);
+
   } catch (err) {
     console.error("STANDINGS ERROR:", err);
     res.status(500).json({ error: "Failed to fetch standings" });
   }
 });
 
+/* ============================================================
+   SCHEDULE ROUTE — normalized
+   ============================================================ */
+app.get("/api/league/:leagueId/schedule", requireLogin, async (req, res) => {
+  try {
+    const { leagueId } = req.params;
+    const year = getYear(req);
+
+    const host = await detectMFLHost(year, leagueId);
+
+    const url = `https://${host}/${year}/export?TYPE=schedule&L=${leagueId}&JSON=1`;
+
+    console.log("SCHEDULE URL:", url);
+
+    const response = await fetch(url, {
+      headers: buildAuthHeaders(req)
+    });
+
+    const raw = await response.json();
+
+    const weeklySchedule =
+      raw?.schedule?.weeklySchedule ||
+      raw?.weeklySchedule ||
+      [];
+
+    return res.json({
+      schedule: {
+        weeklySchedule
+      }
+    });
+
+  } catch (err) {
+    console.error("SCHEDULE ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch schedule" });
+  }
+});
 
 /* ============================================================
    MYLEAGUES ROUTE — franchise detection
@@ -240,9 +286,7 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
 
     const host = await detectMFLHost(year, leagueId);
 
-    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1${
-      MFL_APIKEY ? `&APIKEY=${encodeURIComponent(MFL_APIKEY)}` : ""
-    }`;
+    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 
     console.log("ROSTER URL:", url);
 
