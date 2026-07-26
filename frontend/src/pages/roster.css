@@ -1,0 +1,23 @@
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.player-card {
+  background: #001d3d;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #003566;
+}
+
+.player-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.player-meta {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
