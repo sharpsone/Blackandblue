@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStandings } from "../utils/api";
+import "./standings.css";
 
 function Standings({ leagueId, myFranchiseId, year }) {
   const [standings, setStandings] = useState(null);
@@ -10,8 +11,10 @@ function Standings({ leagueId, myFranchiseId, year }) {
       setLoading(true);
 
       try {
-        const data = await getStandings(leagueId, year);
-        setStandings(data);
+        const res = await getStandings(leagueId, year);
+
+        // MFL data is inside res.data
+        setStandings(res?.data || null);
       } catch (err) {
         console.error("STANDINGS ERROR:", err);
       }
@@ -34,37 +37,21 @@ function Standings({ leagueId, myFranchiseId, year }) {
     );
   }
 
-  const rows =
-    standings?.standings?.franchise || standings?.franchise || [];
+  // Correct MFL path:
+  const rows = standings?.standings?.franchise || [];
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div className="standings-container">
       <h1>Standings</h1>
 
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          marginTop: "1rem"
-        }}
-      >
+      <table className="standings-table">
         <thead>
-          <tr style={{ background: "#001f3f" }}>
-            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
-              Franchise
-            </th>
-            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
-              Wins
-            </th>
-            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
-              Losses
-            </th>
-            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
-              Points For
-            </th>
-            <th style={{ padding: "0.5rem", border: "1px solid #333" }}>
-              Points Against
-            </th>
+          <tr>
+            <th>Franchise</th>
+            <th>Wins</th>
+            <th>Losses</th>
+            <th>Points For</th>
+            <th>Points Against</th>
           </tr>
         </thead>
 
@@ -72,26 +59,17 @@ function Standings({ leagueId, myFranchiseId, year }) {
           {rows.map((f) => (
             <tr
               key={f.id}
-              style={{
-                background:
-                  f.id === String(myFranchiseId) ? "#003366" : "#000"
-              }}
+              className={
+                f.id === String(myFranchiseId)
+                  ? "standings-row highlight"
+                  : "standings-row"
+              }
             >
-              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
-                {f.name}
-              </td>
-              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
-                {f.wins}
-              </td>
-              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
-                {f.losses}
-              </td>
-              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
-                {f.points_for}
-              </td>
-              <td style={{ padding: "0.5rem", border: "1px solid #333" }}>
-                {f.points_against}
-              </td>
+              <td>{f.name}</td>
+              <td>{f.h2hwins}</td>
+              <td>{f.h2hlosses}</td>
+              <td>{f.pf}</td>
+              <td>{f.pa}</td>
             </tr>
           ))}
         </tbody>
@@ -101,3 +79,4 @@ function Standings({ leagueId, myFranchiseId, year }) {
 }
 
 export default Standings;
+
