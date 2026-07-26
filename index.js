@@ -177,31 +177,38 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
 /* ============================================================
    STANDINGS ROUTE
    ============================================================ */
-app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
+app.get("/api/league/:leagueId/standings", async (req, res) => {
+  const { leagueId } = req.params;
+  const year = req.query.year || "2026";
+
   try {
-    const { leagueId } = req.params;
-    const year = getYear(req);
+    const cookieName = Object.keys(req.cookies)[0];
+    const cookieValue = req.cookies[cookieName];
 
-    const host = await detectMFLHost(year, leagueId);
-
-    const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1${
-      MFL_APIKEY ? `&APIKEY=${encodeURIComponent(MFL_APIKEY)}` : ""
-    }`;
-
-    console.log("STANDINGS URL:", url);
+    const url = `https://api.myfantasyleague.com/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
 
     const response = await fetch(url, {
-      headers: buildAuthHeaders(req)
+      headers: {
+        Cookie: `${cookieName}=${cookieValue}`
+      }
     });
 
     const data = await response.json();
 
-    return res.json(data);
+    return res.json({
+      success: true,
+      data
+    });
+
   } catch (err) {
     console.error("STANDINGS ERROR:", err);
-    res.status(500).json({ error: "Failed to fetch standings" });
+    return res.status(500).json({
+      success: false,
+      error: "Failed to load standings"
+    });
   }
 });
+
 
 /* ============================================================
    SCHEDULE ROUTE — normalized
