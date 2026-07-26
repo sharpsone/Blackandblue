@@ -53,7 +53,7 @@ async function detectMFLHost(year, leagueId) {
 }
 
 /* ============================================================
-   LOGIN ROUTE — XML login + dynamic cookie extraction
+   LOGIN ROUTE — FIXED COOKIE EXTRACTION
    ============================================================ */
 app.post("/api/login", async (req, res) => {
   try {
@@ -84,8 +84,20 @@ app.post("/api/login", async (req, res) => {
       return res.json({ success: false });
     }
 
-    const cookieName = Object.keys(statusAttrs)[0];
-    const cookieValue = statusAttrs[cookieName];
+    // ⭐ FIX: Prefer MFL_GLOBAL → fallback to MFL_USER → fallback to first attribute
+    let cookieName = null;
+    let cookieValue = null;
+
+    if (statusAttrs.MFL_GLOBAL) {
+      cookieName = "MFL_GLOBAL";
+      cookieValue = statusAttrs.MFL_GLOBAL;
+    } else if (statusAttrs.MFL_USER) {
+      cookieName = "MFL_USER";
+      cookieValue = statusAttrs.MFL_USER;
+    } else {
+      cookieName = Object.keys(statusAttrs)[0];
+      cookieValue = statusAttrs[cookieName];
+    }
 
     if (!cookieName || !cookieValue) {
       console.log("❌ Could not extract cookie name/value");
@@ -218,7 +230,7 @@ app.get("/api/league/:leagueId/schedule", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   MYLEAGUES ROUTE — detect logged-in user's franchise
+   MYLEAGUES ROUTE — franchise detection
    ============================================================ */
 app.get("/api/myleagues", requireLogin, async (req, res) => {
   try {
@@ -243,7 +255,7 @@ app.get("/api/myleagues", requireLogin, async (req, res) => {
 });
 
 /* ============================================================
-   ROSTER ROUTE — franchise-aware, normalized
+   ROSTER ROUTE — franchise-aware
    ============================================================ */
 app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
   try {
