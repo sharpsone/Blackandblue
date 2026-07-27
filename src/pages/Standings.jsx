@@ -1,4 +1,4 @@
-// Set fallback Conference and Division Names (only used if league info missing)
+// Optional fallback names (used only if league info missing)
 const CONFERENCE_NAMES = {
   "00": "Black Conference",
   "01": "Blue Conference"
@@ -42,6 +42,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
       // Build lookup maps from league info
       const conferenceLookup = {};
       const divisionLookup = {};
+      const divisionToConference = {};
 
       conferenceList.forEach(c => {
         conferenceLookup[c.id] = c.name;
@@ -49,26 +50,29 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
       divisionList.forEach(d => {
         divisionLookup[d.id] = d.name;
+        divisionToConference[d.id] = d.conference; // KEY FIX
       });
 
       // Build franchise map
       const map = {};
       franchiseList.forEach(f => {
+        const divisionId = f.division;
+        const conferenceId = divisionToConference[divisionId];
+
         map[f.id] = {
           name: f.name || `Franchise ${f.id}`,
           logo: f.icon || null,
           initials: getInitials(f.name),
 
-          // Use league info first, fallback to your static map
-          conference:
-            conferenceLookup[f.conference] ||
-            CONFERENCE_NAMES[f.conference] ||
-            "Unknown Conference",
-
           division:
-            divisionLookup[f.division] ||
-            DIVISION_NAMES[f.division] ||
-            "Unknown Division"
+            divisionLookup[divisionId] ||
+            DIVISION_NAMES[divisionId] ||
+            "Unknown Division",
+
+          conference:
+            conferenceLookup[conferenceId] ||
+            CONFERENCE_NAMES[conferenceId] ||
+            "Unknown Conference"
         };
       });
 
@@ -188,3 +192,4 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     </div>
   );
 }
+
