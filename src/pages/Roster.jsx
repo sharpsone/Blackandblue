@@ -79,21 +79,36 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const ir = players.filter(p => p.status === "IR");
 
 function renderPlayer(p) {
-  const fallback = "/silhouettes/player.png"; // your silhouette file
-  const headshot = `https://www.myfantasyleague.com/player_photos/${p.id}.jpg`;
+  const fallback = "/silhouettes/player.png";
+
+  const base = `https://www.myfantasyleague.com/player_photos/${p.id}`;
+  const extensions = ["jpg", "jpeg", "png", "gif"];
 
   return (
     <div className="player-row">
 
-      {/* HEADSHOT WITH BULLETPROOF FALLBACK */}
+      {/* HEADSHOT WITH MULTI-EXTENSION CHECK */}
       <img
         src={fallback}
-        data-src={headshot}
         className="player-pic"
         onLoad={(e) => {
-          const test = new Image();
-          test.src = e.target.dataset.src;
-          test.onload = () => (e.target.src = e.target.dataset.src);
+          const img = e.target;
+
+          // Try each extension until one loads
+          (async () => {
+            for (const ext of extensions) {
+              const test = new Image();
+              test.src = `${base}.${ext}`;
+              await new Promise((res) => {
+                test.onload = () => {
+                  img.src = test.src; // swap in real headshot
+                  res();
+                };
+                test.onerror = () => res();
+              });
+              if (img.src !== fallback) break; // success
+            }
+          })();
         }}
       />
 
@@ -105,13 +120,8 @@ function renderPlayer(p) {
           <span className="pos-tag">{p.position}</span>
           <span className="team-tag">{p.team}</span>
 
-          {p.injury && (
-            <span className="injury-tag">{p.injury}</span>
-          )}
-
-          {p.bye && (
-            <span className="bye-tag">BYE {p.bye}</span>
-          )}
+          {p.injury && <span className="injury-tag">{p.injury}</span>}
+          {p.bye && <span className="bye-tag">BYE {p.bye}</span>}
         </div>
       </div>
 

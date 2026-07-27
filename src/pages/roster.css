@@ -1,4 +1,3 @@
-/* ROW CONTAINER */
 .player-row {
   display: flex;
   align-items: center;
@@ -7,7 +6,7 @@
   padding: 0.35rem 0.5rem;
   margin-bottom: 0.25rem;
   border-radius: 6px;
-  max-width: 380px; /* ⭐ keeps rows tight */
+  max-width: 380px;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
@@ -16,17 +15,15 @@
   box-shadow: 0 0 5px #00b4d8;
 }
 
-/* HEADSHOT */
 .player-pic {
   width: 34px;
   height: 34px;
   border-radius: 6px;
   object-fit: cover;
-  background: #111; /* silhouette background */
+  background: #111;
   flex-shrink: 0;
 }
 
-/* NAME + TAGS */
 .player-main {
   display: flex;
   flex-direction: column;
@@ -38,7 +35,6 @@
   font-weight: 600;
 }
 
-/* TAGS */
 .player-sub {
   display: flex;
   gap: 4px;
@@ -55,18 +51,7 @@
   font-weight: 600;
 }
 
-.pos-tag {
-  background: #219ebc;
-}
-
-.team-tag {
-  background: #023e8a;
-}
-
-.injury-tag {
-  background: #e63946;
-}
-
-.bye-tag {
-  background: #ffb703;
-}
+.pos-tag { background: #219ebc; }
+.team-tag { background: #023e8a; }
+.injury-tag { background: #e63946; }
+.bye-tag { background: #ffb703; }
