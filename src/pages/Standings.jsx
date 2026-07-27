@@ -1,7 +1,7 @@
 //Set Conference and Division Names 
 const CONFERENCE_NAMES = {
-  "01": "Black Conference",
-  "02": "Blue Conference"
+  "00": "Black Conference",
+  "01": "Blue Conference"
 };
 
 const DIVISION_NAMES = {
