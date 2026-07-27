@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStandings, getLeagueInfo } from "../utils/api";
+import "./standings.css";
 
 function getInitials(name) {
   if (!name) return "";
