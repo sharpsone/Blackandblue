@@ -1,38 +1,33 @@
-.player-card {
+/* ROW CONTAINER */
+.player-row {
   display: flex;
   align-items: center;
   gap: 10px;
   background: #001d3d;
   padding: 0.35rem 0.5rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
   border-radius: 6px;
+  max-width: 380px; /* ⭐ keeps rows tight */
   transition: transform 0.1s ease, box-shadow 0.1s ease;
-  max-width: 480px; /* ⭐ keeps it tight */
 }
 
-.player-card:hover {
+.player-row:hover {
   transform: scale(1.01);
   box-shadow: 0 0 5px #00b4d8;
 }
 
-/* ⭐ FIX: Prevent flashing/collapse */
-.headshot-container {
-  width: 36px;
-  height: 36px;
+/* HEADSHOT */
+.player-pic {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #111; /* silhouette background */
   flex-shrink: 0;
 }
 
-.player-headshot {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  object-fit: cover;
-  background: #111; /* fallback background */
-}
-
-/* CENTER */
-.player-info {
-  flex: 1;
+/* NAME + TAGS */
+.player-main {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -44,38 +39,16 @@
 }
 
 /* TAGS */
-.player-tags {
+.player-sub {
   display: flex;
   gap: 4px;
-}
-
-.injury-tag,
-.bye-tag {
-  padding: 1px 4px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 600;
-}
-
-.injury-tag {
-  background: #e63946;
-}
-
-.bye-tag {
-  background: #ffb703;
-}
-
-/* RIGHT SIDE */
-.player-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-  min-width: 40px; /* ⭐ keeps it tight */
+  flex-wrap: wrap;
 }
 
 .pos-tag,
-.team-tag {
+.team-tag,
+.injury-tag,
+.bye-tag {
   padding: 1px 4px;
   border-radius: 4px;
   font-size: 0.65rem;
@@ -88,4 +61,12 @@
 
 .team-tag {
   background: #023e8a;
+}
+
+.injury-tag {
+  background: #e63946;
+}
+
+.bye-tag {
+  background: #ffb703;
 }

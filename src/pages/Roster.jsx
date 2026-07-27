@@ -79,40 +79,45 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const ir = players.filter(p => p.status === "IR");
 
 function renderPlayer(p) {
+  const fallback = "/silhouettes/player.png"; // your silhouette file
   const headshot = `https://www.myfantasyleague.com/player_photos/${p.id}.jpg`;
 
   return (
-    <div className="player-card">
+    <div className="player-row">
 
-      {/* HEADSHOT */}
-      <div className="headshot-container">
-        <img
-          src={headshot}
-          onError={(e) => (e.target.src = "/headshots/placeholder.png")}
-          className="player-headshot"
-        />
-      </div>
+      {/* HEADSHOT WITH BULLETPROOF FALLBACK */}
+      <img
+        src={fallback}
+        data-src={headshot}
+        className="player-pic"
+        onLoad={(e) => {
+          const test = new Image();
+          test.src = e.target.dataset.src;
+          test.onload = () => (e.target.src = e.target.dataset.src);
+        }}
+      />
 
       {/* NAME + TAGS */}
-      <div className="player-info">
+      <div className="player-main">
         <div className="player-name">{p.name}</div>
 
-        <div className="player-tags">
-          {p.injury && <span className="injury-tag">{p.injury}</span>}
-          {p.bye && <span className="bye-tag">BYE {p.bye}</span>}
-        </div>
-      </div>
+        <div className="player-sub">
+          <span className="pos-tag">{p.position}</span>
+          <span className="team-tag">{p.team}</span>
 
-      {/* POS + TEAM */}
-      <div className="player-meta">
-        <span className="pos-tag">{p.position}</span>
-        <span className="team-tag">{p.team}</span>
+          {p.injury && (
+            <span className="injury-tag">{p.injury}</span>
+          )}
+
+          {p.bye && (
+            <span className="bye-tag">BYE {p.bye}</span>
+          )}
+        </div>
       </div>
 
     </div>
   );
 }
-
 
   return (
     <div className="roster-container">
