@@ -98,3 +98,100 @@
   padding-left: 0.25rem;
   border-left: 4px solid #1f2f45;
 }
+
+/* Conference Banner */
+.conference-banner {
+  background: linear-gradient(90deg, #0b1a2a, #11263d);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 5px solid #00b4ff;
+}
+
+.conference-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #e8eef5;
+}
+
+/* Division Banner */
+.division-banner {
+  background: #1a2c40;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border-left: 4px solid #3fa9f5;
+}
+
+.division-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #cdd9e5;
+}
+
+/* Table + Rows */
+.standings-table {
+  background: #0b1a2a;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.standings-header,
+.standings-row {
+  display: grid;
+  grid-template-columns: 2fr 0.5fr 0.5fr 1fr 1fr 1fr;
+  padding: 0.75rem;
+  align-items: center;
+}
+
+.standings-header {
+  font-weight: bold;
+  color: #9bbcd1;
+  border-bottom: 1px solid #1f2f45;
+}
+
+.standings-row {
+  color: #e8eef5;
+  border-bottom: 1px solid #1f2f45;
+  transition: background 0.2s ease;
+}
+
+.standings-row:hover {
+  background: #11263d;
+}
+
+/* Highlight your team */
+.highlight {
+  background: #1a3a5a !important;
+  border-left: 4px solid #00ff99;
+}
+
+/* Team Cell */
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.initials-badge {
+  width: 32px;
+  height: 32px;
+  background: #1f2f45;
+  color: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.team-name {
+  font-weight: 600;
+}
