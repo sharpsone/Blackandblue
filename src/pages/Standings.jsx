@@ -1,4 +1,4 @@
-// -Optional fallback names (used only if league info missing)
+// Optional fallback names (used only if league info missing)
 const CONFERENCE_NAMES = {
   "00": "Black Conference",
   "01": "Blue Conference"
@@ -246,6 +246,15 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
                   const isMe =
                     normalize(fr.id) === normalize(myFranchiseId);
+
+                  // ⭐ ADDING THE DEBUG LOG HERE ⭐
+                  console.log(
+                    "Row:", fr.id,
+                    "My:", myFranchiseId,
+                    "Normalized Row:", normalize(fr.id),
+                    "Normalized My:", normalize(myFranchiseId),
+                    "isMe:", isMe
+                  );
 
                   return (
                     <div
