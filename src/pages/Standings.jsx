@@ -1,3 +1,17 @@
+//Set Conference and Division Names 
+const CONFERENCE_NAMES = {
+  "01": "Black Conference",
+  "02": "Blue Conference"
+};
+
+const DIVISION_NAMES = {
+  "00": "Black East",
+  "01": "Black West",
+  "02": "Blue North",
+  "03": "Blue South"
+};
+
+
 import { useEffect, useState } from "react";
 import { getStandings, getLeagueInfo } from "../utils/api";
 import "./standings.css";
@@ -29,8 +43,8 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
           name: f.name || `Franchise ${f.id}`,
           logo: f.icon || null,
           initials: getInitials(f.name),
-          conference: f.conference || f.conf || "Unknown",
-          division: f.division || "Unknown"
+          conference: CONFERENCE_NAMES[f.conference] || "Unknown Conference",
+          division: DIVISION_NAMES[f.division] || "Unknown Division"
         };
       });
 
