@@ -133,11 +133,19 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
       {Object.entries(grouped).map(([conference, divisions]) => (
         <div key={conference} className="conference-block">
-          <h2 className="conference-title">{conference}</h2>
+
+          {/* Combined Conference + Division Header */}
+          <div className="conference-banner">
+            <span className="conference-name">{conference}</span>
+          </div>
 
           {Object.entries(divisions).map(([division, teams]) => (
             <div key={division} className="division-block">
-              <h3 className="division-title">{division}</h3>
+
+              {/* Division Header Bar */}
+              <div className="division-banner">
+                <span className="division-name">{division}</span>
+              </div>
 
               <div className="standings-table">
                 <div className="standings-header">
@@ -192,4 +200,3 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     </div>
   );
 }
-
