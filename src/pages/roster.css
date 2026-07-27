@@ -1,53 +1,51 @@
 .roster-container {
   padding: 1rem;
-  max-width: 600px;
+  max-width: 520px;
   margin: auto;
 }
 
 .roster-title {
-  font-size: 2rem;
-  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  margin-bottom: 0.75rem;
   text-align: center;
 }
 
 .section-title,
 .divider {
-  margin-top: 2rem;
-  margin-bottom: 0.5rem;
-  font-size: 1.3rem;
-  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: #8ecae6;
-  border-bottom: 2px solid #8ecae6;
-  padding-bottom: 4px;
+  border-bottom: 1px solid #8ecae6;
+  padding-bottom: 2px;
 }
 
+/* ⭐ Compact player card */
 .player-card {
   display: flex;
   align-items: center;
   background: #001d3d;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
-  border-radius: 10px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.45rem;
+  border-radius: 8px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .player-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 12px #00b4d8;
+  transform: scale(1.015);
+  box-shadow: 0 0 8px #00b4d8;
 }
 
-.player-left {
-  margin-right: 1rem;
-}
-
+/* ⭐ Smaller logo */
 .team-logo {
-  width: 45px;
-  height: 45px;
+  width: 38px;
+  height: 38px;
   border-radius: 6px;
 }
 
-.team-logo.placeholder {
-  background: #333;
+.player-left {
+  margin-right: 0.75rem;
 }
 
 .player-center {
@@ -55,14 +53,15 @@
 }
 
 .player-name {
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
 }
 
+/* ⭐ Compact tags */
 .player-tags {
-  margin-top: 4px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
@@ -71,10 +70,11 @@
 .injury-tag,
 .bye-tag,
 .status-tag {
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: bold;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.1;
 }
 
 .team-tag {
@@ -94,5 +94,5 @@
 }
 
 .player-right {
-  margin-left: 1rem;
+  margin-left: 0.5rem;
 }
