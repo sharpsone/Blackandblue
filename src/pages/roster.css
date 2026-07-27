@@ -3,34 +3,34 @@
   align-items: center;
   gap: 10px;
   background: #001d3d;
-  padding: 0.4rem 0.5rem;
-  margin-bottom: 0.35rem;
-  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.3rem;
+  border-radius: 6px;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
+  max-width: 480px; /* ⭐ keeps it tight */
 }
 
 .player-card:hover {
   transform: scale(1.01);
-  box-shadow: 0 0 6px #00b4d8;
+  box-shadow: 0 0 5px #00b4d8;
 }
 
-/* HEADSHOT */
+/* ⭐ FIX: Prevent flashing/collapse */
+.headshot-container {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
 .player-headshot {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   object-fit: cover;
-  flex-shrink: 0;
-  background: #0a0a0a;
-  animation: fadeIn 0.2s ease;
+  background: #111; /* fallback background */
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* CENTER INFO */
+/* CENTER */
 .player-info {
   flex: 1;
   display: flex;
@@ -39,7 +39,7 @@
 }
 
 .player-name {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
@@ -51,9 +51,9 @@
 
 .injury-tag,
 .bye-tag {
-  padding: 1px 5px;
-  border-radius: 5px;
-  font-size: 0.7rem;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.65rem;
   font-weight: 600;
 }
 
@@ -71,14 +71,14 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
-  min-width: 50px;
+  min-width: 40px; /* ⭐ keeps it tight */
 }
 
 .pos-tag,
 .team-tag {
-  padding: 1px 5px;
-  border-radius: 5px;
-  font-size: 0.7rem;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.65rem;
   font-weight: 600;
 }
 

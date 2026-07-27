@@ -78,20 +78,22 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const bench = players.filter(p => p.status === "BENCH");
   const ir = players.filter(p => p.status === "IR");
 
- function renderPlayer(p) {
+function renderPlayer(p) {
   const headshot = `https://www.myfantasyleague.com/player_photos/${p.id}.jpg`;
 
   return (
     <div className="player-card">
 
-      {/* HEADSHOT LEFT */}
-      <img
-        src={headshot}
-        onError={(e) => (e.target.src = "/headshots/placeholder.png")}
-        className="player-headshot"
-      />
+      {/* HEADSHOT */}
+      <div className="headshot-container">
+        <img
+          src={headshot}
+          onError={(e) => (e.target.src = "/headshots/placeholder.png")}
+          className="player-headshot"
+        />
+      </div>
 
-      {/* NAME + TAGS CENTER */}
+      {/* NAME + TAGS */}
       <div className="player-info">
         <div className="player-name">{p.name}</div>
 
@@ -101,7 +103,7 @@ function Roster({ leagueId, year, myFranchiseId }) {
         </div>
       </div>
 
-      {/* POS + TEAM RIGHT */}
+      {/* POS + TEAM */}
       <div className="player-meta">
         <span className="pos-tag">{p.position}</span>
         <span className="team-tag">{p.team}</span>
@@ -110,6 +112,7 @@ function Roster({ leagueId, year, myFranchiseId }) {
     </div>
   );
 }
+
 
   return (
     <div className="roster-container">
