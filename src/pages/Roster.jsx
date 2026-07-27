@@ -8,12 +8,31 @@ function Roster({ leagueId, year, myFranchiseId }) {
 
   useEffect(() => {
     async function loadRoster() {
-      if (!myFranchiseId) return;
+      if (!myFranchiseId) {
+        console.log("Roster: myFranchiseId is missing");
+        return;
+      }
 
-      const data = await fetchRoster(leagueId, myFranchiseId, year);
-      const list = data?.roster?.players || [];
+      console.log("Roster: loading for franchise", myFranchiseId);
 
-      setPlayers(list);
+      try {
+        // ⭐ FIX: use getRoster (not fetchRoster)
+        const data = await getRoster(leagueId, myFranchiseId, year);
+
+        // MFL returns roster like:
+        // { roster: { players: { player: [...] } } }
+        const list =
+          data?.roster?.players?.player ||
+          data?.roster?.players ||
+          [];
+
+        console.log("Roster loaded:", list);
+
+        setPlayers(Array.isArray(list) ? list : [list]);
+      } catch (err) {
+        console.error("ROSTER ERROR:", err);
+      }
+
       setLoading(false);
     }
 
@@ -32,10 +51,11 @@ function Roster({ leagueId, year, myFranchiseId }) {
       <div className="roster-grid">
         {players.map((p, idx) => (
           <div key={idx} className="player-card">
-            <div className="player-name">{p.name}</div>
+            <div className="player-name">{p.name || "Unknown Player"}</div>
+
             <div className="player-meta">
-              <span className="player-pos">{p.position}</span>
-              <span className="player-team">{p.team}</span>
+              <span className="player-pos">{p.position || "?"}</span>
+              <span className="player-team">{p.team || "FA"}</span>
             </div>
           </div>
         ))}
