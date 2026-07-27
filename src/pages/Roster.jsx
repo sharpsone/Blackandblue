@@ -81,50 +81,60 @@ function Roster({ leagueId, year, myFranchiseId }) {
 function renderPlayer(p) {
   const fallback = "/silhouettes/player.png";
 
-  const base = `https://www.myfantasyleague.com/player_photos/${p.id}`;
-  const extensions = ["jpg", "jpeg", "png", "gif"];
+  const subdomains = ["www", "www2", "www44", "www57"];
+  const folders = [
+    "player_photos",
+    "player_photos_2010",
+    "player_photos_2011",
+    "player_photos_2012",
+    "player_photos_2013",
+    "player_photos_2014"
+  ];
+  const filenames = [
+    `${p.id}.jpg`,
+    `${p.id}_thumb.jpg`,
+    `${p.id}_p.jpg`,
+    `${p.id}_80.jpg`
+  ];
 
   return (
     <div className="player-row">
-
-      {/* HEADSHOT WITH MULTI-EXTENSION CHECK */}
       <img
         src={fallback}
         className="player-pic"
         onLoad={(e) => {
           const img = e.target;
 
-          // Try each extension until one loads
           (async () => {
-            for (const ext of extensions) {
-              const test = new Image();
-              test.src = `${base}.${ext}`;
-              await new Promise((res) => {
-                test.onload = () => {
-                  img.src = test.src; // swap in real headshot
-                  res();
-                };
-                test.onerror = () => res();
-              });
-              if (img.src !== fallback) break; // success
+            for (const sub of subdomains) {
+              for (const folder of folders) {
+                for (const file of filenames) {
+                  const test = new Image();
+                  test.src = `https://${sub}.myfantasyleague.com/${folder}/${file}`;
+
+                  await new Promise((res) => {
+                    test.onload = () => {
+                      img.src = test.src;
+                      res();
+                    };
+                    test.onerror = () => res();
+                  });
+
+                  if (img.src !== fallback) return; // success
+                }
+              }
             }
           })();
         }}
       />
 
-      {/* NAME + TAGS */}
       <div className="player-main">
         <div className="player-name">{p.name}</div>
-
         <div className="player-sub">
           <span className="pos-tag">{p.position}</span>
           <span className="team-tag">{p.team}</span>
-
-          {p.injury && <span className="injury-tag">{p.injury}</span>}
-          {p.bye && <span className="bye-tag">BYE {p.bye}</span>}
         </div>
       </div>
-
     </div>
   );
 }
