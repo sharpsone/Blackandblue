@@ -70,3 +70,11 @@ export async function getRoster(leagueId, franchiseId, year = "2026") {
 
   return response.json();
 }
+
+// GET PLAYERS
+export async function getPlayers(year = "2026") {
+  const response = await fetch(`${API_BASE}/players?year=${year}`, {
+    credentials: "include"
+  });
+  return response.json();
+}

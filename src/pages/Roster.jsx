@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getRoster } from "../utils/api";
+import { getRoster, getPlayers } from "../utils/api";
 import "./roster.css";
 
 function Roster({ leagueId, year, myFranchiseId }) {
@@ -8,27 +8,31 @@ function Roster({ leagueId, year, myFranchiseId }) {
 
   useEffect(() => {
     async function loadRoster() {
-      if (!myFranchiseId) {
-        console.log("Roster: myFranchiseId is missing");
-        return;
-      }
+      if (!myFranchiseId) return;
 
       console.log("Roster: loading for franchise", myFranchiseId);
 
       try {
-        // ⭐ FIX: use getRoster (not fetchRoster)
-        const data = await getRoster(leagueId, myFranchiseId, year);
+        // Step 1 — get roster (IDs only)
+        const rosterData = await getRoster(leagueId, myFranchiseId, year);
+        const rosterPlayers = rosterData?.roster?.players || [];
 
-        // MFL returns roster like:
-        // { roster: { players: { player: [...] } } }
-        const list =
-          data?.roster?.players?.player ||
-          data?.roster?.players ||
-          [];
+        // Step 2 — get full player database
+        const playerData = await getPlayers(year);
+        const allPlayers = playerData?.players || [];
 
-        console.log("Roster loaded:", list);
+        // Step 3 — merge by ID
+        const merged = rosterPlayers.map(rp => {
+          const full = allPlayers.find(p => p.id === rp.id);
+          return {
+            ...rp,
+            ...full
+          };
+        });
 
-        setPlayers(Array.isArray(list) ? list : [list]);
+        console.log("Merged roster:", merged);
+
+        setPlayers(merged);
       } catch (err) {
         console.error("ROSTER ERROR:", err);
       }
