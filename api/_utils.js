@@ -16,8 +16,6 @@ export function getCookies(req) {
     if (!name) return;
 
     const rawValue = rest.join("=");
-
-    // Always decode cookie values
     const decodedValue = decodeURIComponent(rawValue);
 
     cookies[name] = decodedValue;
@@ -51,16 +49,16 @@ export function buildAuthHeaders(req) {
 }
 
 /**
- * Correct host detection:
- * 1. Try TYPE=league (always returns correct host)
- * 2. Fallback to TYPE=myleagues
- * 3. Final fallback: api.myfantasyleague.com
+ * AUTHENTICATED HOST DETECTION
+ * Private leagues require the cookie to be passed.
  */
-export async function detectMFLHost(year, leagueId) {
+export async function detectMFLHost(year, leagueId, req) {
+  const authHeaders = buildAuthHeaders(req);
+
   try {
-    // 1. Try league info first — this ALWAYS returns the correct host
+    // 1. Try league info WITH COOKIE
     const leagueUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
-    const leagueRes = await fetch(leagueUrl);
+    const leagueRes = await fetch(leagueUrl, { headers: authHeaders });
     const leagueData = await leagueRes.json();
 
     if (leagueData.league?.host) {
@@ -68,9 +66,9 @@ export async function detectMFLHost(year, leagueId) {
       return leagueData.league.host;
     }
 
-    // 2. Fallback: use myleagues (also returns correct host)
+    // 2. Fallback: myleagues WITH COOKIE
     const myLeaguesUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=myleagues&JSON=1`;
-    const myLeaguesRes = await fetch(myLeaguesUrl);
+    const myLeaguesRes = await fetch(myLeaguesUrl, { headers: authHeaders });
     const myLeaguesData = await myLeaguesRes.json();
 
     if (myLeaguesData.myleagues?.league) {
@@ -83,7 +81,7 @@ export async function detectMFLHost(year, leagueId) {
       }
     }
 
-    // 3. Absolute fallback (rare)
+    // 3. Absolute fallback
     console.log(`Fallback host used for ${year}: api.myfantasyleague.com`);
     return "api.myfantasyleague.com";
   } catch (err) {
@@ -93,3 +91,4 @@ export async function detectMFLHost(year, leagueId) {
 }
 
 export { fetch, xml2js };
+
