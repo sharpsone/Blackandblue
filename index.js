@@ -166,7 +166,8 @@ app.get("/api/league/:leagueId", requireLogin, async (req, res) => {
     const { leagueId } = req.params;
     const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+    const host = await detectMFLHost(year, leagueId, req);
+
 
     const url = `https://${host}/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
 
@@ -193,7 +194,8 @@ app.get("/api/league/:leagueId/standings", requireLogin, async (req, res) => {
     const { leagueId } = req.params;
     const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+    const host = await detectMFLHost(year, leagueId, req);
+
 
     const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
 
@@ -221,7 +223,8 @@ app.get("/api/league/:leagueId/schedule", requireLogin, async (req, res) => {
     const { leagueId } = req.params;
     const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+    const host = await detectMFLHost(year, leagueId, req);
+
 
     const url = `https://${host}/${year}/export?TYPE=schedule&L=${leagueId}&JSON=1`;
 
@@ -284,7 +287,7 @@ app.get("/api/league/:leagueId/rosters", requireLogin, async (req, res) => {
     const { franchiseId } = req.query;
     const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+    const host = await detectMFLHost(year, leagueId, req);
 
     const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 

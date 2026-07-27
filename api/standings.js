@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const { leagueId } = req.query;
     const year = getYear(req);
 
-    const host = await detectMFLHost(year, leagueId);
+    const host = await detectMFLHost(year, leagueId, req);
 
     const url = `https://${host}/${year}/export?TYPE=standings&L=${leagueId}&JSON=1`;
     console.log("STANDINGS URL:", url);

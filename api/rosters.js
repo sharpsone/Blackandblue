@@ -5,7 +5,8 @@ export default async function handler(req, res) {
   const year = getYear(req);
 
   try {
-    const host = await detectMFLHost(year, leagueId);
+    const host = await detectMFLHost(year, leagueId, req);
+
 
     const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
 
