@@ -7,7 +7,8 @@ export default async function handler(req, res) {
   try {
     const host = await detectMFLHost(year, leagueId, req);
 
-    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&JSON=1`;
+    // ⭐ MUST include APIKEY or roster will return empty
+    const url = `https://${host}/${year}/export?TYPE=rosters&L=${leagueId}&FRANCHISE=${franchiseId}&APIKEY=${process.env.MFL_API_KEY}&JSON=1`;
 
     console.log("ROSTER URL:", url);
 
@@ -17,15 +18,11 @@ export default async function handler(req, res) {
 
     const raw = await response.json();
 
-    // MFL returns: raw.rosters.franchise = array
-    const franchiseArr = raw?.rosters?.franchise;
+    // MFL returns: raw.rosters.franchise = array OR object
+    const franchiseObj = Array.isArray(raw?.rosters?.franchise)
+      ? raw.rosters.franchise.find(f => f.id === franchiseId)
+      : raw?.rosters?.franchise;
 
-    // Find the franchise object matching the ID
-    const franchiseObj = Array.isArray(franchiseArr)
-      ? franchiseArr.find(f => f.id === franchiseId)
-      : null;
-
-    // Correct player extraction
     const players = franchiseObj?.player || [];
 
     return res.json({
