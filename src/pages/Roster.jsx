@@ -83,30 +83,30 @@ function Roster({ leagueId, year, myFranchiseId }) {
 
   return (
     <div className="player-card">
-      
-      {/* LEFT: Player Name */}
-      <div className="player-left">
+
+      {/* HEADSHOT LEFT */}
+      <img
+        src={headshot}
+        onError={(e) => (e.target.src = "/headshots/placeholder.png")}
+        className="player-headshot"
+      />
+
+      {/* NAME + TAGS CENTER */}
+      <div className="player-info">
         <div className="player-name">{p.name}</div>
 
-        <div className="player-tags-left">
+        <div className="player-tags">
           {p.injury && <span className="injury-tag">{p.injury}</span>}
           {p.bye && <span className="bye-tag">BYE {p.bye}</span>}
         </div>
       </div>
 
-      {/* RIGHT: Headshot + POS + TEAM */}
-      <div className="player-right">
-        <img
-          src={headshot}
-          onError={(e) => (e.target.src = "/headshots/placeholder.png")}
-          className="player-headshot"
-        />
-
-        <div className="player-tags-right">
-          <span className="pos-tag">{p.position}</span>
-          <span className="team-tag">{p.team}</span>
-        </div>
+      {/* POS + TEAM RIGHT */}
+      <div className="player-meta">
+        <span className="pos-tag">{p.position}</span>
+        <span className="team-tag">{p.team}</span>
       </div>
+
     </div>
   );
 }
