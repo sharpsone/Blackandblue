@@ -123,7 +123,8 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
         wins: aw - bw,
         losses: bl - al,
         pf: Number(a.pf) - Number(b.pf),
-        pa: Number(a.pa) - Number(b.pa)
+        pa: Number(a.pa) - Number(b.pa),
+        pct: (aw / (aw + al || 1)) - (bw / (bw + bl || 1))
       };
 
       const val = stats[sortKey];
@@ -146,7 +147,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
   });
 
   return (
-    <div className="standings-container">
+    <div className="standings-container fade-in">
       <h1 className="standings-title">Standings</h1>
 
       {Object.entries(grouped).map(([conference, divisions]) => (
@@ -211,6 +212,17 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                     PA
                   </span>
 
+                  <span
+                    className="col-pct sortable"
+                    onClick={() => {
+                      setSortKey("pct");
+                      setSortDir(sortDir === "desc" ? "asc" : "desc");
+                    }}
+                  >
+                    PCT
+                  </span>
+
+                  <span className="col-conf">Conf</span>
                   <span className="col-strk">Streak</span>
                 </div>
 
@@ -224,6 +236,10 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                   const pf = fr.pf || "0";
                   const pa = fr.pa || "0";
                   const streak = fr.strk || "-";
+
+                  const pct = (wins / (wins + losses || 1)).toFixed(3);
+
+                  const confRecord = fr.confwlt || "0-0-0";
 
                   const isMe = fr.id === String(myFranchiseId);
 
@@ -245,6 +261,8 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                       <span className="col-wl">{losses}</span>
                       <span className="col-pf">{pf}</span>
                       <span className="col-pa">{pa}</span>
+                      <span className="col-pct">{pct}</span>
+                      <span className="col-conf">{confRecord}</span>
                       <span className="col-strk">{streak}</span>
                     </div>
                   );
