@@ -6,22 +6,41 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // NFL team logos
+  const teamLogos = {
+    BUF: "/logos/BUF.png",
+    KC: "/logos/KC.png",
+    MIN: "/logos/MIN.png",
+    DAL: "/logos/DAL.png",
+    // Add remaining teams...
+  };
+
+  // Position color map
+  const posColor = {
+    QB: "#ffb703",
+    RB: "#219ebc",
+    WR: "#8ecae6",
+    TE: "#fb8500",
+    PK: "#e63946",
+    DEF: "#6a4c93",
+    LB: "#6a4c93",
+    CB: "#6a4c93",
+    DT: "#6a4c93",
+    DE: "#6a4c93",
+    S: "#6a4c93"
+  };
+
   useEffect(() => {
     async function loadRoster() {
       if (!myFranchiseId) return;
 
-      console.log("Roster: loading for franchise", myFranchiseId);
-
       try {
-        // Step 1 — get roster (IDs only)
         const rosterData = await getRoster(leagueId, myFranchiseId, year);
         const rosterPlayers = rosterData?.roster?.players || [];
 
-        // Step 2 — get full player database
         const playerData = await getPlayers(year);
         const allPlayers = playerData?.players || [];
 
-        // Step 3 — merge by ID
         const merged = rosterPlayers.map(rp => {
           const full = allPlayers.find(p => p.id === rp.id);
           return {
@@ -29,8 +48,6 @@ function Roster({ leagueId, year, myFranchiseId }) {
             ...full
           };
         });
-
-        console.log("Merged roster:", merged);
 
         setPlayers(merged);
       } catch (err) {
@@ -43,27 +60,83 @@ function Roster({ leagueId, year, myFranchiseId }) {
     loadRoster();
   }, [leagueId, year, myFranchiseId]);
 
-  if (loading) return <div style={{ padding: "1rem" }}>Loading roster...</div>;
+  if (loading) return <div className="loading">Loading roster...</div>;
 
   if (!players.length)
-    return <div style={{ padding: "1rem" }}>No roster data found.</div>;
+    return <div className="loading">No roster data found.</div>;
+
+  // Group offense / defense
+  const offense = players.filter(p =>
+    ["QB", "RB", "WR", "TE", "PK"].includes(p.position)
+  );
+  const defense = players.filter(p =>
+    ["LB", "CB", "DT", "DE", "S", "DB", "DL"].includes(p.position)
+  );
+
+  // Starter / Bench / IR grouping
+  const starters = players.filter(p => p.status === "ROSTER");
+  const bench = players.filter(p => p.status === "BENCH");
+  const ir = players.filter(p => p.status === "IR");
+
+  function renderPlayer(p) {
+    const logo = teamLogos[p.team];
+    const color = posColor[p.position] || "#ccc";
+
+    return (
+      <div className="player-card">
+        <div className="player-left">
+          {logo ? (
+            <img src={logo} className="team-logo" alt={p.team} />
+          ) : (
+            <div className="team-logo placeholder"></div>
+          )}
+        </div>
+
+        <div className="player-center">
+          <div className="player-name">{p.name}</div>
+
+          <div className="player-tags">
+            <span className="pos-tag" style={{ background: color }}>
+              {p.position}
+            </span>
+
+            <span className="team-tag">{p.team}</span>
+
+            {p.injury && (
+              <span className="injury-tag">{p.injury}</span>
+            )}
+
+            {p.bye && (
+              <span className="bye-tag">BYE {p.bye}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="player-right">
+          <span className="status-tag">{p.status}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1 style={{ marginBottom: "1rem" }}>My Roster</h1>
+    <div className="roster-container">
+      <h1 className="roster-title">My Roster</h1>
 
-      <div className="roster-grid">
-        {players.map((p, idx) => (
-          <div key={idx} className="player-card">
-            <div className="player-name">{p.name || "Unknown Player"}</div>
+      <div className="section-title">Starters</div>
+      {starters.map(renderPlayer)}
 
-            <div className="player-meta">
-              <span className="player-pos">{p.position || "?"}</span>
-              <span className="player-team">{p.team || "FA"}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <div className="section-title">Bench</div>
+      {bench.map(renderPlayer)}
+
+      <div className="section-title">Injured Reserve</div>
+      {ir.map(renderPlayer)}
+
+      <div className="divider">Offense</div>
+      {offense.map(renderPlayer)}
+
+      <div className="divider">Defense</div>
+      {defense.map(renderPlayer)}
     </div>
   );
 }
