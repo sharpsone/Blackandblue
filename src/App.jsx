@@ -58,7 +58,7 @@ function App() {
       const myLeagues = await fetchMyLeagues(year);
 
       const leagueEntry = myLeagues?.myleagues?.league?.find(
-        (l) => Number(l.id) === Number(leagueId)
+        (l) => Number(l.league_id) === Number(leagueId)
       );
 
       if (!leagueEntry) {
