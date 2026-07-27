@@ -1,4 +1,4 @@
-//Set Conference and Division Names 
+// Set fallback Conference and Division Names (only used if league info missing)
 const CONFERENCE_NAMES = {
   "00": "Black Conference",
   "01": "Blue Conference"
@@ -10,7 +10,6 @@ const DIVISION_NAMES = {
   "02": "Blue North",
   "03": "Blue South"
 };
-
 
 import { useEffect, useState } from "react";
 import { getStandings, getLeagueInfo } from "../utils/api";
@@ -35,16 +34,41 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
   useEffect(() => {
     async function loadFranchises() {
       const leagueJson = await getLeagueInfo(leagueId, year);
-      const franchiseList = leagueJson.league.franchises.franchise || [];
 
+      const franchiseList = leagueJson.league.franchises.franchise || [];
+      const conferenceList = leagueJson.league.conferences?.conference || [];
+      const divisionList = leagueJson.league.divisions?.division || [];
+
+      // Build lookup maps from league info
+      const conferenceLookup = {};
+      const divisionLookup = {};
+
+      conferenceList.forEach(c => {
+        conferenceLookup[c.id] = c.name;
+      });
+
+      divisionList.forEach(d => {
+        divisionLookup[d.id] = d.name;
+      });
+
+      // Build franchise map
       const map = {};
       franchiseList.forEach(f => {
         map[f.id] = {
           name: f.name || `Franchise ${f.id}`,
           logo: f.icon || null,
           initials: getInitials(f.name),
-          conference: CONFERENCE_NAMES[f.conference] || "Unknown Conference",
-          division: DIVISION_NAMES[f.division] || "Unknown Division"
+
+          // Use league info first, fallback to your static map
+          conference:
+            conferenceLookup[f.conference] ||
+            CONFERENCE_NAMES[f.conference] ||
+            "Unknown Conference",
+
+          division:
+            divisionLookup[f.division] ||
+            DIVISION_NAMES[f.division] ||
+            "Unknown Division"
         };
       });
 
@@ -90,8 +114,8 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
   rows.forEach(fr => {
     const info = franchiseMap[fr.id] || {};
-    const conf = info.conference || "Unknown Conference";
-    const div = info.division || "Unknown Division";
+    const conf = info.conference;
+    const div = info.division;
 
     if (!grouped[conf]) grouped[conf] = {};
     if (!grouped[conf][div]) grouped[conf][div] = [];
@@ -105,7 +129,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
       {Object.entries(grouped).map(([conference, divisions]) => (
         <div key={conference} className="conference-block">
-          <h2 className="conference-title">{conference} Conference</h2>
+          <h2 className="conference-title">{conference}</h2>
 
           {Object.entries(divisions).map(([division, teams]) => (
             <div key={division} className="division-block">
@@ -164,4 +188,3 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     </div>
   );
 }
-
