@@ -32,6 +32,10 @@ function normalize(id) {
 }
 
 export default function Standings({ leagueId, myFranchiseId, year }) {
+
+  // ⭐ DEBUG: Log what App.jsx is passing in
+  console.log("myFranchiseId from App.jsx:", myFranchiseId);
+
   const [rows, setRows] = useState([]);
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -47,7 +51,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
       const conferenceList = leagueJson.league.conferences?.conference || [];
       const divisionList = leagueJson.league.divisions?.division || [];
 
-      // Build lookup maps from league info
       const conferenceLookup = {};
       const divisionLookup = {};
       const divisionToConference = {};
@@ -61,7 +64,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
         divisionToConference[d.id] = d.conference;
       });
 
-      // Build franchise map
       const map = {};
       franchiseList.forEach(f => {
         const divisionId = f.division;
@@ -119,7 +121,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     );
   }
 
-  // Sorting logic
   function sortTeams(teams) {
     return [...teams].sort((a, b) => {
       const [aw, al] = a.h2hwlt.split("-").map(Number);
@@ -138,7 +139,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     });
   }
 
-  // Group by conference → division
   const grouped = {};
 
   rows.forEach(fr => {
@@ -159,7 +159,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
       {Object.entries(grouped).map(([conference, divisions]) => (
         <div key={conference} className="conference-block">
 
-          {/* Conference Banner */}
           <div className="conference-banner">
             <span className="conference-name">{conference}</span>
           </div>
@@ -167,14 +166,12 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
           {Object.entries(divisions).map(([division, teams]) => (
             <div key={division} className="division-block">
 
-              {/* Division Banner */}
               <div className="division-banner">
                 <span className="division-name">{division}</span>
               </div>
 
               <div className="standings-table">
 
-                {/* Sortable Header */}
                 <div className="standings-header">
                   <span className="col-team">Team</span>
 
@@ -247,7 +244,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                   const isMe =
                     normalize(fr.id) === normalize(myFranchiseId);
 
-                  // ⭐ ADDING THE DEBUG LOG HERE ⭐
+                  // ⭐ DEBUG LOG BLOCK ⭐
                   console.log(
                     "Row:", fr.id,
                     "My:", myFranchiseId,
