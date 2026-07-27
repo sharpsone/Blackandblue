@@ -29,6 +29,8 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
   const [rows, setRows] = useState([]);
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState("wins");
+  const [sortDir, setSortDir] = useState("desc");
 
   // Load franchise names + logos + conference + division
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
       divisionList.forEach(d => {
         divisionLookup[d.id] = d.name;
-        divisionToConference[d.id] = d.conference; // KEY FIX
+        divisionToConference[d.id] = d.conference;
       });
 
       // Build franchise map
@@ -63,12 +65,10 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
           name: f.name || `Franchise ${f.id}`,
           logo: f.icon || null,
           initials: getInitials(f.name),
-
           division:
             divisionLookup[divisionId] ||
             DIVISION_NAMES[divisionId] ||
             "Unknown Division",
-
           conference:
             conferenceLookup[conferenceId] ||
             CONFERENCE_NAMES[conferenceId] ||
@@ -113,6 +113,24 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     );
   }
 
+  // Sorting logic
+  function sortTeams(teams) {
+    return [...teams].sort((a, b) => {
+      const [aw, al] = a.h2hwlt.split("-").map(Number);
+      const [bw, bl] = b.h2hwlt.split("-").map(Number);
+
+      const stats = {
+        wins: aw - bw,
+        losses: bl - al,
+        pf: Number(a.pf) - Number(b.pf),
+        pa: Number(a.pa) - Number(b.pa)
+      };
+
+      const val = stats[sortKey];
+      return sortDir === "desc" ? -val : val;
+    });
+  }
+
   // Group by conference → division
   const grouped = {};
 
@@ -134,7 +152,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
       {Object.entries(grouped).map(([conference, divisions]) => (
         <div key={conference} className="conference-block">
 
-          {/* Combined Conference + Division Header */}
+          {/* Conference Banner */}
           <div className="conference-banner">
             <span className="conference-name">{conference}</span>
           </div>
@@ -142,22 +160,61 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
           {Object.entries(divisions).map(([division, teams]) => (
             <div key={division} className="division-block">
 
-              {/* Division Header Bar */}
+              {/* Division Banner */}
               <div className="division-banner">
                 <span className="division-name">{division}</span>
               </div>
 
               <div className="standings-table">
+
+                {/* Sortable Header */}
                 <div className="standings-header">
                   <span className="col-team">Team</span>
-                  <span className="col-wl">W</span>
-                  <span className="col-wl">L</span>
-                  <span className="col-pf">PF</span>
-                  <span className="col-pa">PA</span>
+
+                  <span
+                    className="col-wl sortable"
+                    onClick={() => {
+                      setSortKey("wins");
+                      setSortDir(sortDir === "desc" ? "asc" : "desc");
+                    }}
+                  >
+                    W
+                  </span>
+
+                  <span
+                    className="col-wl sortable"
+                    onClick={() => {
+                      setSortKey("losses");
+                      setSortDir(sortDir === "desc" ? "asc" : "desc");
+                    }}
+                  >
+                    L
+                  </span>
+
+                  <span
+                    className="col-pf sortable"
+                    onClick={() => {
+                      setSortKey("pf");
+                      setSortDir(sortDir === "desc" ? "asc" : "desc");
+                    }}
+                  >
+                    PF
+                  </span>
+
+                  <span
+                    className="col-pa sortable"
+                    onClick={() => {
+                      setSortKey("pa");
+                      setSortDir(sortDir === "desc" ? "asc" : "desc");
+                    }}
+                  >
+                    PA
+                  </span>
+
                   <span className="col-strk">Streak</span>
                 </div>
 
-                {teams.map(fr => {
+                {sortTeams(teams).map(fr => {
                   const info = franchiseMap[fr.id] || {};
                   const name = info.name || fr.id;
                   const logo = info.logo;
@@ -173,7 +230,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                   return (
                     <div
                       key={fr.id}
-                      className={`standings-row ${isMe ? "highlight" : ""}`}
+                      className={`standings-row ${isMe ? "highlight animated-highlight" : ""}`}
                     >
                       <div className="team-cell">
                         {logo ? (
