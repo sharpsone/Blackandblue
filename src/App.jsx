@@ -14,7 +14,6 @@ import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
 
-// ⭐ Updated imports — we now use getLeagueInfo instead of getMyLeagues
 import {
   login as loginUser,
   getLeagueInfo
@@ -42,7 +41,6 @@ function App() {
   async function login() {
     setError(null);
 
-    // Step 1 — Login
     const res = await loginUser(username, password, year);
     if (!res.success) {
       setError("Login failed");
@@ -52,9 +50,7 @@ function App() {
     setLoggedIn(true);
 
     try {
-      // ⭐ Step 2 — Fetch league info (this contains franchise list)
       const leagueInfo = await getLeagueInfo(leagueId, year);
-
       const franchises = leagueInfo?.league?.franchises?.franchise;
 
       if (!franchises) {
@@ -63,18 +59,24 @@ function App() {
         return;
       }
 
-      // ⭐ Step 3 — Find the franchise matching the logged-in username
-      const myFranchise = franchises.find(
-        (f) => f.username?.toLowerCase() === username.toLowerCase()
-      );
+      // ⭐ FIX: match by username OR email OR owner_name
+      const loginLower = username.toLowerCase();
+
+      const myFranchise = franchises.find((f) => {
+        return (
+          f.username?.toLowerCase() === loginLower ||
+          f.email?.toLowerCase() === loginLower ||
+          f.owner_name?.toLowerCase() === loginLower
+        );
+      });
 
       if (!myFranchise) {
-        console.error("❌ Could not match username to franchise");
+        console.error("❌ Could not match login to franchise");
         setError("Could not determine franchise ID");
         return;
       }
 
-      const franchiseId = myFranchise.id; // ⭐ This is "0012"
+      const franchiseId = myFranchise.id; // "0012"
 
       console.log("✔ REAL FRANCHISE ID:", franchiseId);
 
