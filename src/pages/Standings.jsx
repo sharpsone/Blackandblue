@@ -1,4 +1,4 @@
-// Optional fallback names (used only if league info missing)
+// -Optional fallback names (used only if league info missing)
 const CONFERENCE_NAMES = {
   "00": "Black Conference",
   "01": "Blue Conference"
