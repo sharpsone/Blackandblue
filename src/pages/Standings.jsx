@@ -17,7 +17,7 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
   const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Load franchise names + logos
+  // Load franchise names + logos + conference + division
   useEffect(() => {
     async function loadFranchises() {
       const leagueJson = await getLeagueInfo(leagueId, year);
@@ -28,7 +28,9 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
         map[f.id] = {
           name: f.name || `Franchise ${f.id}`,
           logo: f.icon || null,
-          initials: getInitials(f.name)
+          initials: getInitials(f.name),
+          conference: f.conference || f.conf || "Unknown",
+          division: f.division || "Unknown"
         };
       });
 
@@ -69,56 +71,83 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
     );
   }
 
+  // Group by conference → division
+  const grouped = {};
+
+  rows.forEach(fr => {
+    const info = franchiseMap[fr.id] || {};
+    const conf = info.conference || "Unknown Conference";
+    const div = info.division || "Unknown Division";
+
+    if (!grouped[conf]) grouped[conf] = {};
+    if (!grouped[conf][div]) grouped[conf][div] = [];
+
+    grouped[conf][div].push(fr);
+  });
+
   return (
     <div className="standings-container">
       <h1 className="standings-title">Standings</h1>
 
-      <div className="standings-table">
-        <div className="standings-header">
-          <span className="col-team">Team</span>
-          <span className="col-wl">W</span>
-          <span className="col-wl">L</span>
-          <span className="col-pf">PF</span>
-          <span className="col-pa">PA</span>
-          <span className="col-strk">Streak</span>
-        </div>
+      {Object.entries(grouped).map(([conference, divisions]) => (
+        <div key={conference} className="conference-block">
+          <h2 className="conference-title">{conference} Conference</h2>
 
-        {rows.map(fr => {
-          const info = franchiseMap[fr.id] || {};
-          const name = info.name || fr.id;
-          const logo = info.logo;
-          const initials = info.initials;
+          {Object.entries(divisions).map(([division, teams]) => (
+            <div key={division} className="division-block">
+              <h3 className="division-title">{division}</h3>
 
-          const [wins, losses] = fr.h2hwlt?.split("-") || ["0", "0"];
-          const pf = fr.pf || "0";
-          const pa = fr.pa || "0";
-          const streak = fr.strk || "-";
+              <div className="standings-table">
+                <div className="standings-header">
+                  <span className="col-team">Team</span>
+                  <span className="col-wl">W</span>
+                  <span className="col-wl">L</span>
+                  <span className="col-pf">PF</span>
+                  <span className="col-pa">PA</span>
+                  <span className="col-strk">Streak</span>
+                </div>
 
-          const isMe = fr.id === String(myFranchiseId);
+                {teams.map(fr => {
+                  const info = franchiseMap[fr.id] || {};
+                  const name = info.name || fr.id;
+                  const logo = info.logo;
+                  const initials = info.initials;
 
-          return (
-            <div
-              key={fr.id}
-              className={`standings-row ${isMe ? "highlight" : ""}`}
-            >
-              <div className="team-cell">
-                {logo ? (
-                  <img src={logo} className="team-logo" alt={name} />
-                ) : (
-                  <div className="initials-badge">{initials}</div>
-                )}
-                <span className="team-name">{name}</span>
+                  const [wins, losses] = fr.h2hwlt?.split("-") || ["0", "0"];
+                  const pf = fr.pf || "0";
+                  const pa = fr.pa || "0";
+                  const streak = fr.strk || "-";
+
+                  const isMe = fr.id === String(myFranchiseId);
+
+                  return (
+                    <div
+                      key={fr.id}
+                      className={`standings-row ${isMe ? "highlight" : ""}`}
+                    >
+                      <div className="team-cell">
+                        {logo ? (
+                          <img src={logo} className="team-logo" alt={name} />
+                        ) : (
+                          <div className="initials-badge">{initials}</div>
+                        )}
+                        <span className="team-name">{name}</span>
+                      </div>
+
+                      <span className="col-wl">{wins}</span>
+                      <span className="col-wl">{losses}</span>
+                      <span className="col-pf">{pf}</span>
+                      <span className="col-pa">{pa}</span>
+                      <span className="col-strk">{streak}</span>
+                    </div>
+                  );
+                })}
               </div>
-
-              <span className="col-wl">{wins}</span>
-              <span className="col-wl">{losses}</span>
-              <span className="col-pf">{pf}</span>
-              <span className="col-pa">{pa}</span>
-              <span className="col-strk">{streak}</span>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
+

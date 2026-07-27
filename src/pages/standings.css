@@ -76,3 +76,25 @@
   padding: 1rem;
   color: #fff;
 }
+
+.conference-block {
+  margin-bottom: 2rem;
+}
+
+.conference-title {
+  font-size: 1.6rem;
+  color: #00b4ff;
+  margin-bottom: 0.5rem;
+}
+
+.division-block {
+  margin-bottom: 1.5rem;
+}
+
+.division-title {
+  font-size: 1.3rem;
+  color: #9bbcd1;
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+  border-left: 4px solid #1f2f45;
+}
