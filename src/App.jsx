@@ -67,9 +67,10 @@ function App() {
         return;
       }
 
-      const franchise = leagueEntry.franchise;
+      // ⭐ FIXED: use franchise_id instead of franchise
+      const franchise = leagueEntry.franchise_id;
 
-      console.log("✔ DETECTED FRANCHISE ID:", franchise);
+      console.log("✔ REAL FRANCHISE ID:", franchise);
 
       setMyFranchiseId(franchise);
       localStorage.setItem("myFranchiseId", franchise);
