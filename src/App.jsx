@@ -14,10 +14,10 @@ import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
 
-// ⭐ FIXED IMPORTS — matching your updated api.js
+// ⭐ Updated imports — we now use getLeagueInfo instead of getMyLeagues
 import {
   login as loginUser,
-  getMyLeagues as fetchMyLeagues
+  getLeagueInfo
 } from "./utils/api";
 
 function App() {
@@ -28,13 +28,11 @@ function App() {
 
   const [myFranchiseId, setMyFranchiseId] = useState(null);
 
-  // IMPORTANT: leagueId must be a NUMBER
   const [leagueId] = useState(19757);
   const [year, setYear] = useState("2026");
 
   const [error, setError] = useState(null);
 
-  // Always start logged out on refresh
   useEffect(() => {
     setLoggedIn(false);
     setMyFranchiseId(null);
@@ -54,26 +52,34 @@ function App() {
     setLoggedIn(true);
 
     try {
-      // Step 2 — Detect franchise ID using myleagues
-      const myLeagues = await fetchMyLeagues(year);
+      // ⭐ Step 2 — Fetch league info (this contains franchise list)
+      const leagueInfo = await getLeagueInfo(leagueId, year);
 
-      const leagueEntry = myLeagues?.myleagues?.league?.find(
-        (l) => Number(l.league_id) === Number(leagueId)
+      const franchises = leagueInfo?.league?.franchises?.franchise;
+
+      if (!franchises) {
+        console.error("❌ Could not load franchises");
+        setError("Could not load franchise list");
+        return;
+      }
+
+      // ⭐ Step 3 — Find the franchise matching the logged-in username
+      const myFranchise = franchises.find(
+        (f) => f.username?.toLowerCase() === username.toLowerCase()
       );
 
-      if (!leagueEntry) {
-        console.error("❌ User does not belong to this league");
+      if (!myFranchise) {
+        console.error("❌ Could not match username to franchise");
         setError("Could not determine franchise ID");
         return;
       }
 
-      // ⭐ FIXED: use franchise_id instead of franchise
-      const franchise = leagueEntry.franchise_id;
+      const franchiseId = myFranchise.id; // ⭐ This is "0012"
 
-      console.log("✔ REAL FRANCHISE ID:", franchise);
+      console.log("✔ REAL FRANCHISE ID:", franchiseId);
 
-      setMyFranchiseId(franchise);
-      localStorage.setItem("myFranchiseId", franchise);
+      setMyFranchiseId(franchiseId);
+      localStorage.setItem("myFranchiseId", franchiseId);
 
     } catch (err) {
       console.error("FRANCHISE DETECTION ERROR:", err);
