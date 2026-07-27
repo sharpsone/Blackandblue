@@ -78,46 +78,38 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const bench = players.filter(p => p.status === "BENCH");
   const ir = players.filter(p => p.status === "IR");
 
-  function renderPlayer(p) {
-    const logo = teamLogos[p.team];
-    const color = posColor[p.position] || "#ccc";
+ function renderPlayer(p) {
+  const headshot = `https://www.myfantasyleague.com/player_photos/${p.id}.jpg`;
 
-    return (
-      <div className="player-card">
-        <div className="player-left">
-          {logo ? (
-            <img src={logo} className="team-logo" alt={p.team} />
-          ) : (
-            <div className="team-logo placeholder"></div>
-          )}
-        </div>
+  return (
+    <div className="player-card">
+      
+      {/* LEFT: Player Name */}
+      <div className="player-left">
+        <div className="player-name">{p.name}</div>
 
-        <div className="player-center">
-          <div className="player-name">{p.name}</div>
-
-          <div className="player-tags">
-            <span className="pos-tag" style={{ background: color }}>
-              {p.position}
-            </span>
-
-            <span className="team-tag">{p.team}</span>
-
-            {p.injury && (
-              <span className="injury-tag">{p.injury}</span>
-            )}
-
-            {p.bye && (
-              <span className="bye-tag">BYE {p.bye}</span>
-            )}
-          </div>
-        </div>
-
-        <div className="player-right">
-          <span className="status-tag">{p.status}</span>
+        <div className="player-tags-left">
+          {p.injury && <span className="injury-tag">{p.injury}</span>}
+          {p.bye && <span className="bye-tag">BYE {p.bye}</span>}
         </div>
       </div>
-    );
-  }
+
+      {/* RIGHT: Headshot + POS + TEAM */}
+      <div className="player-right">
+        <img
+          src={headshot}
+          onError={(e) => (e.target.src = "/headshots/placeholder.png")}
+          className="player-headshot"
+        />
+
+        <div className="player-tags-right">
+          <span className="pos-tag">{p.position}</span>
+          <span className="team-tag">{p.team}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="roster-container">

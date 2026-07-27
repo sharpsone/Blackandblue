@@ -1,80 +1,63 @@
-.roster-container {
-  padding: 1rem;
-  max-width: 520px;
-  margin: auto;
-}
-
-.roster-title {
-  font-size: 1.8rem;
-  margin-bottom: 0.75rem;
-  text-align: center;
-}
-
-.section-title,
-.divider {
-  margin-top: 1.5rem;
-  margin-bottom: 0.4rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #8ecae6;
-  border-bottom: 1px solid #8ecae6;
-  padding-bottom: 2px;
-}
-
-/* ⭐ Compact player card */
 .player-card {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   background: #001d3d;
-  padding: 0.5rem 0.6rem;
-  margin-bottom: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.35rem;
   border-radius: 8px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .player-card:hover {
-  transform: scale(1.015);
-  box-shadow: 0 0 8px #00b4d8;
+  transform: scale(1.01);
+  box-shadow: 0 0 6px #00b4d8;
 }
 
-/* ⭐ Smaller logo */
-.team-logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 6px;
-}
-
+/* LEFT SIDE */
 .player-left {
-  margin-right: 0.75rem;
-}
-
-.player-center {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .player-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 2px;
 }
 
-/* ⭐ Compact tags */
-.player-tags {
+.player-tags-left {
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
 }
 
+/* RIGHT SIDE */
+.player-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-headshot {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+/* TAGS */
 .pos-tag,
 .team-tag,
 .injury-tag,
-.bye-tag,
-.status-tag {
+.bye-tag {
   padding: 1px 5px;
   border-radius: 5px;
   font-size: 0.7rem;
   font-weight: 600;
-  line-height: 1.1;
+}
+
+.pos-tag {
+  background: #219ebc;
 }
 
 .team-tag {
@@ -87,12 +70,4 @@
 
 .bye-tag {
   background: #ffb703;
-}
-
-.status-tag {
-  background: #8d99ae;
-}
-
-.player-right {
-  margin-left: 0.5rem;
 }
