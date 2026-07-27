@@ -1,18 +1,53 @@
+//updated 7/26/26
 import { useEffect, useState } from "react";
-import { getStandings } from "../utils/api";
+import { getStandings, getLeagueInfo } from "../utils/api";
+import "./standings.css";
 
-function Standings({ leagueId, myFranchiseId, year }) {
-  const [standings, setStandings] = useState(null);
+function getInitials(name) {
+  if (!name) return "";
+  return name
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 3);
+}
+
+export default function Standings({ leagueId, myFranchiseId, year }) {
+  const [rows, setRows] = useState([]);
+  const [franchiseMap, setFranchiseMap] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Load franchise names + logos
   useEffect(() => {
-    async function load() {
+    async function loadFranchises() {
+      const leagueJson = await getLeagueInfo(leagueId, year);
+      const franchiseList = leagueJson.league.franchises.franchise || [];
+
+      const map = {};
+      franchiseList.forEach(f => {
+        map[f.id] = {
+          name: f.name || `Franchise ${f.id}`,
+          logo: f.icon || null,
+          initials: getInitials(f.name)
+        };
+      });
+
+      setFranchiseMap(map);
+    }
+
+    loadFranchises();
+  }, [leagueId, year]);
+
+  // Load standings
+  useEffect(() => {
+    async function loadStandings() {
       setLoading(true);
 
       try {
-        const res = await getStandings(leagueId, year);
-        // 🔹 res is the raw MFL JSON
-        setStandings(res || null);
+        const data = await getStandings(leagueId, year);
+        const list = data?.leagueStandings?.franchise || [];
+        setRows(list);
       } catch (err) {
         console.error("STANDINGS ERROR:", err);
       }
@@ -20,59 +55,71 @@ function Standings({ leagueId, myFranchiseId, year }) {
       setLoading(false);
     }
 
-    load();
+    loadStandings();
   }, [leagueId, year]);
 
   if (loading) {
-    return <p style={{ padding: "1rem" }}>Loading standings...</p>;
+    return <div className="loading">Loading standings...</div>;
   }
 
-  if (!standings) {
+  if (!rows.length) {
     return (
-      <p style={{ padding: "1rem", color: "red" }}>
+      <div className="loading" style={{ color: "red" }}>
         Could not load standings.
-      </p>
+      </div>
     );
   }
 
-  const rows = standings?.standings?.franchise || [];
-
   return (
     <div className="standings-container">
-      <h1>Standings</h1>
+      <h1 className="standings-title">Standings</h1>
 
-      <table className="standings-table">
-        <thead>
-          <tr>
-            <th>Franchise</th>
-            <th>Wins</th>
-            <th>Losses</th>
-            <th>Points For</th>
-            <th>Points Against</th>
-          </tr>
-        </thead>
+      <div className="standings-table">
+        <div className="standings-header">
+          <span className="col-team">Team</span>
+          <span className="col-wl">W</span>
+          <span className="col-wl">L</span>
+          <span className="col-pf">PF</span>
+          <span className="col-pa">PA</span>
+          <span className="col-strk">Streak</span>
+        </div>
 
-        <tbody>
-          {rows.map((f) => (
-            <tr
-              key={f.id}
-              className={
-                f.id === String(myFranchiseId)
-                  ? "standings-row highlight"
-                  : "standings-row"
-              }
+        {rows.map(fr => {
+          const info = franchiseMap[fr.id] || {};
+          const name = info.name || fr.id;
+          const logo = info.logo;
+          const initials = info.initials;
+
+          const [wins, losses] = fr.h2hwlt?.split("-") || ["0", "0"];
+          const pf = fr.pf || "0";
+          const pa = fr.pa || "0";
+          const streak = fr.strk || "-";
+
+          const isMe = fr.id === String(myFranchiseId);
+
+          return (
+            <div
+              key={fr.id}
+              className={`standings-row ${isMe ? "highlight" : ""}`}
             >
-              <td>{f.name}</td>
-              <td>{f.h2hwins}</td>
-              <td>{f.h2hlosses}</td>
-              <td>{f.pf}</td>
-              <td>{f.pa}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              <div className="team-cell">
+                {logo ? (
+                  <img src={logo} className="team-logo" alt={name} />
+                ) : (
+                  <div className="initials-badge">{initials}</div>
+                )}
+                <span className="team-name">{name}</span>
+              </div>
+
+              <span className="col-wl">{wins}</span>
+              <span className="col-wl">{losses}</span>
+              <span className="col-pf">{pf}</span>
+              <span className="col-pa">{pa}</span>
+              <span className="col-strk">{streak}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
-
-export default Standings;
