@@ -25,6 +25,12 @@ function getInitials(name) {
     .slice(0, 3);
 }
 
+// Normalize franchise IDs so highlight works
+function normalize(id) {
+  if (!id) return "";
+  return id.toString().padStart(4, "0");
+}
+
 export default function Standings({ leagueId, myFranchiseId, year }) {
   const [rows, setRows] = useState([]);
   const [franchiseMap, setFranchiseMap] = useState({});
@@ -222,7 +228,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                     PCT
                   </span>
 
-                  <span className="col-conf">Conf</span>
                   <span className="col-strk">Streak</span>
                 </div>
 
@@ -239,14 +244,15 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
 
                   const pct = (wins / (wins + losses || 1)).toFixed(3);
 
-                  const confRecord = fr.confwlt || "0-0-0";
-
-                  const isMe = fr.id === String(myFranchiseId);
+                  const isMe =
+                    normalize(fr.id) === normalize(myFranchiseId);
 
                   return (
                     <div
                       key={fr.id}
-                      className={`standings-row ${isMe ? "highlight animated-highlight" : ""}`}
+                      className={`standings-row ${
+                        isMe ? "highlight animated-highlight" : ""
+                      }`}
                     >
                       <div className="team-cell">
                         {logo ? (
@@ -262,7 +268,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                       <span className="col-pf">{pf}</span>
                       <span className="col-pa">{pa}</span>
                       <span className="col-pct">{pct}</span>
-                      <span className="col-conf">{confRecord}</span>
                       <span className="col-strk">{streak}</span>
                     </div>
                   );

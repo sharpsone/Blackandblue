@@ -1,254 +1,8 @@
+/* Container */
 .standings-container {
   padding: 1.5rem;
-  max-width: 900px;
+  max-width: 1000px;
   margin: auto;
-}
-
-.standings-title {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: #fff;
-}
-
-.standings-table {
-  background: #0b1a2a;
-  border-radius: 10px;
-  padding: 1rem;
-}
-
-.standings-header,
-.standings-row {
-  display: grid;
-  grid-template-columns: 2fr 0.5fr 0.5fr 1fr 1fr 1fr;
-  padding: 0.75rem;
-  align-items: center;
-}
-
-.standings-header {
-  font-weight: bold;
-  color: #9bbcd1;
-  border-bottom: 1px solid #1f2f45;
-}
-
-.standings-row {
-  color: #e8eef5;
-  border-bottom: 1px solid #1f2f45;
-}
-
-.standings-row:hover {
-  background: #11263d;
-}
-
-.highlight {
-  background: #1a3a5a !important;
-  border-left: 4px solid #00ff99;
-}
-
-.team-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.team-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-}
-
-.initials-badge {
-  width: 32px;
-  height: 32px;
-  background: #1f2f45;
-  color: #fff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.team-name {
-  font-weight: 600;
-}
-
-.loading {
-  padding: 1rem;
-  color: #fff;
-}
-
-.conference-block {
-  margin-bottom: 2rem;
-}
-
-.conference-title {
-  font-size: 1.6rem;
-  color: #00b4ff;
-  margin-bottom: 0.5rem;
-}
-
-.division-block {
-  margin-bottom: 1.5rem;
-}
-
-.division-title {
-  font-size: 1.3rem;
-  color: #9bbcd1;
-  margin-bottom: 0.5rem;
-  padding-left: 0.25rem;
-  border-left: 4px solid #1f2f45;
-}
-
-/* Conference Banner */
-.conference-banner {
-  background: linear-gradient(90deg, #0b1a2a, #11263d);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  border-left: 5px solid #00b4ff;
-}
-
-.conference-name {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #e8eef5;
-}
-
-/* Division Banner */
-.division-banner {
-  background: #1a2c40;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  border-left: 4px solid #3fa9f5;
-}
-
-.division-name {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #cdd9e5;
-}
-
-/* Table + Rows */
-.standings-table {
-  background: #0b1a2a;
-  border-radius: 10px;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.standings-header,
-.standings-row {
-  display: grid;
-  grid-template-columns: 2fr 0.5fr 0.5fr 1fr 1fr 1fr;
-  padding: 0.75rem;
-  align-items: center;
-}
-
-.standings-header {
-  font-weight: bold;
-  color: #9bbcd1;
-  border-bottom: 1px solid #1f2f45;
-}
-
-.standings-row {
-  color: #e8eef5;
-  border-bottom: 1px solid #1f2f45;
-  transition: background 0.2s ease;
-}
-
-.standings-row:hover {
-  background: #11263d;
-}
-
-/* Highlight your team */
-.highlight {
-  background: #1a3a5a !important;
-  border-left: 4px solid #00ff99;
-}
-
-/* Team Cell */
-.team-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.team-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-}
-
-.initials-badge {
-  width: 32px;
-  height: 32px;
-  background: #1f2f45;
-  color: #fff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.team-name {
-  font-weight: 600;
-}
-
-/* Sortable columns */
-.sortable {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.sortable:hover {
-  color: #3fa9f5;
-}
-
-/* Animated highlight for logged-in user */
-.animated-highlight {
-  animation: pulseGlow 1.5s ease-in-out infinite;
-}
-
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 0px #00ff99; }
-  50% { box-shadow: 0 0 12px #00ff99; }
-  100% { box-shadow: 0 0 0px #00ff99; }
-}
-
-/* Conference Banner */
-.conference-banner {
-  background: linear-gradient(90deg, #0b1a2a, #11263d);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  border-left: 5px solid #00b4ff;
-}
-
-.conference-name {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #e8eef5;
-}
-
-/* Division Banner */
-.division-banner {
-  background: #1a2c40;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  border-left: 4px solid #3fa9f5;
-}
-
-.division-name {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #cdd9e5;
-}
-
-/* Fade-in animation */
-.fade-in {
   animation: fadeIn 0.6s ease-out;
 }
 
@@ -257,6 +11,131 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+.standings-title {
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Conference Banner */
+.conference-banner {
+  background: linear-gradient(90deg, #0b1a2a, #11263d);
+  padding: 0.9rem 1.2rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border-left: 6px solid #00b4ff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.conference-name {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #e8eef5;
+}
+
+/* Division Banner */
+.division-banner {
+  background: #1a2c40;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border-left: 5px solid #3fa9f5;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+}
+
+.division-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #cdd9e5;
+}
+
+/* Table */
+.standings-table {
+  background: #0b1a2a;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.45);
+}
+
+/* Header + Rows */
+.standings-header,
+.standings-row {
+  display: grid;
+  grid-template-columns: 2fr 0.5fr 0.5fr 1fr 1fr 0.8fr 1fr;
+  padding: 0.85rem;
+  align-items: center;
+}
+
+.standings-header {
+  font-weight: bold;
+  color: #9bbcd1;
+  border-bottom: 1px solid #1f2f45;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.standings-row {
+  color: #e8eef5;
+  border-bottom: 1px solid #1f2f45;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.standings-row:hover {
+  background: #11263d;
+  transform: translateY(-2px);
+}
+
+/* Highlight logged-in user */
+.highlight {
+  background: #1a3a5a !important;
+  border-left: 5px solid #00ff99;
+}
+
+.animated-highlight {
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0px #00ff99; }
+  50% { box-shadow: 0 0 14px #00ff99; }
+  100% { box-shadow: 0 0 0px #00ff99; }
+}
+
+/* Team Cell */
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.team-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.initials-badge {
+  width: 38px;
+  height: 38px;
+  background: #1f2f45;
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.team-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
 /* Sortable columns */
 .sortable {
   cursor: pointer;
@@ -267,43 +146,8 @@
   color: #3fa9f5;
 }
 
-/* Animated highlight for logged-in user */
-.animated-highlight {
-  animation: pulseGlow 1.5s ease-in-out infinite;
-}
-
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 0px #00ff99; }
-  50% { box-shadow: 0 0 12px #00ff99; }
-  100% { box-shadow: 0 0 0px #00ff99; }
-}
-
-/* Conference Banner */
-.conference-banner {
-  background: linear-gradient(90deg, #0b1a2a, #11263d);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  border-left: 5px solid #00b4ff;
-}
-
-.conference-name {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #e8eef5;
-}
-
-/* Division Banner */
-.division-banner {
-  background: #1a2c40;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  border-left: 4px solid #3fa9f5;
-}
-
-.division-name {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #cdd9e5;
+/* Loading */
+.loading {
+  padding: 1rem;
+  color: #fff;
 }
