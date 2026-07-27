@@ -20,7 +20,6 @@ export function getCookies(req) {
     // Always decode cookie values
     const decodedValue = decodeURIComponent(rawValue);
 
-    // Prefer decoded value if duplicates exist
     cookies[name] = decodedValue;
   });
 
@@ -51,21 +50,45 @@ export function buildAuthHeaders(req) {
   };
 }
 
+/**
+ * Correct host detection:
+ * 1. Try TYPE=league (always returns correct host)
+ * 2. Fallback to TYPE=myleagues
+ * 3. Final fallback: api.myfantasyleague.com
+ */
 export async function detectMFLHost(year, leagueId) {
-  const url = `https://api.myfantasyleague.com/${year}/export?TYPE=assets&L=${leagueId}&XML=1`;
-
   try {
-    const res = await fetch(url);
-    const xml = await res.text();
+    // 1. Try league info first — this ALWAYS returns the correct host
+    const leagueUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
+    const leagueRes = await fetch(leagueUrl);
+    const leagueData = await leagueRes.json();
 
-    const match = xml.match(/host="([^"]+)"/);
-    const detectedHost = match ? match[1] : "www.myfantasyleague.com";
+    if (leagueData.league?.host) {
+      console.log(`Detected MFL host for ${year}: ${leagueData.league.host}`);
+      return leagueData.league.host;
+    }
 
-    console.log(`Detected MFL host for ${year}: ${detectedHost}`);
-    return detectedHost;
+    // 2. Fallback: use myleagues (also returns correct host)
+    const myLeaguesUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=myleagues&JSON=1`;
+    const myLeaguesRes = await fetch(myLeaguesUrl);
+    const myLeaguesData = await myLeaguesRes.json();
+
+    if (myLeaguesData.myleagues?.league) {
+      const league = myLeaguesData.myleagues.league.find(
+        (l) => l.id === leagueId.toString()
+      );
+      if (league?.host) {
+        console.log(`Detected MFL host for ${year}: ${league.host}`);
+        return league.host;
+      }
+    }
+
+    // 3. Absolute fallback (rare)
+    console.log(`Fallback host used for ${year}: api.myfantasyleague.com`);
+    return "api.myfantasyleague.com";
   } catch (err) {
     console.error("HOST DETECTION ERROR:", err);
-    return "www.myfantasyleague.com";
+    return "api.myfantasyleague.com";
   }
 }
 
