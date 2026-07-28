@@ -102,25 +102,26 @@ function renderPlayer(p) {
       <img
         src={fallback}
         className="player-pic"
-        onLoad={(e) => {
+        onError={(e) => {
           const img = e.target;
 
           (async () => {
             for (const sub of subdomains) {
               for (const folder of folders) {
                 for (const file of filenames) {
+                  const url = `https://${sub}.myfantasyleague.com/${folder}/${file}`;
                   const test = new Image();
-                  test.src = `https://${sub}.myfantasyleague.com/${folder}/${file}`;
+                  test.src = url;
 
                   await new Promise((res) => {
                     test.onload = () => {
-                      img.src = test.src;
+                      img.src = url; // SUCCESS
                       res();
                     };
                     test.onerror = () => res();
                   });
 
-                  if (img.src !== fallback) return; // success
+                  if (img.src !== fallback) return; // STOP — we found a valid image
                 }
               }
             }
