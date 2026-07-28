@@ -33,6 +33,7 @@ export default function Roster({ leagueId, myFranchiseId, year }) {
     setLoading(false);
   }
 
+  // Grouping
   const offense = players.filter(p =>
     ["QB", "RB", "WR", "TE", "PK"].includes(p.position)
   );
@@ -47,6 +48,7 @@ export default function Roster({ leagueId, myFranchiseId, year }) {
 
   const ir = players.filter(p => p.status === "IR");
 
+  // Polished Yahoo-style card
   function renderPlayer(p) {
     return (
       <div className="player-card">
@@ -89,3 +91,4 @@ export default function Roster({ leagueId, myFranchiseId, year }) {
     </div>
   );
 }
+
