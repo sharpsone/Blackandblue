@@ -78,32 +78,16 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const bench = players.filter(p => p.status === "BENCH");
   const ir = players.filter(p => p.status === "IR");
 
-const headshotCache = {}; // memory cache
-
-function renderPlayer(p) {
-  const fallback = "/silhouettes/player.png";
-
-  const subdomains = ["www", "www2", "www44", "www57"];
-  const folders = [
-    "player_photos",
-    "player_photos_2010",
-    "player_photos_2011",
-    "player_photos_2012",
-    "player_photos_2013",
-    "player_photos_2014"
-  ];
-  const filenames = [
-    `${p.id}.jpg`,
-    `${p.id}_thumb.jpg`,
-    `${p.id}_p.jpg`,
-    `${p.id}_80.jpg`
-  ];
-
-  // 1. If cached, load instantly
-  if (headshotCache[p.id]) {
+  // ⭐ PROXY-BASED HEADSHOT LOADER
+  function renderPlayer(p) {
     return (
       <div className="player-row">
-        <img src={headshotCache[p.id]} className="player-pic" />
+        <img
+          src={`/api/headshot?id=${p.id}`}
+          className="player-pic"
+          alt={p.name}
+        />
+
         <div className="player-main">
           <div className="player-name">{p.name}</div>
           <div className="player-sub">
@@ -114,57 +98,6 @@ function renderPlayer(p) {
       </div>
     );
   }
-
-  // 2. Build all possible URLs
-  const urls = [];
-  for (const sub of subdomains) {
-    for (const folder of folders) {
-      for (const file of filenames) {
-        urls.push(`https://${sub}.myfantasyleague.com/${folder}/${file}`);
-      }
-    }
-  }
-
-  return (
-    <div className="player-row">
-      <img
-        src="data:image/png;base64,INVALID"
-        className="player-pic"
-        onError={(e) => {
-          const img = e.target;
-
-          // 3. Try all URLs in parallel
-          Promise.any(
-            urls.map(
-              (url) =>
-                new Promise((resolve, reject) => {
-                  const test = new Image();
-                  test.onload = () => resolve(url);
-                  test.onerror = reject;
-                  test.src = url;
-                })
-            )
-          )
-            .then((validUrl) => {
-              headshotCache[p.id] = validUrl; // cache it
-              img.src = validUrl;
-            })
-            .catch(() => {
-              img.src = fallback; // none worked
-            });
-        }}
-      />
-
-      <div className="player-main">
-        <div className="player-name">{p.name}</div>
-        <div className="player-sub">
-          <span className="pos-tag">{p.position}</span>
-          <span className="team-tag">{p.team}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
   return (
     <div className="roster-container">
