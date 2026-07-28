@@ -90,12 +90,38 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       const weeklyPlayers =
         weekly?.weeklyResults?.matchup?.[0]?.franchise?.[0]?.player || [];
 
-      const initialLineup = {};
-      weeklyPlayers.forEach(lp => {
-        initialLineup[lp.id] = lp.id;
-      });
+        // Build a map of positionGroup → slot names
+        const slotsByGroup = starterSlots.reduce((acc, slot) => {
+        if (!acc[slot.positionGroup]) acc[slot.positionGroup] = [];
+        acc[slot.positionGroup].push(slot.slotName);
+        return acc;
+        }, {});
 
-      setLineup(initialLineup);
+        const initialLineup = {};
+
+        weeklyPlayers.forEach(lp => {
+        const full = merged.find(p => p.id === lp.id);
+        if (!full) return;
+
+        const pos = full.position;
+
+        // Find matching group (handles DT+DE, CB+S)
+        const group = Object.keys(slotsByGroup).find(g =>
+            g === pos || g.split("+").includes(pos)
+        );
+
+        if (!group) return;
+
+        const availableSlots = slotsByGroup[group];
+
+        // Assign to first empty slot
+        const nextSlot = availableSlots.find(s => !initialLineup[s]);
+
+        if (nextSlot) initialLineup[nextSlot] = lp.id;
+        });
+
+        setLineup(initialLineup);
+
     } catch (err) {
       console.error("LINEUP LOAD ERROR:", err);
     }
