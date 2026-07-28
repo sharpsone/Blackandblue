@@ -35,19 +35,20 @@ async function loadRoster() {
   if (!myFranchiseId) return;
 
   try {
-    // 1. Get roster (who is on your team)
     const rosterData = await getRoster(leagueId, myFranchiseId, year);
     const rosterPlayers = rosterData?.roster?.players || [];
 
-    // 2. Get full player database
     const playerData = await getPlayers(year);
     const allPlayers = playerData?.players || [];
 
-    // 3. Get weekly lineup (starter / bench / IR)
-    const lineupData = await getWeeklyLineup(leagueId, myFranchiseId, year, 1);
-    const lineupPlayers = lineupData?.weeklyResults?.franchise?.player || [];
+    let lineupPlayers = [];
+    try {
+      const lineupData = await getWeeklyLineup(leagueId, myFranchiseId, year, 1);
+      lineupPlayers = lineupData?.weeklyResults?.franchise?.player || [];
+    } catch (e) {
+      console.warn("weeklyResults failed, defaulting all to bench:", e);
+    }
 
-    // 4. Merge everything
     const merged = rosterPlayers.map(rp => {
       const full = allPlayers.find(p => p.id === rp.id);
       const lineup = lineupPlayers.find(lp => lp.id === rp.id);
@@ -55,20 +56,9 @@ async function loadRoster() {
       return {
         ...rp,
         ...full,
-        lineupStatus: lineup?.status || "bench" // default bench if not found
+        lineupStatus: lineup?.status || "bench"
       };
     });
-
-    // Debug: see actual lineup statuses
-    console.log(
-      "Lineup Statuses:",
-      merged.map(p => ({
-        id: p.id,
-        name: p.name,
-        pos: p.position,
-        lineupStatus: p.lineupStatus
-      }))
-    );
 
     setPlayers(merged);
   } catch (err) {
@@ -77,6 +67,7 @@ async function loadRoster() {
 
   setLoading(false);
 }
+
 
     loadRoster();
   }, [leagueId, year, myFranchiseId]);
