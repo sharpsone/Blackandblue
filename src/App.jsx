@@ -13,6 +13,7 @@ import MessageBoard from "./pages/MessageBoard";
 import FreeAgents from "./pages/FreeAgents";
 import Schedule from "./pages/Schedule";
 import PlayoffBracket from "./pages/PlayoffBracket";
+import SubmitLineup from "./pages/SubmitLineup";
 
 import {
   login as loginUser,
