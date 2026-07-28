@@ -138,21 +138,33 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
             {slot.required ? "" : " (optional)"}
           </div>
 
-          <select
+            <select
             className="submit-select"
             value={lineup[slot.slotName] || ""}
             onChange={(e) => setStarter(slot.slotName, e.target.value)}
-          >
+            >
             <option value="">-- Select Player --</option>
 
-            {players
-              .filter(p => slot.eligible.includes(p.position))
-              .map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.position} - {p.team})
+            {(() => {
+                const selected = players.find(p => p.id === lineup[slot.slotName]);
+                return selected ? (
+                <option value={selected.id}>
+                    {selected.name} ({selected.position} - {selected.team})
                 </option>
-              ))}
-          </select>
+                ) : null;
+            })()}
+
+            {players
+                .filter(p => slot.eligible.includes(p.position))
+                .filter(p => p.id !== lineup[slot.slotName]) // don't duplicate selected
+                .filter(p => !Object.values(lineup).includes(p.id)) // prevent duplicates
+                .map(p => (
+                <option key={p.id} value={p.id}>
+                    {p.name} ({p.position} - {p.team})
+                </option>
+                ))}
+            </select>
+
         </div>
       ))}
 
