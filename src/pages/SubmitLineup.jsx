@@ -20,14 +20,27 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     }
 
     try {
-      // 1. League rules via backend proxy (/api/league)
+      // 1. League rules (THIS IS THE FIX)
       const leagueData = await getLeague(leagueId, year);
-      const starters = leagueData?.league?.starters?.starter || [];
+      const positions = leagueData?.league?.starters?.position || [];
 
-      const starterList = starters.map(s => ({
-        position: s.position,
-        limit: parseInt(s.limit, 10)
-      }));
+      // Convert grouped positions into arrays of eligible positions
+      const starterList = positions.map(p => {
+        const name = p.name;
+        const limit = p.limit;
+
+        // Split grouped positions: "DT+DE" → ["DT", "DE"]
+        const eligible = name.includes("+")
+          ? name.split("+")
+          : [name];
+
+        return {
+          slotName: name,
+          eligible,
+          limit
+        };
+      });
+
       setStarterSlots(starterList);
 
       // 2. Roster
@@ -42,9 +55,10 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         const full = allPlayers.find(p => p.id === rp.id);
         return { ...rp, ...full };
       });
+
       setPlayers(merged);
 
-      // 4. Weekly lineup via backend proxy (/api/weekly)
+      // 4. Weekly lineup
       const weeklyRaw = await fetch(
         `/api/weekly?leagueId=${leagueId}&franchise=${myFranchiseId}&year=${year}&week=1`
       ).then(r => r.text());
@@ -56,10 +70,11 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         console.error("Weekly returned non‑JSON:", weeklyRaw);
       }
 
-      const weeklyPlayers = weekly?.weeklyResults?.franchise?.player || [];
+      const weeklyPlayers = weekly?.weeklyResults?.matchup?.[0]?.franchise?.[0]?.player || [];
+
       const initialLineup = {};
       weeklyPlayers.forEach(lp => {
-        initialLineup[lp.position] = lp.id;
+        initialLineup[lp.id] = lp.id; // store by player ID
       });
 
       setLineup(initialLineup);
@@ -70,13 +85,11 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     setLoading(false);
   }
 
-  function setStarter(position, playerId) {
-    setLineup(prev => ({ ...prev, [position]: playerId }));
+  function setStarter(slotName, playerId) {
+    setLineup(prev => ({ ...prev, [slotName]: playerId }));
   }
 
   async function submitLineup() {
-    if (!leagueId || !myFranchiseId) return;
-
     const params = new URLSearchParams({
       TYPE: "submitLineup",
       L: leagueId,
@@ -84,19 +97,14 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       JSON: 1
     });
 
-    Object.entries(lineup).forEach(([pos, id]) => {
-      if (id) params.append(pos, id);
+    Object.entries(lineup).forEach(([slotName, id]) => {
+      params.append(slotName, id);
     });
 
-    try {
-      const res = await fetch(`/api/submitLineup?${params.toString()}`);
-      const json = await res.json();
-      console.log("SUBMIT RESPONSE:", json);
-      alert("Lineup submitted!");
-    } catch (err) {
-      console.error("SUBMIT ERROR:", err);
-      alert("Failed to submit lineup.");
-    }
+    const res = await fetch(`/api/submitLineup?${params.toString()}`);
+    const json = await res.json();
+
+    alert("Lineup submitted!");
   }
 
   if (loading) return <p>Loading lineup...</p>;
@@ -106,23 +114,23 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       <h1 className="submit-title">Submit Lineup</h1>
 
       {starterSlots.map(slot => (
-        <div key={slot.position} className="submit-row">
+        <div key={slot.slotName} className="submit-row">
           <div className="submit-pos">
-            {slot.position} ({slot.limit})
+            {slot.slotName} ({slot.limit})
           </div>
 
           <select
             className="submit-select"
-            value={lineup[slot.position] || ""}
-            onChange={(e) => setStarter(slot.position, e.target.value)}
+            value={lineup[slot.slotName] || ""}
+            onChange={(e) => setStarter(slot.slotName, e.target.value)}
           >
             <option value="">-- Select Starter --</option>
 
             {players
-              .filter(p => p.position === slot.position)
+              .filter(p => slot.eligible.includes(p.position))
               .map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.team})
+                  {p.name} ({p.position} - {p.team})
                 </option>
               ))}
           </select>
