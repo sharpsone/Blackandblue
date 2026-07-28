@@ -61,3 +61,13 @@
 .submit-button:hover {
   background: #005fa3;
 }
+
+.submit-select {
+  color: #000;
+  background: #fff;
+}
+
+.submit-select option {
+  color: #000 !important;
+  background: #fff !important;
+}
