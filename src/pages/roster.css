@@ -55,3 +55,86 @@
 .team-tag { background: #023e8a; }
 .injury-tag { background: #e63946; }
 .bye-tag { background: #ffb703; }
+
+/* Centered roster container */
+.roster-container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Section headers */
+.section-title {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #8ecae6;
+  text-align: center;
+  border-bottom: 1px solid #8ecae6;
+  padding-bottom: 4px;
+}
+
+/* Player list section */
+.player-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Yahoo-style player card */
+.player-card {
+  display: flex;
+  align-items: center;
+  background: #001d3d;
+  padding: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.player-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 10px #00b4d8;
+}
+
+/* Player photo */
+.player-photo {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  margin-right: 0.75rem;
+}
+
+/* Player info */
+.player-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.player-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.player-pos {
+  background: #023e8a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.player-team {
+  background: #8d99ae;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}

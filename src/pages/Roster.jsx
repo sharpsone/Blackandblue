@@ -81,47 +81,45 @@ function Roster({ leagueId, year, myFranchiseId }) {
   // ⭐ PROXY-BASED HEADSHOT LOADER
 function renderPlayer(p) {
   return (
-    <div className="player-row">
+    <div className="player-card">
       <img
         src={`/api/headshot?id=${p.id}`}
-        className="player-pic"
+        className="player-photo"
         alt={p.name}
-        onError={(e) => {
-          e.target.src = "/silhouettes/player.png";
-        }}
+        onError={(e) => (e.target.src = "/silhouettes/player.png")}
       />
 
-      <div className="player-main">
+      <div className="player-info">
         <div className="player-name">{p.name}</div>
-        <div className="player-sub">
-          <span className="pos-tag">{p.position}</span>
-          <span className="team-tag">{p.team}</span>
+        <div className="player-meta">
+          <span className="player-pos">{p.position}</span>
+          <span className="player-team">{p.team}</span>
         </div>
       </div>
     </div>
   );
 }
 
-  return (
-    <div className="roster-container">
-      <h1 className="roster-title">My Roster</h1>
+return (
+  <div className="roster-container">
+    <h1 className="roster-title">My Roster</h1>
 
-      <div className="section-title">Starters</div>
+    <div className="section-title">Starters</div>
+    <div className="player-section">
       {starters.map(renderPlayer)}
-
-      <div className="section-title">Bench</div>
-      {bench.map(renderPlayer)}
-
-      <div className="section-title">Injured Reserve</div>
-      {ir.map(renderPlayer)}
-
-      <div className="divider">Offense</div>
-      {offense.map(renderPlayer)}
-
-      <div className="divider">Defense</div>
-      {defense.map(renderPlayer)}
     </div>
-  );
+
+    <div className="section-title">Bench</div>
+    <div className="player-section">
+      {bench.map(renderPlayer)}
+    </div>
+
+    <div className="section-title">Injured Reserve</div>
+    <div className="player-section">
+      {ir.map(renderPlayer)}
+    </div>
+  </div>
+);
 }
 
 export default Roster;
