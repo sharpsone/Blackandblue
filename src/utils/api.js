@@ -78,3 +78,10 @@ export async function getPlayers(year = "2026") {
   });
   return response.json();
 }
+
+// GET WEEKLY LINEUP
+export async function getWeeklyLineup(leagueId, franchiseId, year, week) {
+  const url = `https://www${year}.myfantasyleague.com/${year}/export?TYPE=weeklyResults&L=${leagueId}&FRANCHISE=${franchiseId}&W=${week}&JSON=1`;
+  const res = await fetch(url);
+  return res.json();
+}
