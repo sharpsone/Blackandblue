@@ -86,9 +86,6 @@ function renderPlayer(p) {
         src={`/api/headshot?id=${p.id}`}
         className="player-pic"
         alt={p.name}
-        onError={(e) => {
-          e.target.src = "/silhouettes/player.png";
-        }}
       />
 
       <div className="player-main">

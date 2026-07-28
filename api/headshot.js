@@ -43,12 +43,14 @@ export default async function handler(req, res) {
   }
 
   // Fallback silhouette
-  const fs = require("fs");
-  const path = require("path");
-  const fallbackPath = path.join(process.cwd(), "public/silhouettes/player.png");
-  const fallbackImage = fs.readFileSync(fallbackPath);
+// Fallback silhouette (served directly, no onError needed)
+    const fs = require("fs");
+    const path = require("path");
 
-  res.setHeader("Content-Type", "image/png");
-  res.setHeader("Cache-Control", "public, max-age=31536000");
-  return res.status(200).send(fallbackImage);
+    const fallbackPath = path.join(process.cwd(), "public/silhouettes/player.png");
+    const fallbackImage = fs.readFileSync(fallbackPath);
+
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    return res.status(200).send(fallbackImage);
 }
