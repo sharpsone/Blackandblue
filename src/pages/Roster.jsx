@@ -79,25 +79,29 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const ir = players.filter(p => p.status === "IR");
 
   // ⭐ PROXY-BASED HEADSHOT LOADER
-  function renderPlayer(p) {
-    return (
-      <div className="player-row">
-        <img
-          src={`/api/headshot?id=${p.id}`}
-          className="player-pic"
-          alt={p.name}
-        />
+function renderPlayer(p) {
+  return (
+    <div className="player-row">
+      <img
+        src={`/api/headshot?id=${p.id}`}
+        className="player-pic"
+        alt={p.name}
+        onError={(e) => {
+          e.target.src = "/silhouettes/player.png";
+        }}
+      />
 
-        <div className="player-main">
-          <div className="player-name">{p.name}</div>
-          <div className="player-sub">
-            <span className="pos-tag">{p.position}</span>
-            <span className="team-tag">{p.team}</span>
-          </div>
+      <div className="player-main">
+        <div className="player-name">{p.name}</div>
+        <div className="player-sub">
+          <span className="pos-tag">{p.position}</span>
+          <span className="team-tag">{p.team}</span>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   return (
     <div className="roster-container">
