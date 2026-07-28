@@ -1,76 +1,104 @@
+/* --- Container --- */
 .roster-container {
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
   padding: 1rem;
+  color: #e0e0e0;
 }
 
+/* --- Section Titles --- */
 .section-title {
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #8ecae6;
-  text-align: center;
-  border-bottom: 1px solid #8ecae6;
-  padding-bottom: 4px;
+  margin-top: 1.8rem;
+  margin-bottom: 0.8rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #00b4d8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+.section-title::before {
+  content: "▌";
+  color: #00b4d8;
+  font-size: 1.4rem;
+}
+
+/* --- Player Section --- */
 .player-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
+/* --- Player Card --- */
 .player-card {
   display: flex;
   align-items: center;
-  background: #001d3d;
-  padding: 0.75rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  background: linear-gradient(135deg, #001a33, #003b6f);
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: 1px solid #0a84ff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .player-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 10px #00b4d8;
+  transform: translateY(-3px);
+  box-shadow: 0 0 18px #00b4d8;
 }
 
+/* --- Player Photo --- */
 .player-photo {
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
-  margin-right: 0.75rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  border: 2px solid #00b4d8;
+  margin-right: 1rem;
+  object-fit: cover;
 }
 
+/* --- Player Info --- */
 .player-info {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .player-name {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  margin-bottom: 2px;
+  color: #ffffff;
 }
 
+/* --- Meta Row --- */
 .player-meta {
   display: flex;
-  gap: 8px;
-  font-size: 0.85rem;
-  opacity: 0.85;
+  gap: 10px;
+  align-items: center;
 }
 
+/* --- Position Badge --- */
 .player-pos {
-  background: #023e8a;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 600;
+  background: #0077b6;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  text-transform: uppercase;
 }
 
+/* --- Team Badge --- */
 .player-team {
   background: #8d99ae;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  text-transform: uppercase;
 }
+
