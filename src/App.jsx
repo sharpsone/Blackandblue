@@ -186,6 +186,14 @@ function App() {
             <Schedule leagueId={leagueId} year={year} />
           )}
 
+          {page === "submitlineup" && (
+            <SubmitLineup
+              leagueId={leagueId}
+              myFranchiseId={myFranchiseId}
+              year={year}
+            />
+          )}
+
           {page === "playoffs" && (
             <PlayoffBracket leagueId={leagueId} year={year} />
           )}

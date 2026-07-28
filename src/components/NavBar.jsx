@@ -1,18 +1,19 @@
 import "../App.css";
 export default function NavBar({ page, setPage }) {
-  const tabs = [
-    { id: "standings", label: "Standings" },
-    { id: "roster", label: "My Roster" },
-    { id: "live", label: "Live Scoring" },
-    { id: "matchups", label: "Matchups" },
-    { id: "playerstats", label: "Player Stats" },
-    { id: "transactions", label: "Transactions" },
-    { id: "draft", label: "Draft Results" },
-    { id: "messages", label: "Message Board" },
-    { id: "freeagents", label: "Free Agents" },
-    { id: "schedule", label: "Schedule" },
-    { id: "playoffs", label: "Playoff Bracket" }
-  ];
+ const tabs = [
+  { id: "standings", label: "Standings" },
+  { id: "roster", label: "My Roster" },
+  { id: "submitlineup", label: "Submit Lineup" },
+  { id: "live", label: "Live Scoring" },
+  { id: "matchups", label: "Matchups" },
+  { id: "playerstats", label: "Player Stats" },
+  { id: "transactions", label: "Transactions" },
+  { id: "draft", label: "Draft Results" },
+  { id: "messages", label: "Message Board" },
+  { id: "freeagents", label: "Free Agents" },
+  { id: "schedule", label: "Schedule" }
+];
+
 
   return (
     <div className="navbar">
