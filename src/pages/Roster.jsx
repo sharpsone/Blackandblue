@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getRoster, getPlayers } from "../utils/api";
+import { getRoster, getPlayers, getWeeklyLineup } from "../utils/api";
 import "./roster.css";
 
 function Roster({ leagueId, year, myFranchiseId }) {
