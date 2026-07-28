@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { getRoster, getPlayers } from "../utils/api";
-import "../pages/submitlineup.css"; // ESPN-style CSS
+import { getRoster, getPlayers, getLeague } from "../utils/api";
+import "../pages/submitlineup.css";
 
 export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
   const [players, setPlayers] = useState([]);
   const [lineup, setLineup] = useState({});
+  const [starterSlots, setStarterSlots] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,14 +13,30 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
   }, [myFranchiseId]);
 
   async function loadData() {
-    if (!myFranchiseId) return;
+    if (!leagueId || !myFranchiseId) {
+      console.warn("Missing leagueId or franchiseId");
+      return;
+    }
 
     try {
-      // Load roster
+      // 1. Load league rules (starter positions)
+      const leagueData = await getLeague(leagueId, year);
+      const starters = leagueData?.league?.starters?.starter || [];
+
+      // Convert MFL starter objects → usable array
+      // Example: { position: "RB", limit: "2" }
+      const starterList = starters.map(s => ({
+        position: s.position,
+        limit: parseInt(s.limit, 10)
+      }));
+
+      setStarterSlots(starterList);
+
+      // 2. Load roster
       const rosterData = await getRoster(leagueId, myFranchiseId, year);
       const rosterPlayers = rosterData?.roster?.players || [];
 
-      // Load player database
+      // 3. Load player database
       const playerData = await getPlayers(year);
       const allPlayers = playerData?.players || [];
 
@@ -28,10 +45,19 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         return { ...rp, ...full };
       });
 
-      // Load weekly lineup (starter/bench/IR)
-      const weekly = await fetch(
+      setPlayers(merged);
+
+      // 4. Load weekly lineup (starter assignments)
+      const weeklyRaw = await fetch(
         `/api/weekly?leagueId=${leagueId}&franchise=${myFranchiseId}&year=${year}&week=1`
-      ).then(r => r.json());
+      ).then(r => r.text());
+
+      let weekly = null;
+      try {
+        weekly = JSON.parse(weeklyRaw);
+      } catch {
+        console.error("Weekly returned HTML instead of JSON:", weeklyRaw);
+      }
 
       const weeklyPlayers = weekly?.weeklyResults?.franchise?.player || [];
 
@@ -41,7 +67,6 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       });
 
       setLineup(initialLineup);
-      setPlayers(merged);
     } catch (err) {
       console.error("LINEUP LOAD ERROR:", err);
     }
@@ -73,25 +98,25 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
 
   if (loading) return <p>Loading lineup...</p>;
 
-  const positions = ["QB", "RB", "WR", "TE", "PK", "LB", "DL", "CB"];
-
   return (
     <div className="submit-container">
       <h1 className="submit-title">Submit Lineup</h1>
 
-      {positions.map(pos => (
-        <div key={pos} className="submit-row">
-          <div className="submit-pos">{pos}</div>
+      {starterSlots.map(slot => (
+        <div key={slot.position} className="submit-row">
+          <div className="submit-pos">
+            {slot.position} ({slot.limit})
+          </div>
 
           <select
             className="submit-select"
-            value={lineup[pos] || ""}
-            onChange={(e) => setStarter(pos, e.target.value)}
+            value={lineup[slot.position] || ""}
+            onChange={(e) => setStarter(slot.position, e.target.value)}
           >
             <option value="">-- Select Starter --</option>
 
             {players
-              .filter(p => p.position === pos)
+              .filter(p => p.position === slot.position)
               .map(p => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.team})

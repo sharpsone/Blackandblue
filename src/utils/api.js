@@ -47,6 +47,13 @@ export async function getStandings(leagueId, year = "2026") {
   return response.json();
 }
 
+// GET LEAGUE
+export async function getLeague(leagueId, year) {
+  const url = `https://www.myfantasyleague.com/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
+  const res = await fetch(url);
+  return res.json();
+}
+
 // GET SCHEDULE
 export async function getSchedule(leagueId, year = "2026") {
   const response = await fetch(
