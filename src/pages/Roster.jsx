@@ -31,31 +31,42 @@ function Roster({ leagueId, year, myFranchiseId }) {
   };
 
   useEffect(() => {
-    async function loadRoster() {
-      if (!myFranchiseId) return;
+async function loadRoster() {
+  if (!myFranchiseId) return;
 
-      try {
-        const rosterData = await getRoster(leagueId, myFranchiseId, year);
-        const rosterPlayers = rosterData?.roster?.players || [];
+  try {
+    const rosterData = await getRoster(leagueId, myFranchiseId, year);
+    const rosterPlayers = rosterData?.roster?.players || [];
 
-        const playerData = await getPlayers(year);
-        const allPlayers = playerData?.players || [];
+    const playerData = await getPlayers(year);
+    const allPlayers = playerData?.players || [];
 
-        const merged = rosterPlayers.map(rp => {
-          const full = allPlayers.find(p => p.id === rp.id);
-          return {
-            ...rp,
-            ...full
-          };
-        });
+    const merged = rosterPlayers.map(rp => {
+      const full = allPlayers.find(p => p.id === rp.id);
+      return {
+        ...rp,
+        ...full
+      };
+    });
 
-        setPlayers(merged);
-      } catch (err) {
-        console.error("ROSTER ERROR:", err);
-      }
+    // ⭐ ADD THIS HERE — prints each player's MFL status
+    console.log(
+      "Statuses:",
+      merged.map(p => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        status: p.status
+      }))
+    );
 
-      setLoading(false);
-    }
+    setPlayers(merged);
+  } catch (err) {
+    console.error("ROSTER ERROR:", err);
+  }
+
+  setLoading(false);
+}
 
     loadRoster();
   }, [leagueId, year, myFranchiseId]);
