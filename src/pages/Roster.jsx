@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getRoster, getPlayers } from "../utils/api";
 import "../utils/animations.css";
+import "../pages/roster.css";
 
 export default function Roster({ leagueId, myFranchiseId, year }) {
   const [players, setPlayers] = useState([]);
