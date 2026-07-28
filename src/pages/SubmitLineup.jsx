@@ -24,21 +24,38 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       const leagueData = await getLeague(leagueId, year);
       const positions = leagueData?.league?.starters?.position || [];
 
-      // Convert grouped positions into arrays of eligible positions
-      const starterList = positions.map(p => {
+      const starterList = [];
+
+      positions.forEach(p => {
         const name = p.name;
         const limit = p.limit;
+
+        // Parse limits: "2-3" → min=2, max=3
+        let min = 1;
+        let max = 1;
+
+        if (limit.includes("-")) {
+          const [lo, hi] = limit.split("-");
+          min = parseInt(lo, 10);
+          max = parseInt(hi, 10);
+        } else {
+          min = max = parseInt(limit, 10);
+        }
 
         // Split grouped positions: "DT+DE" → ["DT", "DE"]
         const eligible = name.includes("+")
           ? name.split("+")
           : [name];
 
-        return {
-          slotName: name,
-          eligible,
-          limit
-        };
+        // Create max slots
+        for (let i = 1; i <= max; i++) {
+          starterList.push({
+            slotName: `${name} Slot ${i}`,
+            positionGroup: name,
+            eligible,
+            required: i <= min // first min slots required
+          });
+        }
       });
 
       setStarterSlots(starterList);
@@ -70,11 +87,12 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         console.error("Weekly returned non‑JSON:", weeklyRaw);
       }
 
-      const weeklyPlayers = weekly?.weeklyResults?.matchup?.[0]?.franchise?.[0]?.player || [];
+      const weeklyPlayers =
+        weekly?.weeklyResults?.matchup?.[0]?.franchise?.[0]?.player || [];
 
       const initialLineup = {};
       weeklyPlayers.forEach(lp => {
-        initialLineup[lp.id] = lp.id; // store by player ID
+        initialLineup[lp.id] = lp.id;
       });
 
       setLineup(initialLineup);
@@ -98,7 +116,7 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     });
 
     Object.entries(lineup).forEach(([slotName, id]) => {
-      params.append(slotName, id);
+      if (id) params.append(slotName, id);
     });
 
     const res = await fetch(`/api/submitLineup?${params.toString()}`);
@@ -116,7 +134,8 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       {starterSlots.map(slot => (
         <div key={slot.slotName} className="submit-row">
           <div className="submit-pos">
-            {slot.slotName} ({slot.limit})
+            {slot.slotName}
+            {slot.required ? "" : " (optional)"}
           </div>
 
           <select
@@ -124,7 +143,7 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
             value={lineup[slot.slotName] || ""}
             onChange={(e) => setStarter(slot.slotName, e.target.value)}
           >
-            <option value="">-- Select Starter --</option>
+            <option value="">-- Select Player --</option>
 
             {players
               .filter(p => slot.eligible.includes(p.position))
