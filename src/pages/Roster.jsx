@@ -100,7 +100,7 @@ function renderPlayer(p) {
   return (
     <div className="player-row">
       <img
-        src={fallback}
+        src="/invalid-start.jpg"   // ⭐ forces onError immediately
         className="player-pic"
         onError={(e) => {
           const img = e.target;
@@ -115,16 +115,19 @@ function renderPlayer(p) {
 
                   await new Promise((res) => {
                     test.onload = () => {
-                      img.src = url; // SUCCESS
+                      img.src = url;  // ⭐ SUCCESS
                       res();
                     };
                     test.onerror = () => res();
                   });
 
-                  if (img.src !== fallback) return; // STOP — we found a valid image
+                  if (img.src === url) return; // stop — we found a valid image
                 }
               }
             }
+
+            // ⭐ If nothing worked, use silhouette
+            img.src = fallback;
           })();
         }}
       />
