@@ -78,6 +78,39 @@ function Roster({ leagueId, year, myFranchiseId }) {
   const bench = players.filter(p => p.status === "BENCH");
   const ir = players.filter(p => p.status === "IR");
 
+// ⭐ ORDER STARTERS
+function orderStarters(starters) {
+  const groups = {
+    QB: [],
+    RB: [],
+    WR: [],
+    TE: [],
+    PK: [],
+    LB: [],
+    DL: [],
+    CB: []
+  };
+
+  // Group players by position
+  starters.forEach(p => {
+    if (groups[p.position]) {
+      groups[p.position].push(p);
+    }
+  });
+
+  // Build ordered list
+  return [
+    ...groups.QB.slice(0, 1),
+    ...groups.RB.slice(0, 3),   // up to 3 RB
+    ...groups.WR.slice(0, 3),   // up to 3 WR
+    ...groups.TE.slice(0, 1),
+    ...groups.PK.slice(0, 1),
+    ...groups.LB.slice(0, 2),
+    ...groups.DL.slice(0, 2),
+    ...groups.CB.slice(0, 2)
+  ].filter(Boolean); // remove undefined
+}
+
   // ⭐ PROXY-BASED HEADSHOT LOADER
 function renderPlayer(p) {
   return (
@@ -106,7 +139,7 @@ return (
 
     <div className="section-title">Starters</div>
     <div className="player-section">
-      {starters.map(renderPlayer)}
+      {orderStarters(starters).map(renderPlayer)}
     </div>
 
     <div className="section-title">Bench</div>
