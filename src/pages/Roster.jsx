@@ -100,7 +100,7 @@ function renderPlayer(p) {
   return (
     <div className="player-row">
       <img
-        src="/invalid-start.jpg"   // ⭐ forces onError immediately
+        src="data:image/png;base64,INVALID"   // ⭐ guaranteed broken
         className="player-pic"
         onError={(e) => {
           const img = e.target;
@@ -121,13 +121,12 @@ function renderPlayer(p) {
                     test.onerror = () => res();
                   });
 
-                  if (img.src === url) return; // stop — we found a valid image
+                  if (img.src === url) return; // stop — found valid image
                 }
               }
             }
 
-            // ⭐ If nothing worked, use silhouette
-            img.src = fallback;
+            img.src = fallback; // ⭐ final fallback
           })();
         }}
       />
