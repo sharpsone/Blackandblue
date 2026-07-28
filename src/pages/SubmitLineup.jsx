@@ -10,33 +10,31 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
 
   useEffect(() => {
     loadData();
-  }, [myFranchiseId]);
+  }, [leagueId, myFranchiseId, year]);
 
   async function loadData() {
     if (!leagueId || !myFranchiseId) {
       console.warn("Missing leagueId or franchiseId");
+      setLoading(false);
       return;
     }
 
     try {
-      // 1. Load league rules (starter positions)
+      // 1. League rules via backend proxy (/api/league)
       const leagueData = await getLeague(leagueId, year);
       const starters = leagueData?.league?.starters?.starter || [];
 
-      // Convert MFL starter objects → usable array
-      // Example: { position: "RB", limit: "2" }
       const starterList = starters.map(s => ({
         position: s.position,
         limit: parseInt(s.limit, 10)
       }));
-
       setStarterSlots(starterList);
 
-      // 2. Load roster
+      // 2. Roster
       const rosterData = await getRoster(leagueId, myFranchiseId, year);
       const rosterPlayers = rosterData?.roster?.players || [];
 
-      // 3. Load player database
+      // 3. Player database
       const playerData = await getPlayers(year);
       const allPlayers = playerData?.players || [];
 
@@ -44,10 +42,9 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         const full = allPlayers.find(p => p.id === rp.id);
         return { ...rp, ...full };
       });
-
       setPlayers(merged);
 
-      // 4. Load weekly lineup (starter assignments)
+      // 4. Weekly lineup via backend proxy (/api/weekly)
       const weeklyRaw = await fetch(
         `/api/weekly?leagueId=${leagueId}&franchise=${myFranchiseId}&year=${year}&week=1`
       ).then(r => r.text());
@@ -56,11 +53,10 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       try {
         weekly = JSON.parse(weeklyRaw);
       } catch {
-        console.error("Weekly returned HTML instead of JSON:", weeklyRaw);
+        console.error("Weekly returned non‑JSON:", weeklyRaw);
       }
 
       const weeklyPlayers = weekly?.weeklyResults?.franchise?.player || [];
-
       const initialLineup = {};
       weeklyPlayers.forEach(lp => {
         initialLineup[lp.position] = lp.id;
@@ -79,6 +75,8 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
   }
 
   async function submitLineup() {
+    if (!leagueId || !myFranchiseId) return;
+
     const params = new URLSearchParams({
       TYPE: "submitLineup",
       L: leagueId,
@@ -87,13 +85,18 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     });
 
     Object.entries(lineup).forEach(([pos, id]) => {
-      params.append(pos, id);
+      if (id) params.append(pos, id);
     });
 
-    const res = await fetch(`/api/submitLineup?${params.toString()}`);
-    const json = await res.json();
-
-    alert("Lineup submitted!");
+    try {
+      const res = await fetch(`/api/submitLineup?${params.toString()}`);
+      const json = await res.json();
+      console.log("SUBMIT RESPONSE:", json);
+      alert("Lineup submitted!");
+    } catch (err) {
+      console.error("SUBMIT ERROR:", err);
+      alert("Failed to submit lineup.");
+    }
   }
 
   if (loading) return <p>Loading lineup...</p>;
