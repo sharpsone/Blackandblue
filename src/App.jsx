@@ -2,9 +2,9 @@ import { useContext } from "react";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
 import Login from "./components/Login";
-import SubmitLineup from "./components/SubmitLineup";
-import Roster from "./components/Roster";
-import Standings from "./components/Standings";
+import SubmitLineup from "./pages/SubmitLineup";
+import Roster from "./pages/Roster";
+import Standings from "./pages/Standings";
 
 function MainApp() {
   const { isLoggedIn } = useContext(AuthContext);
