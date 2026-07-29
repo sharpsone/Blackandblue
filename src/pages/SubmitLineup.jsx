@@ -147,7 +147,10 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       STARTERS: starters
     });
 
-    const res = await fetch(`/api/submitLineup?${params.toString()}`);
+    const res = await fetch(`/api/submitLineup?${params.toString()}`, {
+  credentials: "include"
+});
+
     const json = await res.json();
 
     alert("Lineup submitted!");

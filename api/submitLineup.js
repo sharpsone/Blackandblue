@@ -14,7 +14,9 @@ export default async function handler(req, res) {
     console.log("LINEUP IMPORT URL:", url);
 
     const response = await fetch(url, {
-      headers: buildAuthHeaders(req)
+      headers: {
+  Cookie: req.headers.cookie || "",
+}
     });
 
     const text = await response.text();
