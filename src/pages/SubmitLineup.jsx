@@ -134,36 +134,60 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
   }
 
   // ⭐ FIXED — async function restored
-  async function submitLineup() {
-    const params = new URLSearchParams({
-      TYPE: "submitLineup",
-      L: leagueId,
-      JSON: 1
-    });
+    async function submitLineup() {
+      const params = new URLSearchParams({
+        TYPE: "submitLineup",
+        L: leagueId,
+        JSON: 1
+      });
 
-    Object.entries(lineup).forEach(([slotName, id]) => {
-      if (!id) return;
+      Object.entries(lineup).forEach(([slotName, id]) => {
+        if (!id) return;
 
-      // Convert "RB Slot 1" → "RB1"
-      const [pos, , num] = slotName.split(" ");
-      const mflKey = pos.replace("+", "") + num; // DT+DE → DTDE1 (we fix below)
+        const [pos, , num] = slotName.split(" ");
 
-      let finalKey = mflKey;
+        let finalKey = "";
 
-      // Fix grouped positions to MFL format
-      if (pos === "DT+DE") finalKey = `DL${num}`;
-      if (pos === "CB+S") finalKey = `DB${num}`;
+        switch (pos) {
+          case "QB":
+            finalKey = `QB${num}`;
+            break;
+          case "RB":
+            finalKey = `RB${num}`;
+            break;
+          case "WR":
+            finalKey = `WR${num}`;
+            break;
+          case "TE":
+            finalKey = `TE${num}`;
+            break;
+          case "PK":
+            finalKey = `PK${num}`;
+            break;
+          case "DT+DE":
+            finalKey = `DL${num}`;
+            break;
+          case "LB":
+            finalKey = `LB${num}`;
+            break;
+          case "CB+S":
+            finalKey = `DB${num}`;
+            break;
+          default:
+            console.warn("Unknown slot:", slotName);
+            return;
+        }
 
-      params.append(finalKey, id);
-    });
+        params.append(finalKey, id);
+      });
 
-    params.append("FRANCHISE", myFranchiseId);
+      params.append("FRANCHISE", myFranchiseId);
 
-    const res = await fetch(`/api/submitLineup?${params.toString()}`);
-    const json = await res.json();
+      const res = await fetch(`/api/submitLineup?${params.toString()}`);
+      const json = await res.json();
 
-    alert("Lineup submitted!");
-  }
+      alert("Lineup submitted!");
+    }
 
   if (loading) return <p>Loading lineup...</p>;
 
