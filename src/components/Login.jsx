@@ -7,10 +7,9 @@ export default function Login() {
   const handleLogin = () => {
     const year = new Date().getFullYear();
 
-    const redirectUrl = "https://blackandblue.vercel.app";
-
+    // Redirect to MFL login
     window.location.href =
-      `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1&REDIRECT=${redirectUrl}`;
+      `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1`;
   };
 
   return (
@@ -31,6 +30,18 @@ export default function Login() {
       />
 
       <button onClick={handleLogin}>Login</button>
+
+      <hr />
+
+      <p>After logging in and seeing the “OK” page:</p>
+
+      <button
+        onClick={() =>
+          window.location.href = "https://blackandblue.vercel.app/after-login"
+        }
+      >
+        Return to App
+      </button>
     </div>
   );
 }
