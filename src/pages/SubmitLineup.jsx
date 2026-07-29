@@ -133,17 +133,20 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     setLineup(prev => ({ ...prev, [slotName]: playerId }));
   }
 
-  async function submitLineup() {
-    const params = new URLSearchParams({
-      TYPE: "submitLineup",
-      L: leagueId,
-      FRANCHISE: myFranchiseId,
-      JSON: 1
-    });
+const params = new URLSearchParams({
+  TYPE: "submitLineup",
+  L: leagueId,
+  JSON: 1
+});
 
+// Append lineup slots first
     Object.entries(lineup).forEach(([slotName, id]) => {
       if (id) params.append(slotName, id);
     });
+
+    // Append franchise last (prevents accidental concatenation)
+    params.append("FRANCHISE", myFranchiseId);
+
 
     const res = await fetch(`/api/submitLineup?${params.toString()}`);
     const json = await res.json();
