@@ -134,60 +134,24 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
   }
 
   // ⭐ FIXED — async function restored
-    async function submitLineup() {
-      const params = new URLSearchParams({
-        TYPE: "submitLineup",
-        L: leagueId,
-        JSON: 1
-      });
+  async function submitLineup() {
+    const starters = Object.values(lineup)
+      .filter(id => id)
+      .join(",");
 
-      Object.entries(lineup).forEach(([slotName, id]) => {
-        if (!id) return;
+    const params = new URLSearchParams({
+      TYPE: "lineup",
+      L: leagueId,
+      W: 1,
+      FRANCHISE_ID: myFranchiseId,
+      STARTERS: starters
+    });
 
-        const [pos, , num] = slotName.split(" ");
+    const res = await fetch(`/api/submitLineup?${params.toString()}`);
+    const json = await res.json();
 
-        let finalKey = "";
-
-        switch (pos) {
-          case "QB":
-            finalKey = `QB${num}`;
-            break;
-          case "RB":
-            finalKey = `RB${num}`;
-            break;
-          case "WR":
-            finalKey = `WR${num}`;
-            break;
-          case "TE":
-            finalKey = `TE${num}`;
-            break;
-          case "PK":
-            finalKey = `PK${num}`;
-            break;
-          case "DT+DE":
-            finalKey = `DL${num}`;
-            break;
-          case "LB":
-            finalKey = `LB${num}`;
-            break;
-          case "CB+S":
-            finalKey = `DB${num}`;
-            break;
-          default:
-            console.warn("Unknown slot:", slotName);
-            return;
-        }
-
-        params.append(finalKey, id);
-      });
-
-      params.append("FRANCHISE", myFranchiseId);
-
-      const res = await fetch(`/api/submitLineup?${params.toString()}`);
-      const json = await res.json();
-
-      alert("Lineup submitted!");
-    }
+    alert("Lineup submitted!");
+  }
 
   if (loading) return <p>Loading lineup...</p>;
 

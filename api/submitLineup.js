@@ -1,18 +1,17 @@
 import { fetch, getYear, buildAuthHeaders } from "./_utils.js";
 
 export default async function handler(req, res) {
-  const { TYPE, L, FRANCHISE } = req.query;
+  const { L, FRANCHISE_ID, W, STARTERS } = req.query;
   const year = getYear(req);
 
-  if (!TYPE || !L || !FRANCHISE) {
-    return res.status(400).json({ error: "Missing TYPE, L, or FRANCHISE" });
+  if (!L || !FRANCHISE_ID || !W || !STARTERS) {
+    return res.status(400).json({ error: "Missing L, FRANCHISE_ID, W, or STARTERS" });
   }
 
   try {
-    // submitLineup must go to api.myfantasyleague.com
-    const url = `https://api.myfantasyleague.com/${year}/export?TYPE=${TYPE}&L=${L}&FRANCHISE=${FRANCHISE}&JSON=1`;
+    const url = `https://api.myfantasyleague.com/${year}/import?TYPE=lineup&L=${L}&W=${W}&FRANCHISE_ID=${FRANCHISE_ID}&STARTERS=${STARTERS}`;
 
-    console.log("SUBMIT URL:", url);
+    console.log("LINEUP IMPORT URL:", url);
 
     const response = await fetch(url, {
       headers: buildAuthHeaders(req)
@@ -24,14 +23,12 @@ export default async function handler(req, res) {
       const json = JSON.parse(text);
       return res.json(json);
     } catch {
-      console.error("SubmitLineup returned non‑JSON:", text);
-      return res
-        .status(500)
-        .json({ error: "SubmitLineup returned non‑JSON", raw: text });
+      console.error("Lineup import returned non‑JSON:", text);
+      return res.status(500).json({ error: "Lineup import returned non‑JSON", raw: text });
     }
   } catch (err) {
-    console.error("SUBMITLINEUP ERROR:", err);
-    res.status(500).json({ error: "Failed to submit lineup" });
+    console.error("LINEUP IMPORT ERROR:", err);
+    res.status(500).json({ error: "Failed to import lineup" });
   }
 }
 
