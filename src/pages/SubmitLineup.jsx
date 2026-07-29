@@ -20,7 +20,7 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     }
 
     try {
-      // 1. League rules (THIS IS THE FIX)
+      // 1. League rules
       const leagueData = await getLeague(leagueId, year);
       const positions = leagueData?.league?.starters?.position || [];
 
@@ -53,7 +53,7 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
             slotName: `${name} Slot ${i}`,
             positionGroup: name,
             eligible,
-            required: i <= min // first min slots required
+            required: i <= min
           });
         }
       });
@@ -90,16 +90,16 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       const weeklyPlayers =
         weekly?.weeklyResults?.matchup?.[0]?.franchise?.[0]?.player || [];
 
-        // Build a map of positionGroup → slot names
-        const slotsByGroup = starterSlots.reduce((acc, slot) => {
+      // Build a map of positionGroup → slot names
+      const slotsByGroup = starterSlots.reduce((acc, slot) => {
         if (!acc[slot.positionGroup]) acc[slot.positionGroup] = [];
         acc[slot.positionGroup].push(slot.slotName);
         return acc;
-        }, {});
+      }, {});
 
-        const initialLineup = {};
+      const initialLineup = {};
 
-        weeklyPlayers.forEach(lp => {
+      weeklyPlayers.forEach(lp => {
         const full = merged.find(p => p.id === lp.id);
         if (!full) return;
 
@@ -107,7 +107,7 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
 
         // Find matching group (handles DT+DE, CB+S)
         const group = Object.keys(slotsByGroup).find(g =>
-            g === pos || g.split("+").includes(pos)
+          g === pos || g.split("+").includes(pos)
         );
 
         if (!group) return;
@@ -118,9 +118,9 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         const nextSlot = availableSlots.find(s => !initialLineup[s]);
 
         if (nextSlot) initialLineup[nextSlot] = lp.id;
-        });
+      });
 
-        setLineup(initialLineup);
+      setLineup(initialLineup);
 
     } catch (err) {
       console.error("LINEUP LOAD ERROR:", err);
@@ -133,20 +133,21 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     setLineup(prev => ({ ...prev, [slotName]: playerId }));
   }
 
-const params = new URLSearchParams({
-  TYPE: "submitLineup",
-  L: leagueId,
-  JSON: 1
-});
+  // ⭐ FIXED — async function restored
+  async function submitLineup() {
+    const params = new URLSearchParams({
+      TYPE: "submitLineup",
+      L: leagueId,
+      JSON: 1
+    });
 
-// Append lineup slots first
+    // Append lineup slots first
     Object.entries(lineup).forEach(([slotName, id]) => {
       if (id) params.append(slotName, id);
     });
 
     // Append franchise last (prevents accidental concatenation)
     params.append("FRANCHISE", myFranchiseId);
-
 
     const res = await fetch(`/api/submitLineup?${params.toString()}`);
     const json = await res.json();
@@ -167,33 +168,32 @@ const params = new URLSearchParams({
             {slot.required ? "" : " (optional)"}
           </div>
 
-            <select
+          <select
             className="submit-select"
             value={lineup[slot.slotName] || ""}
             onChange={(e) => setStarter(slot.slotName, e.target.value)}
-            >
+          >
             <option value="">-- Select Player --</option>
 
             {(() => {
-                const selected = players.find(p => p.id === lineup[slot.slotName]);
-                return selected ? (
+              const selected = players.find(p => p.id === lineup[slot.slotName]);
+              return selected ? (
                 <option value={selected.id}>
-                    {selected.name} ({selected.position} - {selected.team})
+                  {selected.name} ({selected.position} - {selected.team})
                 </option>
-                ) : null;
+              ) : null;
             })()}
 
             {players
-                .filter(p => slot.eligible.includes(p.position))
-                .filter(p => p.id !== lineup[slot.slotName]) // don't duplicate selected
-                .filter(p => !Object.values(lineup).includes(p.id)) // prevent duplicates
-                .map(p => (
+              .filter(p => slot.eligible.includes(p.position))
+              .filter(p => p.id !== lineup[slot.slotName]) // don't duplicate selected
+              .filter(p => !Object.values(lineup).includes(p.id)) // prevent duplicates
+              .map(p => (
                 <option key={p.id} value={p.id}>
-                    {p.name} ({p.position} - {p.team})
+                  {p.name} ({p.position} - {p.team})
                 </option>
-                ))}
-            </select>
-
+              ))}
+          </select>
         </div>
       ))}
 
