@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       return res.json({ success: false });
     }
 
-    // ⭐ Save ALL cookies returned by MFL
+    // ⭐ Store ALL cookies returned by MFL
     const cookies = Object.entries(statusAttrs).map(([key, value]) => {
       return `${key}=${value}; Path=/; HttpOnly; Secure; SameSite=None`;
     });
@@ -41,3 +41,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server error" });
   }
 }
+
