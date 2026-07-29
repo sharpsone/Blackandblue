@@ -2,8 +2,7 @@ import { parseStringPromise } from "xml2js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -18,53 +17,27 @@ export default async function handler(req, res) {
 
     const url = `https://api.myfantasyleague.com/${season}/login?${params.toString()}`;
 
-    console.log("LOGIN URL:", url);
-
     const response = await fetch(url);
     const xml = await response.text();
-
-    console.log("LOGIN XML RESPONSE:", xml);
 
     const parsed = await parseStringPromise(xml);
     const statusAttrs = parsed?.status?.$;
 
     if (!statusAttrs) {
-      res.json({ success: false });
-      return;
+      return res.json({ success: false });
     }
 
-    let cookieName = null;
-    let cookieValue = null;
+    // ⭐ Save ALL cookies returned by MFL
+    const cookies = Object.entries(statusAttrs).map(([key, value]) => {
+      return `${key}=${value}; Path=/; HttpOnly; Secure; SameSite=None`;
+    });
 
-    if (statusAttrs.MFL_USER_ID) {
-      cookieName = "MFL_USER_ID";
-      cookieValue = statusAttrs.MFL_USER_ID;
-    } else if (statusAttrs.MFL_USER) {
-      cookieName = "MFL_USER";
-      cookieValue = statusAttrs.MFL_USER;
-    } else if (statusAttrs.MFL_GLOBAL) {
-      cookieName = "MFL_GLOBAL";
-      cookieValue = statusAttrs.MFL_GLOBAL;
-    } else {
-      const firstKey = Object.keys(statusAttrs)[0];
-      cookieName = firstKey;
-      cookieValue = statusAttrs[firstKey];
-    }
+    res.setHeader("Set-Cookie", cookies);
 
-    if (!cookieName || !cookieValue) {
-      res.json({ success: false });
-      return;
-    }
-
-    res.setHeader(
-      "Set-Cookie",
-      `${cookieName}=${cookieValue}; Path=/; HttpOnly; Secure; SameSite=None`
-    );
-
-    res.json({ success: true });
+    return res.json({ success: true });
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 }
