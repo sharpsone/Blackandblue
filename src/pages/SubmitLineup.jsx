@@ -134,26 +134,36 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
   }
 
   // ⭐ FIXED — async function restored
-async function submitLineup() {
-  const params = new URLSearchParams({
-    TYPE: "submitLineup",
-    L: leagueId,
-    JSON: 1
-  });
+  async function submitLineup() {
+    const params = new URLSearchParams({
+      TYPE: "submitLineup",
+      L: leagueId,
+      JSON: 1
+    });
 
-  // Append lineup slots first
-  Object.entries(lineup).forEach(([slotName, id]) => {
-    if (id) params.append(slotName, id);
-  });
+    Object.entries(lineup).forEach(([slotName, id]) => {
+      if (!id) return;
 
-  // Append franchise last (prevents accidental concatenation)
-  params.append("FRANCHISE", myFranchiseId);
+      // Convert "RB Slot 1" → "RB1"
+      const [pos, , num] = slotName.split(" ");
+      const mflKey = pos.replace("+", "") + num; // DT+DE → DTDE1 (we fix below)
 
-  const res = await fetch(`/api/submitLineup?${params.toString()}`);
-  const json = await res.json();
+      let finalKey = mflKey;
 
-  alert("Lineup submitted!");
-}
+      // Fix grouped positions to MFL format
+      if (pos === "DT+DE") finalKey = `DL${num}`;
+      if (pos === "CB+S") finalKey = `DB${num}`;
+
+      params.append(finalKey, id);
+    });
+
+    params.append("FRANCHISE", myFranchiseId);
+
+    const res = await fetch(`/api/submitLineup?${params.toString()}`);
+    const json = await res.json();
+
+    alert("Lineup submitted!");
+  }
 
   if (loading) return <p>Loading lineup...</p>;
 
