@@ -7,13 +7,16 @@ export default function Login() {
   const handleLogin = () => {
     const year = new Date().getFullYear();
 
-    // ⭐ Redirect browser directly to MFL login
+    const redirectUrl = "https://blackandblue.vercel.app";
+
     window.location.href =
-      `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1`;
+      `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1&REDIRECT=${redirectUrl}`;
   };
 
   return (
-    <div>
+    <div style={{ padding: 20 }}>
+      <h2>Login to MFL</h2>
+
       <input
         placeholder="Username or Email"
         value={username}
