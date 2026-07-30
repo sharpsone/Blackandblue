@@ -1,3 +1,5 @@
+import cookie from "cookie";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -6,7 +8,6 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
   const year = new Date().getFullYear();
 
-  // Call MFL login API
   const response = await fetch(
     `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1`,
     {
@@ -17,15 +18,25 @@ export default async function handler(req, res) {
     }
   );
 
-  // Extract cookies from MFL response
-  const setCookie = response.headers.get("set-cookie");
+  const rawCookie = response.headers.get("set-cookie");
 
-  if (!setCookie) {
+  if (!rawCookie) {
     return res.status(401).json({ error: "Login failed" });
   }
 
-  // Forward cookies to browser
-  res.setHeader("Set-Cookie", setCookie);
+  // Parse the cookie from MFL
+  const parsed = cookie.parse(rawCookie);
+
+  // Re-set cookie for YOUR domain
+  res.setHeader(
+    "Set-Cookie",
+    cookie.serialize("MFL_USER_ID", parsed.MFL_USER_ID, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    })
+  );
 
   return res.status(200).json({ ok: true });
 }
