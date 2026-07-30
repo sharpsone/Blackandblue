@@ -3,17 +3,21 @@ import { getRoster, getPlayers } from "../utils/api";
 import "../utils/animations.css";
 import "../pages/roster.css";
 
-export default function Roster({ leagueId, myFranchiseId, year }) {
+export default function Roster({ leagueInfo }) {
+  // ⭐ Unpack leagueInfo passed from App.jsx
+  const leagueId = leagueInfo?.leagueId;
+  const myFranchiseId = leagueInfo?.franchiseId;
+  const year = leagueInfo?.year || 2026;
+
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!myFranchiseId) return;
     loadRoster();
   }, [myFranchiseId]);
 
   async function loadRoster() {
-    if (!myFranchiseId) return;
-
     try {
       const rosterData = await getRoster(leagueId, myFranchiseId, year);
       const rosterPlayers = rosterData?.roster?.players || [];
@@ -49,7 +53,6 @@ export default function Roster({ leagueId, myFranchiseId, year }) {
 
   const ir = players.filter(p => p.status === "IR");
 
-  // Polished Yahoo-style card
   function renderPlayer(p) {
     return (
       <div className="player-card">
@@ -92,4 +95,3 @@ export default function Roster({ leagueId, myFranchiseId, year }) {
     </div>
   );
 }
-

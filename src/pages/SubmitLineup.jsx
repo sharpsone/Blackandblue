@@ -2,23 +2,23 @@ import { useEffect, useState } from "react";
 import { getRoster, getPlayers, getLeague } from "../utils/api";
 import "../pages/submitlineup.css";
 
-export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
+export default function SubmitLineup({ leagueInfo }) {
+  // ⭐ Unpack leagueInfo passed from App.jsx
+  const leagueId = leagueInfo?.leagueId;
+  const myFranchiseId = leagueInfo?.franchiseId;
+  const year = leagueInfo?.year || 2026;
+
   const [players, setPlayers] = useState([]);
   const [lineup, setLineup] = useState({});
   const [starterSlots, setStarterSlots] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!leagueId || !myFranchiseId) return;
     loadData();
   }, [leagueId, myFranchiseId, year]);
 
   async function loadData() {
-    if (!leagueId || !myFranchiseId) {
-      console.warn("Missing leagueId or franchiseId");
-      setLoading(false);
-      return;
-    }
-
     try {
       // 1. League rules
       const leagueData = await getLeague(leagueId, year);
@@ -30,7 +30,6 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         const name = p.name;
         const limit = p.limit;
 
-        // Parse limits: "2-3" → min=2, max=3
         let min = 1;
         let max = 1;
 
@@ -42,12 +41,10 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
           min = max = parseInt(limit, 10);
         }
 
-        // Split grouped positions: "DT+DE" → ["DT", "DE"]
         const eligible = name.includes("+")
           ? name.split("+")
           : [name];
 
-        // Create max slots
         for (let i = 1; i <= max; i++) {
           starterList.push({
             slotName: `${name} Slot ${i}`,
@@ -90,8 +87,7 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       const weeklyPlayers =
         weekly?.weeklyResults?.matchup?.[0]?.franchise?.[0]?.player || [];
 
-      // Build a map of positionGroup → slot names
-      const slotsByGroup = starterSlots.reduce((acc, slot) => {
+      const slotsByGroup = starterList.reduce((acc, slot) => {
         if (!acc[slot.positionGroup]) acc[slot.positionGroup] = [];
         acc[slot.positionGroup].push(slot.slotName);
         return acc;
@@ -105,7 +101,6 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
 
         const pos = full.position;
 
-        // Find matching group (handles DT+DE, CB+S)
         const group = Object.keys(slotsByGroup).find(g =>
           g === pos || g.split("+").includes(pos)
         );
@@ -113,8 +108,6 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
         if (!group) return;
 
         const availableSlots = slotsByGroup[group];
-
-        // Assign to first empty slot
         const nextSlot = availableSlots.find(s => !initialLineup[s]);
 
         if (nextSlot) initialLineup[nextSlot] = lp.id;
@@ -133,7 +126,6 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
     setLineup(prev => ({ ...prev, [slotName]: playerId }));
   }
 
-  // ⭐ FIXED — async function restored
   async function submitLineup() {
     const starters = Object.values(lineup)
       .filter(id => id)
@@ -147,7 +139,6 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
       STARTERS: starters
     });
 
-    // ⭐ THIS is where you add credentials: "include"
     const res = await fetch(`/api/submitLineup?${params.toString()}`, {
       credentials: "include"
     });
@@ -187,8 +178,8 @@ export default function SubmitLineup({ leagueId, myFranchiseId, year }) {
 
             {players
               .filter(p => slot.eligible.includes(p.position))
-              .filter(p => p.id !== lineup[slot.slotName]) // don't duplicate selected
-              .filter(p => !Object.values(lineup).includes(p.id)) // prevent duplicates
+              .filter(p => p.id !== lineup[slot.slotName])
+              .filter(p => !Object.values(lineup).includes(p.id))
               .map(p => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.position} - {p.team})
