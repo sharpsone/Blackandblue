@@ -13,10 +13,10 @@ export default async function handler(req, res) {
 
     console.log("LINEUP IMPORT URL:", url);
 
+    // ⭐ FIX: use your proper auth headers
     const response = await fetch(url, {
-      headers: {
-  Cookie: req.headers.cookie || "",
-}
+      headers: buildAuthHeaders(req),   // <-- THIS FIXES AUTH
+      credentials: "include"
     });
 
     const text = await response.text();
@@ -33,4 +33,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Failed to import lineup" });
   }
 }
-
