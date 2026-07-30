@@ -27,25 +27,21 @@ export default async function handler(req, res) {
   }
 
   const userId = parsed.status.$.MFL_USER_ID;
-  const pwSeq = parsed.status.$.MFL_PW_SEQ || "0";
 
   console.log("EXTRACTED USER ID:", userId);
-  console.log("EXTRACTED PW SEQ:", pwSeq);
-
-  // Detect environment
-  const isProd = process.env.VERCEL === "1";
 
   const cookieOptions = {
     httpOnly: false,
-    secure: isProd,          // secure only in production
-    sameSite: isProd ? "none" : "lax", // SameSite=None only in production
+    secure: true,
+    sameSite: "none",
     path: "/",
   };
 
   const cookies = [
     cookie.serialize("MFL_USER_ID", userId, cookieOptions),
-    cookie.serialize("MFL_PW_SEQ", pwSeq, cookieOptions),
     cookie.serialize("MFL_USERNAME", username, cookieOptions),
+    cookie.serialize("MFL_PASSWORD", password, cookieOptions),
+    cookie.serialize("MFL_YEAR", year.toString(), cookieOptions),
   ];
 
   console.log("FINAL SET-COOKIE HEADERS:", cookies);
