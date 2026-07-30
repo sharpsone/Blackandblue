@@ -37,7 +37,7 @@ export default function Login() {
 
       <button
         onClick={() =>
-          window.location.href = "https://blackandblue.vercel.app/after-login"
+          window.location.href = "https://blackandblue.vercel.app/after-login.jsx"
         }
       >
         Return to App
