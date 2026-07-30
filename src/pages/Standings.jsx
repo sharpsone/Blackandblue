@@ -1,3 +1,23 @@
+export default function Standings({ leagueInfo }) {
+  // Unpack what App.jsx passed in
+  const leagueId = leagueInfo?.leagueId;
+  const myFranchiseId = leagueInfo?.franchiseId;
+  const year = leagueInfo?.year || 2026;
+
+  console.log("Standings props:", { leagueId, myFranchiseId, year });
+
+  // If leagueId is missing, STOP — do NOT load standings yet
+  if (!leagueId) {
+    return (
+      <div className="loading" style={{ color: "yellow" }}>
+        Waiting for league info...
+      </div>
+    );
+  }
+
+  // ⭐ Your existing code continues unchanged below this line
+
+
 // Optional fallback names (used only if league info missing)
 const CONFERENCE_NAMES = {
   "00": "Black Conference",
