@@ -4,15 +4,11 @@ export default async function handler(req, res) {
   console.log("LOGIN API HIT");
 
   if (req.method !== "POST") {
-    console.log("INVALID METHOD:", req.method);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { username, password } = req.body;
-  console.log("USERNAME:", username);
-
   const year = new Date().getFullYear();
-  console.log("YEAR:", year);
 
   const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1`;
   console.log("MFL LOGIN URL:", url);
@@ -26,35 +22,35 @@ export default async function handler(req, res) {
 
   console.log("MFL STATUS:", response.status);
 
-  const rawCookies = response.headers.get("set-cookie");
-  console.log("RAW COOKIES FROM MFL:", rawCookies);
+  const raw = response.headers.get("set-cookie");
+  console.log("RAW COOKIES:", raw);
 
-  if (!rawCookies) {
-    console.log("NO COOKIES RECEIVED FROM MFL");
+  if (!raw) {
+    console.log("NO COOKIES RECEIVED");
     return res.status(401).json({ error: "Login failed" });
   }
 
-  // MFL returns multiple cookies separated by commas
-  const cookieParts = rawCookies.split(",");
-  console.log("COOKIE PARTS:", cookieParts);
+  // Correctly split multiple cookies
+  const cookies = raw.match(/(?:[^,]+=[^;]+;[^,]+(?:,[^A-Z]|$))+/g) || [raw];
+  console.log("PARSED COOKIES:", cookies);
 
   const setHeaders = [];
 
-  cookieParts.forEach((part) => {
-    const parsed = cookie.parse(part);
+  cookies.forEach((c) => {
+    const parsed = cookie.parse(c);
+    const name = Object.keys(parsed)[0];
+    const value = parsed[name];
 
-    Object.keys(parsed).forEach((key) => {
-      console.log("SETTING COOKIE:", key, parsed[key]);
+    console.log("SETTING COOKIE:", name, value);
 
-      setHeaders.push(
-        cookie.serialize(key, parsed[key], {
-          httpOnly: false,
-          secure: true,
-          sameSite: "none",
-          path: "/",
-        })
-      );
-    });
+    setHeaders.push(
+      cookie.serialize(name, value, {
+        httpOnly: false,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+      })
+    );
   });
 
   console.log("FINAL SET-COOKIE HEADERS:", setHeaders);
@@ -62,7 +58,5 @@ export default async function handler(req, res) {
   res.setHeader("Set-Cookie", setHeaders);
 
   console.log("LOGIN SUCCESS — RETURNING 200");
-
   return res.status(200).json({ ok: true });
 }
-
