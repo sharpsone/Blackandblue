@@ -1,23 +1,3 @@
-export default function Standings({ leagueInfo }) {
-  // Unpack what App.jsx passed in
-  const leagueId = leagueInfo?.leagueId;
-  const myFranchiseId = leagueInfo?.franchiseId;
-  const year = leagueInfo?.year || 2026;
-
-  console.log("Standings props:", { leagueId, myFranchiseId, year });
-
-  // If leagueId is missing, STOP — do NOT load standings yet
-  if (!leagueId) {
-    return (
-      <div className="loading" style={{ color: "yellow" }}>
-        Waiting for league info...
-      </div>
-    );
-  }
-
-  // ⭐ Your existing code continues unchanged below this line
-
-
 // Optional fallback names (used only if league info missing)
 const CONFERENCE_NAMES = {
   "00": "Black Conference",
@@ -51,10 +31,14 @@ function normalize(id) {
   return id.toString().padStart(4, "0");
 }
 
-export default function Standings({ leagueId, myFranchiseId, year }) {
+// ✅ MAIN COMPONENT
+export default function Standings({ leagueInfo }) {
+  // Unpack what App.jsx passes in
+  const leagueId = leagueInfo?.leagueId;
+  const myFranchiseId = leagueInfo?.franchiseId;
+  const year = leagueInfo?.year || 2026;
 
-  // ⭐ DEBUG: Log what App.jsx is passing in
-  console.log("myFranchiseId from App.jsx:", myFranchiseId);
+  console.log("Standings props:", { leagueId, myFranchiseId, year });
 
   const [rows, setRows] = useState([]);
   const [franchiseMap, setFranchiseMap] = useState({});
@@ -62,49 +46,62 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
   const [sortKey, setSortKey] = useState("wins");
   const [sortDir, setSortDir] = useState("desc");
 
+  // If leagueId is missing, don’t even try to load standings
+  if (!leagueId) {
+    return (
+      <div className="loading" style={{ color: "yellow" }}>
+        Waiting for league info...
+      </div>
+    );
+  }
+
   // Load franchise names + logos + conference + division
   useEffect(() => {
     async function loadFranchises() {
-      const leagueJson = await getLeagueInfo(leagueId, year);
+      try {
+        const leagueJson = await getLeagueInfo(leagueId, year);
 
-      const franchiseList = leagueJson.league.franchises.franchise || [];
-      const conferenceList = leagueJson.league.conferences?.conference || [];
-      const divisionList = leagueJson.league.divisions?.division || [];
+        const franchiseList = leagueJson.league.franchises.franchise || [];
+        const conferenceList = leagueJson.league.conferences?.conference || [];
+        const divisionList = leagueJson.league.divisions?.division || [];
 
-      const conferenceLookup = {};
-      const divisionLookup = {};
-      const divisionToConference = {};
+        const conferenceLookup = {};
+        const divisionLookup = {};
+        const divisionToConference = {};
 
-      conferenceList.forEach(c => {
-        conferenceLookup[c.id] = c.name;
-      });
+        conferenceList.forEach(c => {
+          conferenceLookup[c.id] = c.name;
+        });
 
-      divisionList.forEach(d => {
-        divisionLookup[d.id] = d.name;
-        divisionToConference[d.id] = d.conference;
-      });
+        divisionList.forEach(d => {
+          divisionLookup[d.id] = d.name;
+          divisionToConference[d.id] = d.conference;
+        });
 
-      const map = {};
-      franchiseList.forEach(f => {
-        const divisionId = f.division;
-        const conferenceId = divisionToConference[divisionId];
+        const map = {};
+        franchiseList.forEach(f => {
+          const divisionId = f.division;
+          const conferenceId = divisionToConference[divisionId];
 
-        map[f.id] = {
-          name: f.name || `Franchise ${f.id}`,
-          logo: f.icon || null,
-          initials: getInitials(f.name),
-          division:
-            divisionLookup[divisionId] ||
-            DIVISION_NAMES[divisionId] ||
-            "Unknown Division",
-          conference:
-            conferenceLookup[conferenceId] ||
-            CONFERENCE_NAMES[conferenceId] ||
-            "Unknown Conference"
-        };
-      });
+          map[f.id] = {
+            name: f.name || `Franchise ${f.id}`,
+            logo: f.icon || null,
+            initials: getInitials(f.name),
+            division:
+              divisionLookup[divisionId] ||
+              DIVISION_NAMES[divisionId] ||
+              "Unknown Division",
+            conference:
+              conferenceLookup[conferenceId] ||
+              CONFERENCE_NAMES[conferenceId] ||
+              "Unknown Conference"
+          };
+        });
 
-      setFranchiseMap(map);
+        setFranchiseMap(map);
+      } catch (err) {
+        console.error("FRANCHISE LOAD ERROR:", err);
+      }
     }
 
     loadFranchises();
@@ -264,7 +261,6 @@ export default function Standings({ leagueId, myFranchiseId, year }) {
                   const isMe =
                     normalize(fr.id) === normalize(myFranchiseId);
 
-                  // ⭐ DEBUG LOG BLOCK ⭐
                   console.log(
                     "Row:", fr.id,
                     "My:", myFranchiseId,
