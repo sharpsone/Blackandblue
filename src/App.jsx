@@ -9,7 +9,7 @@ import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
 // If you have other pages, import them here:
 import Roster from "./pages/Roster";
-import Matchups from "./pages/submitlineup";
+import Matchups from "./pages/SubmitLineup";
 // import LiveScoring from "./pages/LiveScoring";
 // etc.
 
