@@ -1,22 +1,42 @@
-import { fetch, getYear, buildAuthHeaders } from "./_utils.js";
+import xml2js from "xml2js";
 
 export default async function handler(req, res) {
-  const year = getYear(req);
+  console.log("MYLEAGUES API HIT");
 
-  try {
-    const url = `https://api.myfantasyleague.com/${year}/export?TYPE=myleagues&JSON=1`;
+  const { username, password, year } = req.cookies;
 
-    console.log("MYLEAGUES URL:", url);
+  const url = `https://api.myfantasyleague.com/${year}/export?TYPE=myleagues&USERNAME=${username}&PASSWORD=${password}&XML=1`;
+  console.log("MYLEAGUES URL:", url);
 
-    const response = await fetch(url, {
-      headers: buildAuthHeaders(req)
-    });
+  const response = await fetch(url);
+  const xml = await response.text();
 
-    const data = await response.json();
+  console.log("RAW MYLEAGUES XML:", xml);
 
-    return res.json(data);
-  } catch (err) {
-    console.error("MYLEAGUES ERROR:", err);
-    res.status(500).json({ error: "Failed to fetch my leagues" });
+  const parsed = await xml2js.parseStringPromise(xml);
+
+  // FIX: MFL uses <leagues>, not <myleagues>
+  const leagues = parsed.leagues?.league;
+
+  if (!leagues || leagues.length === 0) {
+    console.log("❌ No leagues found for user");
+    return res.status(404).json({ error: "No leagues found" });
   }
+
+  const league = leagues[0].$;
+
+  const leagueId = league.league_id;
+  const franchiseId = league.franchise_id;
+  const host = league.url.split("/")[2]; // www44.myfantasyleague.com
+
+  console.log("DETECTED LEAGUE ID:", leagueId);
+  console.log("DETECTED FRANCHISE ID:", franchiseId);
+  console.log("DETECTED HOST:", host);
+
+  return res.status(200).json({
+    leagueId,
+    franchiseId,
+    host,
+  });
 }
+
