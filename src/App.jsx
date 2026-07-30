@@ -1,5 +1,6 @@
 // src/App.jsx
-import "./App.css";               // ⭐ REQUIRED FOR PAGE WRAPPER + GLOBAL LAYOUT
+import "./App.css";
+
 import { useContext, useEffect, useState } from "react";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
@@ -9,14 +10,6 @@ import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
 import Roster from "./pages/Roster";
 import Matchups from "./pages/SubmitLineup";
-// import LiveScoring from "./pages/LiveScoring";
-// import PlayerStats from "./pages/PlayerStats";
-// import Transactions from "./pages/Transactions";
-// import DraftResults from "./pages/DraftResults";
-// import MessageBoard from "./pages/MessageBoard";
-// import FreeAgents from "./pages/FreeAgents";
-// import Schedule from "./pages/Schedule";
-// import PlayoffBracket from "./pages/PlayoffBracket";
 
 export default function App() {
   return (
@@ -29,20 +22,15 @@ export default function App() {
 function MainApp() {
   const { isLoggedIn } = useContext(AuthContext);
 
-  // ⭐ Page routing
   const [page, setPage] = useState("standings");
-
-  // ⭐ League info from backend
   const [leagueInfo, setLeagueInfo] = useState(null);
-  const [loadingLeague, setLoadingLeague] = useState(true);
+  const [loadingLeague, setLoadingLeague] = useState(false);
 
-  // ⭐ If not logged in → show login
-  if (!isLoggedIn) {
-    return <Login />;
-  }
-
-  // ⭐ Load league info AFTER login
   useEffect(() => {
+    if (!isLoggedIn) return;
+
+    setLoadingLeague(true);
+
     async function loadLeague() {
       try {
         const res = await fetch("/api/myleagues");
@@ -50,6 +38,7 @@ function MainApp() {
         setLeagueInfo(data);
       } catch (err) {
         console.error("Failed to load league info:", err);
+        setLeagueInfo(null);
       } finally {
         setLoadingLeague(false);
       }
@@ -58,44 +47,36 @@ function MainApp() {
     loadLeague();
   }, [isLoggedIn]);
 
-  // ⭐ Show loading screen while league loads
-  if (loadingLeague) {
-    return (
-      <div className="page-wrapper" style={{ color: "white", padding: "2rem" }}>
-        Loading league...
-      </div>
-    );
-  }
-
-  // ⭐ If league info failed
-  if (!leagueInfo || leagueInfo.error) {
-    return (
-      <div className="page-wrapper" style={{ color: "red", padding: "2rem" }}>
-        Could not load league info.
-      </div>
-    );
-  }
-
-  // ⭐ MAIN RENDER — NAVBAR + PAGE ROUTING
   return (
     <>
       <NavBar page={page} setPage={setPage} />
 
-      {/* ⭐ THIS WRAPPER IS CRITICAL — WITHOUT IT YOUR PAGE IS BLACK */}
       <div className="page-wrapper">
-        {page === "standings" && <Standings leagueInfo={leagueInfo} />}
-        {page === "roster" && <Roster leagueInfo={leagueInfo} />}
-        {page === "matchups" && <Matchups leagueInfo={leagueInfo} />}
+        {/* NOT LOGGED IN → SHOW LOGIN */}
+        {!isLoggedIn && <Login />}
 
-        {/* Uncomment these when ready */}
-        {/* {page === "live" && <LiveScoring leagueInfo={leagueInfo} />} */}
-        {/* {page === "playerstats" && <PlayerStats leagueInfo={leagueInfo} />} */}
-        {/* {page === "transactions" && <Transactions leagueInfo={leagueInfo} />} */}
-        {/* {page === "draft" && <DraftResults leagueInfo={leagueInfo} />} */}
-        {/* {page === "messages" && <MessageBoard leagueInfo={leagueInfo} />} */}
-        {/* {page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} />} */}
-        {/* {page === "schedule" && <Schedule leagueInfo={leagueInfo} />} */}
-        {/* {page === "playoffs" && <PlayoffBracket leagueInfo={leagueInfo} />} */}
+        {/* LOGGED IN BUT LEAGUE STILL LOADING */}
+        {isLoggedIn && loadingLeague && (
+          <div style={{ color: "white", padding: "2rem" }}>
+            Loading league...
+          </div>
+        )}
+
+        {/* LOGGED IN, LEAGUE FAILED */}
+        {isLoggedIn && !loadingLeague && !leagueInfo && (
+          <div style={{ color: "red", padding: "2rem" }}>
+            Could not load league info.
+          </div>
+        )}
+
+        {/* LOGGED IN, LEAGUE LOADED → ROUTE PAGES */}
+        {isLoggedIn && leagueInfo && (
+          <>
+            {page === "standings" && <Standings leagueInfo={leagueInfo} />}
+            {page === "roster" && <Roster leagueInfo={leagueInfo} />}
+            {page === "matchups" && <Matchups leagueInfo={leagueInfo} />}
+          </>
+        )}
       </div>
     </>
   );
