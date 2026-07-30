@@ -1,4 +1,5 @@
 import cookie from "cookie";
+import xml2js from "xml2js";
 
 export default async function handler(req, res) {
   console.log("LOGIN API HIT");
@@ -13,62 +14,48 @@ export default async function handler(req, res) {
   const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1`;
   console.log("MFL LOGIN URL:", url);
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/xml",
-    },
-  });
+  const response = await fetch(url);
+  const xml = await response.text();
 
-  console.log("MFL STATUS:", response.status);
+  console.log("RAW XML:", xml);
 
-  const raw = response.headers.get("set-cookie");
-  console.log("RAW COOKIES:", raw);
+  const parsed = await xml2js.parseStringPromise(xml);
 
-  if (!raw) {
-    console.log("NO COOKIES RECEIVED");
+  if (!parsed.status || !parsed.status.$ || !parsed.status.$.MFL_USER_ID) {
+    console.log("LOGIN FAILED — NO USER ID");
     return res.status(401).json({ error: "Login failed" });
   }
 
-  // Split cookies safely using the expires delimiter
-  const parts = raw.split("; expires=");
-  const cookies = [];
+  const userId = parsed.status.$.MFL_USER_ID;
+  const pwSeq = parsed.status.$.MFL_PW_SEQ || "0";
 
-  for (let i = 0; i < parts.length; i++) {
-    if (i === 0) {
-      // First cookie already complete
-      cookies.push(parts[i] + ";");
-    } else {
-      // Reconstruct cookie: previous expires + this cookie
-      const [date, rest] = parts[i].split(", ");
-      cookies.push("expires=" + date + ", " + rest + ";");
-    }
-  }
+  console.log("EXTRACTED USER ID:", userId);
+  console.log("EXTRACTED PW SEQ:", pwSeq);
 
-  console.log("RECONSTRUCTED COOKIES:", cookies);
+  const cookies = [
+    cookie.serialize("MFL_USER_ID", userId, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    }),
+    cookie.serialize("MFL_PW_SEQ", pwSeq, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    }),
+    cookie.serialize("MFL_USERNAME", username, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    }),
+  ];
 
-  const setHeaders = [];
+  console.log("FINAL SET-COOKIE HEADERS:", cookies);
 
-  cookies.forEach((c) => {
-    const parsed = cookie.parse(c);
-    const name = Object.keys(parsed)[0];
-    const value = parsed[name];
-
-    console.log("SETTING COOKIE:", name, value);
-
-    setHeaders.push(
-      cookie.serialize(name, value, {
-        httpOnly: false,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-      })
-    );
-  });
-
-  console.log("FINAL SET-COOKIE HEADERS:", setHeaders);
-
-  res.setHeader("Set-Cookie", setHeaders);
+  res.setHeader("Set-Cookie", cookies);
 
   console.log("LOGIN SUCCESS — RETURNING 200");
   return res.status(200).json({ ok: true });
