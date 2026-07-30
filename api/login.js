@@ -20,33 +20,54 @@ export default async function handler(req, res) {
   console.log("RAW XML:", xml);
 
   const parsed = await xml2js.parseStringPromise(xml);
+  const statusAttrs = parsed?.status?.$;
 
-  if (!parsed.status || !parsed.status.$ || !parsed.status.$.MFL_USER_ID) {
-    console.log("LOGIN FAILED — NO USER ID");
+  if (!statusAttrs) {
+    console.log("LOGIN FAILED — NO STATUS ATTRS");
     return res.status(401).json({ error: "Login failed" });
   }
 
-  const userId = parsed.status.$.MFL_USER_ID;
+  // ⭐ Collect ALL MFL cookies returned by the login API
+  const mflCookies = Object.entries(statusAttrs).map(([key, value]) =>
+    cookie.serialize(key, value, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    })
+  );
 
-  console.log("EXTRACTED USER ID:", userId);
+  // ⭐ Also store username/password/year for convenience
+  mflCookies.push(
+    cookie.serialize("MFL_USERNAME", username, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    })
+  );
 
-  const cookieOptions = {
-    httpOnly: false,
-    secure: true,
-    sameSite: "none",
-    path: "/",
-  };
+  mflCookies.push(
+    cookie.serialize("MFL_PASSWORD", password, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    })
+  );
 
-  const cookies = [
-    cookie.serialize("MFL_USER_ID", userId, cookieOptions),
-    cookie.serialize("MFL_USERNAME", username, cookieOptions),
-    cookie.serialize("MFL_PASSWORD", password, cookieOptions),
-    cookie.serialize("MFL_YEAR", year.toString(), cookieOptions),
-  ];
+  mflCookies.push(
+    cookie.serialize("MFL_YEAR", year.toString(), {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    })
+  );
 
-  console.log("FINAL SET-COOKIE HEADERS:", cookies);
+  console.log("FINAL SET-COOKIE HEADERS:", mflCookies);
 
-  res.setHeader("Set-Cookie", cookies);
+  res.setHeader("Set-Cookie", mflCookies);
 
   console.log("LOGIN SUCCESS — RETURNING 200");
   return res.status(200).json({ ok: true });
