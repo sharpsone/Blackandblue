@@ -13,3 +13,4 @@ export default async function handler(req, res) {
     year: 2026                  // ✔ Your league year
   });
 }
+// test
