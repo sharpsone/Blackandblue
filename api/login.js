@@ -1,4 +1,3 @@
-import setCookie from "set-cookie-parser";
 import cookie from "cookie";
 
 export default async function handler(req, res) {
@@ -31,14 +30,29 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Login failed" });
   }
 
-  // Parse ALL cookies correctly
-  const parsedCookies = setCookie.parse(raw, { map: true });
-  console.log("PARSED COOKIES:", parsedCookies);
+  // Split cookies safely using the expires delimiter
+  const parts = raw.split("; expires=");
+  const cookies = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    if (i === 0) {
+      // First cookie already complete
+      cookies.push(parts[i] + ";");
+    } else {
+      // Reconstruct cookie: previous expires + this cookie
+      const [date, rest] = parts[i].split(", ");
+      cookies.push("expires=" + date + ", " + rest + ";");
+    }
+  }
+
+  console.log("RECONSTRUCTED COOKIES:", cookies);
 
   const setHeaders = [];
 
-  Object.keys(parsedCookies).forEach((name) => {
-    const value = parsedCookies[name].value;
+  cookies.forEach((c) => {
+    const parsed = cookie.parse(c);
+    const name = Object.keys(parsed)[0];
+    const value = parsed[name];
 
     console.log("SETTING COOKIE:", name, value);
 
