@@ -73,25 +73,26 @@ function MainApp() {
   }
 
   // STEP 5 — Render navbar + routed pages
-  return (
-    <>
-      <NavBar page={page} setPage={setPage} />
+    return (
+      <>
+        <NavBar page={page} setPage={setPage} />
 
-      <div style={{ paddingTop: "70px" }}>
-        {page === "standings" && <Standings leagueInfo={leagueInfo} />}
+        <div className="page-wrapper">
+          {page === "standings" && <Standings leagueInfo={leagueInfo} />}
 
-        {/* Uncomment these as you restore pages */}
-        {/* page === "roster" && <Roster leagueInfo={leagueInfo} /> */}
-        {/* page === "live" && <LiveScoring leagueInfo={leagueInfo} /> */}
-        {/* page === "matchups" && <Matchups leagueInfo={leagueInfo} /> */}
-        {/* page === "playerstats" && <PlayerStats leagueInfo={leagueInfo} /> */}
-        {/* page === "transactions" && <Transactions leagueInfo={leagueInfo} /> */}
-        {/* page === "draft" && <DraftResults leagueInfo={leagueInfo} /> */}
-        {/* page === "messages" && <MessageBoard leagueInfo={leagueInfo} /> */}
-        {/* page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} /> */}
-        {/* page === "schedule" && <Schedule leagueInfo={leagueInfo} /> */}
-        {/* page === "playoffs" && <PlayoffBracket leagueInfo={leagueInfo} /> */}
-      </div>
-    </>
-  );
+          {/* Uncomment these as you restore pages */}
+          {/* page === "roster" && <Roster leagueInfo={leagueInfo} /> */}
+          {/* page === "live" && <LiveScoring leagueInfo={leagueInfo} /> */}
+          {/* page === "matchups" && <Matchups leagueInfo={leagueInfo} /> */}
+          {/* page === "playerstats" && <PlayerStats leagueInfo={leagueInfo} /> */}
+          {/* page === "transactions" && <Transactions leagueInfo={leagueInfo} /> */}
+          {/* page === "draft" && <DraftResults leagueInfo={leagueInfo} /> */}
+          {/* page === "messages" && <MessageBoard leagueInfo={leagueInfo} /> */}
+          {/* page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} /> */}
+          {/* page === "schedule" && <Schedule leagueInfo={leagueInfo} /> */}
+          {/* page === "playoffs" && <PlayoffBracket leagueInfo={leagueInfo} /> */}
+        </div>
+      </>
+    );
+
 }
