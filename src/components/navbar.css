@@ -29,9 +29,10 @@
 
 /* LOGO */
 .navbar-logo {
-  height: 42px;
+  height: 40px;
   width: auto;
   object-fit: contain;
+  flex-shrink: 0;
   margin-right: 0.5rem;
 }
 

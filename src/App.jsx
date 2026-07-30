@@ -1,6 +1,5 @@
 // src/App.jsx
-import "./App.css";
-
+import "./App.css";               // ⭐ REQUIRED FOR PAGE WRAPPER + GLOBAL LAYOUT
 import { useContext, useEffect, useState } from "react";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
@@ -8,11 +7,16 @@ import Login from "./components/Login";
 import NavBar from "./components/NavBar";
 
 import Standings from "./pages/Standings";
-// If you have other pages, import them here:
 import Roster from "./pages/Roster";
 import Matchups from "./pages/SubmitLineup";
 // import LiveScoring from "./pages/LiveScoring";
-// etc.
+// import PlayerStats from "./pages/PlayerStats";
+// import Transactions from "./pages/Transactions";
+// import DraftResults from "./pages/DraftResults";
+// import MessageBoard from "./pages/MessageBoard";
+// import FreeAgents from "./pages/FreeAgents";
+// import Schedule from "./pages/Schedule";
+// import PlayoffBracket from "./pages/PlayoffBracket";
 
 export default function App() {
   return (
@@ -25,25 +29,24 @@ export default function App() {
 function MainApp() {
   const { isLoggedIn } = useContext(AuthContext);
 
-  // Page routing state
+  // ⭐ Page routing
   const [page, setPage] = useState("standings");
 
-  // League info loaded from /api/myleagues
+  // ⭐ League info from backend
   const [leagueInfo, setLeagueInfo] = useState(null);
   const [loadingLeague, setLoadingLeague] = useState(true);
 
-  // STEP 1 — If not logged in, show login screen
+  // ⭐ If not logged in → show login
   if (!isLoggedIn) {
     return <Login />;
   }
 
-  // STEP 2 — Load league info AFTER login
+  // ⭐ Load league info AFTER login
   useEffect(() => {
     async function loadLeague() {
       try {
         const res = await fetch("/api/myleagues");
         const data = await res.json();
-
         setLeagueInfo(data);
       } catch (err) {
         console.error("Failed to load league info:", err);
@@ -55,45 +58,45 @@ function MainApp() {
     loadLeague();
   }, [isLoggedIn]);
 
-  // STEP 3 — Show loading screen while league info loads
+  // ⭐ Show loading screen while league loads
   if (loadingLeague) {
     return (
-      <div style={{ color: "white", padding: "2rem" }}>
+      <div className="page-wrapper" style={{ color: "white", padding: "2rem" }}>
         Loading league...
       </div>
     );
   }
 
-  // STEP 4 — If league info failed, show error
+  // ⭐ If league info failed
   if (!leagueInfo || leagueInfo.error) {
     return (
-      <div style={{ color: "red", padding: "2rem" }}>
+      <div className="page-wrapper" style={{ color: "red", padding: "2rem" }}>
         Could not load league info.
       </div>
     );
   }
 
-  // STEP 5 — Render navbar + routed pages
-    return (
-      <>
-        <NavBar page={page} setPage={setPage} />
+  // ⭐ MAIN RENDER — NAVBAR + PAGE ROUTING
+  return (
+    <>
+      <NavBar page={page} setPage={setPage} />
 
-        <div className="page-wrapper">
-          {page === "standings" && <Standings leagueInfo={leagueInfo} />}
+      {/* ⭐ THIS WRAPPER IS CRITICAL — WITHOUT IT YOUR PAGE IS BLACK */}
+      <div className="page-wrapper">
+        {page === "standings" && <Standings leagueInfo={leagueInfo} />}
+        {page === "roster" && <Roster leagueInfo={leagueInfo} />}
+        {page === "matchups" && <Matchups leagueInfo={leagueInfo} />}
 
-          {/* Uncomment these as you restore pages */}
-          {/* page === "roster" && <Roster leagueInfo={leagueInfo} /> */}
-          {/* page === "live" && <LiveScoring leagueInfo={leagueInfo} /> */}
-          {/* page === "matchups" && <Matchups leagueInfo={leagueInfo} /> */}
-          {/* page === "playerstats" && <PlayerStats leagueInfo={leagueInfo} /> */}
-          {/* page === "transactions" && <Transactions leagueInfo={leagueInfo} /> */}
-          {/* page === "draft" && <DraftResults leagueInfo={leagueInfo} /> */}
-          {/* page === "messages" && <MessageBoard leagueInfo={leagueInfo} /> */}
-          {/* page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} /> */}
-          {/* page === "schedule" && <Schedule leagueInfo={leagueInfo} /> */}
-          {/* page === "playoffs" && <PlayoffBracket leagueInfo={leagueInfo} /> */}
-        </div>
-      </>
-    );
-
+        {/* Uncomment these when ready */}
+        {/* {page === "live" && <LiveScoring leagueInfo={leagueInfo} />} */}
+        {/* {page === "playerstats" && <PlayerStats leagueInfo={leagueInfo} />} */}
+        {/* {page === "transactions" && <Transactions leagueInfo={leagueInfo} />} */}
+        {/* {page === "draft" && <DraftResults leagueInfo={leagueInfo} />} */}
+        {/* {page === "messages" && <MessageBoard leagueInfo={leagueInfo} />} */}
+        {/* {page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} />} */}
+        {/* {page === "schedule" && <Schedule leagueInfo={leagueInfo} />} */}
+        {/* {page === "playoffs" && <PlayoffBracket leagueInfo={leagueInfo} />} */}
+      </div>
+    </>
+  );
 }

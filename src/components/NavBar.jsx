@@ -1,13 +1,12 @@
 // src/components/NavBar.jsx
-
 import "./navbar.css";
 
 export default function NavBar({ page, setPage }) {
   const tabs = [
     { id: "standings", label: "Standings" },
     { id: "roster", label: "My Roster" },
+    { id: "matchups", label: "Submit Lineup" },
     { id: "live", label: "Live Scoring" },
-    { id: "matchups", label: "Matchups" },
     { id: "playerstats", label: "Player Stats" },
     { id: "transactions", label: "Transactions" },
     { id: "draft", label: "Draft Results" },
@@ -19,15 +18,12 @@ export default function NavBar({ page, setPage }) {
 
   return (
     <div className="navbar">
-
-      {/* League Logo */}
       <img
         src="https://www44.myfantasyleague.com/fflnetdynamic2025/19757_league_logo.png"
         alt="League Logo"
         className="navbar-logo"
       />
 
-      {/* Buttons */}
       <div className="navbar-links">
         {tabs.map(t => (
           <button
