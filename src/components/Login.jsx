@@ -4,20 +4,20 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username, password }),
-    });
+const handleLogin = async () => {
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ username, password }),
+  });
 
-    if (res.ok) {
-      window.location.href = "/";
-    } else {
-      alert("Login failed");
-    }
-  };
+  if (res.ok) {
+    window.location.href = "/";
+  } else {
+    alert("Login failed");
+  }
+};
 
   return (
     <div style={{ padding: 20 }}>
