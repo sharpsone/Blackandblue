@@ -5,6 +5,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
 const handleLogin = async () => {
+  console.log("LOGIN BUTTON CLICKED");
+
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -12,9 +14,18 @@ const handleLogin = async () => {
     body: JSON.stringify({ username, password }),
   });
 
+  console.log("LOGIN RESPONSE STATUS:", res.status);
+
+  const text = await res.text();
+  console.log("LOGIN RESPONSE BODY:", text);
+
+  console.log("COOKIES AFTER LOGIN:", document.cookie);
+
   if (res.ok) {
+    console.log("RELOADING PAGE...");
     window.location.href = "/";
   } else {
+    console.log("LOGIN FAILED");
     alert("Login failed");
   }
 };
