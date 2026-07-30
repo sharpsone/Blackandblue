@@ -32,25 +32,20 @@ export default async function handler(req, res) {
   console.log("EXTRACTED USER ID:", userId);
   console.log("EXTRACTED PW SEQ:", pwSeq);
 
+  // Detect environment
+  const isProd = process.env.VERCEL === "1";
+
+  const cookieOptions = {
+    httpOnly: false,
+    secure: isProd,          // secure only in production
+    sameSite: isProd ? "none" : "lax", // SameSite=None only in production
+    path: "/",
+  };
+
   const cookies = [
-    cookie.serialize("MFL_USER_ID", userId, {
-      httpOnly: false,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-    }),
-    cookie.serialize("MFL_PW_SEQ", pwSeq, {
-      httpOnly: false,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-    }),
-    cookie.serialize("MFL_USERNAME", username, {
-      httpOnly: false,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-    }),
+    cookie.serialize("MFL_USER_ID", userId, cookieOptions),
+    cookie.serialize("MFL_PW_SEQ", pwSeq, cookieOptions),
+    cookie.serialize("MFL_USERNAME", username, cookieOptions),
   ];
 
   console.log("FINAL SET-COOKIE HEADERS:", cookies);
