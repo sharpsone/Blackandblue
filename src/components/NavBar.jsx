@@ -1,6 +1,6 @@
 // src/components/NavBar.jsx
 
-import "../App.css";
+import "./navbar.css";
 
 export default function NavBar({ page, setPage }) {
   const tabs = [
