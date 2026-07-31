@@ -9,46 +9,48 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
   const year = new Date().getFullYear();
 
-  const url = `https://www.myfantasyleague.com/${year}/login`;
+  const url = `https://api.myfantasyleague.com/${year}/login`;
 
   const body = new URLSearchParams({
     USERNAME: username,
-    PASSWORD: password
+    PASSWORD: password,
+    XML: 1
   });
 
   const response = await fetch(url, {
     method: "POST",
-    redirect: "follow", // FOLLOW REDIRECTS
     headers: {
       "User-Agent": "BlackAndBlueApp",
       "Content-Type": "application/x-www-form-urlencoded",
-      "Accept": "*/*",
-      "Connection": "keep-alive"
+      "Accept": "*/*"
     },
     body
   });
 
-  // Collect ALL cookies from ALL redirects
-  const rawCookies = response.headers.get("set-cookie");
-  console.log("RAW SET-COOKIE:", rawCookies);
+  const xml = await response.text();
+  console.log("RAW XML:", xml);
 
-  if (!rawCookies) {
-    return res.status(401).json({ error: "Login failed — no cookies returned" });
+  if (!xml || xml.trim() === "") {
+    return res.status(401).json({ error: "Empty XML returned from MFL login" });
   }
 
-  const cookieParts = rawCookies.split(",").map(c => c.trim());
+  const parsed = await xml2js.parseStringPromise(xml);
+  const statusAttrs = parsed?.status?.$;
 
-  const cookiesToSet = cookieParts.map(c => {
-    const [key, value] = c.split(";")[0].split("=");
-    return cookie.serialize(key, value, {
+  if (!statusAttrs) {
+    return res.status(401).json({ error: "Login failed — no status attributes" });
+  }
+
+  const mflCookies = Object.entries(statusAttrs).map(([key, value]) =>
+    cookie.serialize(key, value, {
       httpOnly: false,
       secure: true,
       sameSite: "none",
       path: "/"
-    });
-  });
+    })
+  );
 
-  res.setHeader("Set-Cookie", cookiesToSet);
+  res.setHeader("Set-Cookie", mflCookies);
 
   return res.status(200).json({ ok: true });
 }
