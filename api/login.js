@@ -9,18 +9,19 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
   const year = new Date().getFullYear();
 
-  const USER_AGENT = "BlackAndBlueApp"; // exactly as in your MFL client
+  // Your league server
+  const SERVER = "www44";
 
-  const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${encodeURIComponent(
+  const url = `https://${SERVER}.myfantasyleague.com/${year}/login?USERNAME=${encodeURIComponent(
     username
   )}&PASSWORD=${encodeURIComponent(password)}`;
 
   const response = await fetch(url, {
     headers: {
-      "User-Agent": USER_AGENT,
+      "User-Agent": "BlackAndBlueApp",
       "Accept": "*/*",
-      "Connection": "keep-alive",
-    },
+      "Connection": "keep-alive"
+    }
   });
 
   const xml = await response.text();
@@ -28,7 +29,6 @@ export default async function handler(req, res) {
   console.log("LOGIN RAW BODY:", xml);
 
   if (!response.ok) {
-    // 403, 500, etc.
     return res
       .status(401)
       .json({ error: `MFL login failed with status ${response.status}` });
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
