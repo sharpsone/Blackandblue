@@ -17,6 +17,7 @@ export default async function handler(req, res) {
       .join("; ");
 
     console.log("FORWARDED COOKIES:", cookieHeader);
+    console.log("REQ.COOKIE OBJECT:", req.cookies);
 
     const response = await fetch(url, {
       headers: {
