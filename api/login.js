@@ -9,35 +9,53 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
   const year = new Date().getFullYear();
 
-  const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}&XML=1`;
+  // ⭐ Your registered API client User-Agent
+  const USER_AGENT = "BlackAndBlueApp/1.0";
 
-  const response = await fetch(url);
+  const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}`;
+
+  // ⭐ Critical: MFL requires a custom User-Agent or it returns EMPTY XML
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": USER_AGENT,
+      "Accept": "*/*",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Connection": "keep-alive"
+    }
+  });
+
   const xml = await response.text();
+  console.log("RAW XML:", xml);
+
+  // ⭐ If XML is empty, login failed
+  if (!xml || xml.trim() === "") {
+    return res.status(401).json({ error: "Empty XML returned from MFL login" });
+  }
 
   const parsed = await xml2js.parseStringPromise(xml);
   const statusAttrs = parsed?.status?.$;
 
   if (!statusAttrs) {
-    return res.status(401).json({ error: "Login failed" });
+    return res.status(401).json({ error: "Login failed — no status attributes" });
   }
 
-  // ⭐ Save ALL cookies returned by MFL
+  // ⭐ Save ALL real MFL cookies returned by the login API
   const mflCookies = Object.entries(statusAttrs).map(([key, value]) =>
     cookie.serialize(key, value, {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
-  // ⭐ Save your own convenience cookies too
+  // ⭐ Save convenience cookies
   mflCookies.push(
     cookie.serialize("MFL_USERNAME", username, {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
@@ -46,7 +64,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
@@ -55,7 +73,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/",
+      path: "/"
     })
   );
 
