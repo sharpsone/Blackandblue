@@ -1,4 +1,5 @@
 import cookie from "cookie";
+import xml2js from "xml2js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
 
   const response = await fetch(url, {
     method: "POST",
-    redirect: "manual", // important: do NOT auto-follow
+    redirect: "follow", // FOLLOW REDIRECTS
     headers: {
       "User-Agent": "BlackAndBlueApp",
       "Content-Type": "application/x-www-form-urlencoded",
@@ -27,33 +28,27 @@ export default async function handler(req, res) {
     body
   });
 
-  // Extract cookies from response headers
-  const setCookie = response.headers.get("set-cookie");
-  console.log("SET-COOKIE:", setCookie);
+  // Collect ALL cookies from ALL redirects
+  const rawCookies = response.headers.get("set-cookie");
+  console.log("RAW SET-COOKIE:", rawCookies);
 
-  if (!setCookie) {
+  if (!rawCookies) {
     return res.status(401).json({ error: "Login failed — no cookies returned" });
   }
 
-  // Split multiple cookies
-  const cookieParts = setCookie.split(",").map(c => c.trim());
+  const cookieParts = rawCookies.split(",").map(c => c.trim());
 
-  const cookiesToSet = cookieParts.map(c =>
-    c.split(";")[0] // only the key=value part
-  );
+  const cookiesToSet = cookieParts.map(c => {
+    const [key, value] = c.split(";")[0].split("=");
+    return cookie.serialize(key, value, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
+  });
 
-  // Set cookies in browser
-  res.setHeader(
-    "Set-Cookie",
-    cookiesToSet.map(c =>
-      cookie.serialize(c.split("=")[0], c.split("=")[1], {
-        httpOnly: false,
-        secure: true,
-        sameSite: "none",
-        path: "/"
-      })
-    )
-  );
+  res.setHeader("Set-Cookie", cookiesToSet);
 
   return res.status(200).json({ ok: true });
 }
