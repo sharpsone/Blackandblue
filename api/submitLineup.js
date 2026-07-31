@@ -1,41 +1,42 @@
-import { fetch, getYear } from "./_utils.js";
+import cookie from "cookie";
 
 export default async function handler(req, res) {
-  const { L, FRANCHISE_ID, W, STARTERS } = req.query;
-  const year = getYear(req);
+  const { TYPE, L, W, FRANCHISE_ID, STARTERS } = req.query;
 
-  if (!L || !FRANCHISE_ID || !W || !STARTERS) {
-    return res.status(400).json({ error: "Missing L, FRANCHISE_ID, W, or STARTERS" });
-  }
+  // ⭐ Read cookies from the incoming request
+  const cookies = req.headers.cookie || "";
+  console.log("FORWARDING COOKIES TO MFL:", cookies);
+
+  const url = `https://www44.myfantasyleague.com/2026/import`;
+
+  const params = new URLSearchParams({
+    TYPE,
+    L,
+    W,
+    FRANCHISE_ID,
+    STARTERS,
+    JSON: 1
+  });
+
+  const response = await fetch(`${url}?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "User-Agent": "BlackAndBlueApp",
+      "Cookie": cookies,          // ⭐ THIS IS THE FIX
+      "Accept": "*/*"
+    }
+  });
+
+  const text = await response.text();
+  console.log("MFL RESPONSE:", text);
 
   try {
-    const url = `https://api.myfantasyleague.com/${year}/import?TYPE=lineup&L=${L}&W=${W}&FRANCHISE_ID=${FRANCHISE_ID}&STARTERS=${STARTERS}`;
-
-    // ⭐ FIX: forward ALL cookies manually
-    const cookieHeader = Object.entries(req.cookies || {})
-      .map(([k, v]) => `${k}=${v}`)
-      .join("; ");
-
-    console.log("FORWARDED COOKIES:", cookieHeader);
-    console.log("REQ.COOKIE OBJECT:", req.cookies);
-
-    const response = await fetch(url, {
-      headers: {
-        Cookie: cookieHeader
-      }
+    const json = JSON.parse(text);
+    return res.status(200).json(json);
+  } catch {
+    return res.status(500).json({
+      error: "Lineup import returned non-JSON",
+      raw: text
     });
-
-    const text = await response.text();
-
-    try {
-      const json = JSON.parse(text);
-      return res.json(json);
-    } catch {
-      console.error("Lineup import returned non‑JSON:", text);
-      return res.status(500).json({ error: "Lineup import returned non‑JSON", raw: text });
-    }
-  } catch (err) {
-    console.error("LINEUP IMPORT ERROR:", err);
-    res.status(500).json({ error: "Failed to import lineup" });
   }
 }
