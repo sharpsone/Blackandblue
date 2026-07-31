@@ -9,25 +9,31 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
   const year = new Date().getFullYear();
 
-  // ⭐ Your registered API client User-Agent
-  const USER_AGENT = "BlackAndBlueApp/1.0";
+  const USER_AGENT = "BlackAndBlueApp"; // exactly as in your MFL client
 
-  const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${username}&PASSWORD=${password}`;
+  const url = `https://api.myfantasyleague.com/${year}/login?USERNAME=${encodeURIComponent(
+    username
+  )}&PASSWORD=${encodeURIComponent(password)}`;
 
-  // ⭐ Critical: MFL requires a custom User-Agent or it returns EMPTY XML
   const response = await fetch(url, {
     headers: {
       "User-Agent": USER_AGENT,
       "Accept": "*/*",
-      "Accept-Encoding": "gzip, deflate, br",
-      "Connection": "keep-alive"
-    }
+      "Connection": "keep-alive",
+    },
   });
 
   const xml = await response.text();
-  console.log("RAW XML:", xml);
+  console.log("LOGIN STATUS:", response.status);
+  console.log("LOGIN RAW BODY:", xml);
 
-  // ⭐ If XML is empty, login failed
+  if (!response.ok) {
+    // 403, 500, etc.
+    return res
+      .status(401)
+      .json({ error: `MFL login failed with status ${response.status}` });
+  }
+
   if (!xml || xml.trim() === "") {
     return res.status(401).json({ error: "Empty XML returned from MFL login" });
   }
@@ -36,26 +42,26 @@ export default async function handler(req, res) {
   const statusAttrs = parsed?.status?.$;
 
   if (!statusAttrs) {
-    return res.status(401).json({ error: "Login failed — no status attributes" });
+    return res
+      .status(401)
+      .json({ error: "Login failed — no status attributes in XML" });
   }
 
-  // ⭐ Save ALL real MFL cookies returned by the login API
   const mflCookies = Object.entries(statusAttrs).map(([key, value]) =>
     cookie.serialize(key, value, {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/"
+      path: "/",
     })
   );
 
-  // ⭐ Save convenience cookies
   mflCookies.push(
     cookie.serialize("MFL_USERNAME", username, {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/"
+      path: "/",
     })
   );
 
@@ -64,7 +70,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/"
+      path: "/",
     })
   );
 
@@ -73,7 +79,7 @@ export default async function handler(req, res) {
       httpOnly: false,
       secure: true,
       sameSite: "none",
-      path: "/"
+      path: "/",
     })
   );
 
