@@ -9,7 +9,6 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
   const year = new Date().getFullYear();
 
-  // Your league server
   const SERVER = "www44";
 
   const url = `https://${SERVER}.myfantasyleague.com/${year}/login?USERNAME=${encodeURIComponent(
@@ -17,10 +16,20 @@ export default async function handler(req, res) {
   )}&PASSWORD=${encodeURIComponent(password)}`;
 
   const response = await fetch(url, {
+    redirect: "follow",
     headers: {
       "User-Agent": "BlackAndBlueApp",
-      "Accept": "*/*",
-      "Connection": "keep-alive"
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.5",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Referer": `https://${SERVER}.myfantasyleague.com/${year}/home/19757`,
+      "Origin": `https://${SERVER}.myfantasyleague.com`,
+      "Connection": "keep-alive",
+      "Upgrade-Insecure-Requests": "1",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "same-origin",
+      "Sec-Fetch-User": "?1"
     }
   });
 
