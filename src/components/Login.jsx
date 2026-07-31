@@ -1,34 +1,38 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-const handleLogin = async () => {
-  console.log("LOGIN BUTTON CLICKED");
+  const { setIsLoggedIn } = useContext(AuthContext);
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ username, password }),
-  });
+  const handleLogin = async () => {
+    console.log("LOGIN BUTTON CLICKED");
 
-  console.log("LOGIN RESPONSE STATUS:", res.status);
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ username, password }),
+    });
 
-  const text = await res.text();
-  console.log("LOGIN RESPONSE BODY:", text);
+    console.log("LOGIN RESPONSE STATUS:", res.status);
 
-  console.log("COOKIES AFTER LOGIN:", document.cookie);
+    const text = await res.text();
+    console.log("LOGIN RESPONSE BODY:", text);
 
-  if (res.ok) {
-    console.log("RELOADING PAGE...");
-    window.location.href = "/";
-  } else {
+    console.log("COOKIES AFTER LOGIN:", document.cookie);
+
+    if (res.ok) {
+      console.log("LOGIN SUCCESS — UPDATING AUTH CONTEXT");
+      setIsLoggedIn(true);        // ⭐ THIS IS THE FIX
+      return;
+    }
+
     console.log("LOGIN FAILED");
     alert("Login failed");
-  }
-};
+  };
 
   return (
     <div style={{ padding: 20 }}>
