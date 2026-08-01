@@ -36,39 +36,37 @@ export default async function handler(req, res) {
       }
     }
 
-    // --- ACTION: freeAgents ---
+    // -----------------------------
+    // ACTION: freeAgents
+    // -----------------------------
     if (action === "freeAgents") {
-      const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
-      const data = await callMFL(url);
+    const leagueId = req.query.leagueId || req.cookies.leagueId;
+    const year = req.query.year || req.cookies.year;
 
-      const players = (data.freeAgents || []).map((p) => ({
+    if (!leagueId || !year) {
+        return res.status(400).json({ error: "Missing leagueId or year" });
+    }
+
+    // DETAILS=1 is REQUIRED for your league
+    const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&DETAILS=1&JSON=1`;
+
+    const data = await callMFL(url);
+
+    // MFL returns: freeAgents → leagueUnit → unit → player[]
+    const rawPlayers =
+        data?.freeAgents?.leagueUnit?.unit?.player || [];
+
+    const players = rawPlayers.map((p) => ({
         id: p.id,
         name: p.name,
         pos: p.position,
         team: p.team,
+        status: p.status,
         rank: null,
         avg: null,
-      }));
+    }));
 
-      return res.status(200).json({ players });
-    }
-
-    // --- ACTION: playerStats ---
-    if (action === "playerStats") {
-      const { playerId } = req.query;
-      if (!playerId) {
-        return res.status(400).json({ error: "Missing playerId" });
-      }
-
-      const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=playerStats&L=${leagueId}&PLAYERS=${playerId}&JSON=1`;
-      const data = await callMFL(url);
-
-      const stats = (data.playerStats || []).map((s) => ({
-        week: s.week,
-        points: s.score,
-      }));
-
-      return res.status(200).json({ stats });
+    return res.status(200).json({ players });
     }
 
     // --- ACTION: addPlayer ---
