@@ -10,6 +10,7 @@ import NavBar from "./components/NavBar";
 import Standings from "./pages/Standings";
 import Roster from "./pages/Roster";
 import Matchups from "./pages/SubmitLineup";
+import FreeAgents from "./pages/FreeAgents";   // ⭐ ADD THIS
 
 export default function App() {
   return (
@@ -52,32 +53,32 @@ function MainApp() {
       <NavBar page={page} setPage={setPage} />
 
       <div className="page-wrapper">
-        {/* NOT LOGGED IN → SHOW LOGIN */}
         {!isLoggedIn && <Login />}
 
-        {/* LOGGED IN BUT LEAGUE STILL LOADING */}
         {isLoggedIn && loadingLeague && (
           <div style={{ color: "white", padding: "2rem" }}>
             Loading league...
           </div>
         )}
 
-        {/* LOGGED IN, LEAGUE FAILED */}
         {isLoggedIn && !loadingLeague && !leagueInfo && (
           <div style={{ color: "red", padding: "2rem" }}>
             Could not load league info.
           </div>
         )}
 
-        {/* LOGGED IN, LEAGUE LOADED → ROUTE PAGES */}
         {isLoggedIn && leagueInfo && (
           <>
             {page === "standings" && <Standings leagueInfo={leagueInfo} />}
             {page === "roster" && <Roster leagueInfo={leagueInfo} />}
             {page === "matchups" && <Matchups leagueInfo={leagueInfo} />}
+
+            {/* ⭐ THIS WAS MISSING */}
+            {page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} />}
           </>
         )}
       </div>
     </>
   );
 }
+
