@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     }
 
 // -----------------------------
-// ACTION: freeAgents (preseason-safe, correct ID lookup)
+// ACTION: freeAgents (correct leagueUnit flattening)
 // -----------------------------
 if (action === "freeAgents") {
   const leagueId = req.query.leagueId || req.cookies.leagueId;
@@ -51,10 +51,17 @@ if (action === "freeAgents") {
   const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
   const faData = await callMFL(faUrl);
 
-  const faPlayers =
-    faData?.freeAgents?.leagueUnit?.unit?.player || [];
+  // ⭐ Flatten ALL leagueUnit entries
+  const faPlayers = [];
+  const units = faData?.freeAgents?.leagueUnit || [];
 
-  // 2. Lookup each player individually (correct for preseason)
+  for (const unit of units) {
+    if (unit.player && Array.isArray(unit.player)) {
+      faPlayers.push(...unit.player);
+    }
+  }
+
+  // 2. Lookup each player individually
   const results = [];
 
   for (const fa of faPlayers) {
@@ -62,7 +69,6 @@ if (action === "freeAgents") {
     const pData = await callMFL(pUrl);
 
     const p = pData?.player;
-
     if (!p) continue;
 
     results.push({
