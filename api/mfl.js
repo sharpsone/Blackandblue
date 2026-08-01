@@ -37,23 +37,21 @@ export default async function handler(req, res) {
     }
     
 // -----------------------------
-// ACTION: freeAgents (ONE CALL, NO RATE LIMITS)
+// ACTION: freeAgents (correct ID system, no rate limits)
 // -----------------------------
 if (action === "freeAgents") {
   const leagueId = req.query.leagueId || req.cookies.leagueId;
   const year = req.query.year || req.cookies.year;
+  const apiKey = process.env.MFL_API_KEY;
 
-  // 1. Get ALL players (full metadata)
-  const playersUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
-  const playersData = await callMFL(playersUrl);
-  const allPlayers = playersData?.players?.player || [];
+  console.log("APIKEY FROM ENV:", apiKey);
 
-  // 2. Get free agent IDs + status
-  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
+  // 1. Get free agent IDs + status
+  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
   const faData = await callMFL(faUrl);
 
-  const faPlayers = [];
   const units = faData?.freeAgents?.leagueUnit || [];
+  const faPlayers = [];
 
   for (const unit of units) {
     if (unit.player && Array.isArray(unit.player)) {
@@ -61,9 +59,19 @@ if (action === "freeAgents") {
     }
   }
 
-  // 3. Merge: match free agent IDs to full player metadata
+  console.log("FREE AGENT IDS:", faPlayers.slice(0, 10));
+
+  // 2. Get playerInfo (unit-ID based metadata)
+  const infoUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=playerInfo&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+  const infoData = await callMFL(infoUrl);
+
+  const infoPlayers = infoData?.playerInfo?.player || [];
+
+  console.log("PLAYERINFO SAMPLE:", infoPlayers.slice(0, 10));
+
+  // 3. Merge freeAgents with playerInfo
   const results = faPlayers.map(fa => {
-    const p = allPlayers.find(x => x.id === fa.id);
+    const p = infoPlayers.find(x => x.id === fa.id);
 
     return {
       id: fa.id,
@@ -75,6 +83,8 @@ if (action === "freeAgents") {
       avg: null,
     };
   });
+
+  console.log("MERGED FREE AGENTS:", results.length);
 
   return res.status(200).json({ players: results });
 }
