@@ -37,31 +37,23 @@ export default async function handler(req, res) {
     }
     
 // -----------------------------
-// ACTION: freeAgents (with APIKEY)
+// ACTION: freeAgents (ONE CALL, NO RATE LIMITS)
 // -----------------------------
 if (action === "freeAgents") {
   const leagueId = req.query.leagueId || req.cookies.leagueId;
   const year = req.query.year || req.cookies.year;
 
-  const apiKey = process.env.MFL_API_KEY || req.query.apiKey;
+  // 1. Get ALL players (full metadata)
+  const playersUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
+  const playersData = await callMFL(playersUrl);
+  const allPlayers = playersData?.players?.player || [];
 
-  if (!leagueId || !year) {
-    return res.status(400).json({ error: "Missing leagueId or year" });
-  }
-
-  if (!apiKey) {
-    return res.status(400).json({ error: "Missing APIKEY" });
-  }
-
-  // 1. Get free agent IDs + status
-  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
-  console.log("FREE AGENTS URL:", faUrl);
-
+  // 2. Get free agent IDs + status
+  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
   const faData = await callMFL(faUrl);
-  console.log("RAW FREE AGENTS RESPONSE:", JSON.stringify(faData, null, 2));
 
-  const units = faData?.freeAgents?.leagueUnit || [];
   const faPlayers = [];
+  const units = faData?.freeAgents?.leagueUnit || [];
 
   for (const unit of units) {
     if (unit.player && Array.isArray(unit.player)) {
@@ -69,28 +61,20 @@ if (action === "freeAgents") {
     }
   }
 
-  console.log("FLATTENED FREE AGENTS:", faPlayers.length);
+  // 3. Merge: match free agent IDs to full player metadata
+  const results = faPlayers.map(fa => {
+    const p = allPlayers.find(x => x.id === fa.id);
 
-  // 2. Lookup each player individually
-  const results = [];
-
-  for (const fa of faPlayers) {
-    const pUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=player&L=${leagueId}&P=${fa.id}&APIKEY=${apiKey}&JSON=1`;
-    const pData = await callMFL(pUrl);
-
-    const p = pData?.player;
-    if (!p) continue;
-
-    results.push({
-      id: p.id,
-      name: p.name,
-      pos: p.position,
-      team: p.team,
+    return {
+      id: fa.id,
+      name: p?.name || "Unknown",
+      pos: p?.position || "UNK",
+      team: p?.team || "",
       status: fa.status || "locked",
       rank: null,
       avg: null,
-    });
-  }
+    };
+  });
 
   return res.status(200).json({ players: results });
 }
