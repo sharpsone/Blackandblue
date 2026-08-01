@@ -43,7 +43,7 @@ if (action === "freeAgents") {
   const leagueId = req.query.leagueId || req.cookies.leagueId;
   const year = req.query.year || req.cookies.year;
 
-  const apiKey = process.env.MFL_APIKEY || req.query.apiKey;
+  const apiKey = process.env.MFL_API_KEY || req.query.apiKey;
 
   if (!leagueId || !year) {
     return res.status(400).json({ error: "Missing leagueId or year" });
