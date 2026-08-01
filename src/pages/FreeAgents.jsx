@@ -18,7 +18,7 @@ export default function FreeAgents({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   // -----------------------------
-  // LOAD FREE AGENTS
+  // LOAD FREE AGENTS (PRESEASON SAFE)
   // -----------------------------
   useEffect(() => {
     if (!leagueInfo) return;
@@ -100,37 +100,17 @@ export default function FreeAgents({ leagueInfo }) {
   const closePlayer = () => setSelectedPlayer(null);
 
   // -----------------------------
-  // ADD PLAYER
+  // ADD PLAYER (WILL BE LOCKED PRESEASON)
   // -----------------------------
   const handleAdd = async (playerId) => {
-    try {
-      const res = await fetch(
-        `/api/mfl?action=addPlayer&playerId=${playerId}&franchiseId=${leagueInfo.franchiseId}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-
-      const data = await res.json();
-      alert(data.result?.status || "Add request sent");
-    } catch (err) {
-      console.error("Add player failed:", err);
-      alert("Add failed");
-    }
+    alert("Players are locked until the season starts.");
   };
 
   // -----------------------------
-  // WAIVER CLAIM
+  // WAIVER CLAIM (ALSO LOCKED PRESEASON)
   // -----------------------------
   const handleWaiver = async (playerId) => {
-    try {
-      const res = await fetch(
-        `/api/mfl?action=waiverClaim&playerId=${playerId}&franchiseId=${leagueInfo.franchiseId}&bid=0&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-
-      const data = await res.json();
-      alert(data.result?.status || "Waiver claim submitted");
-    } catch (err) {
-      console.error("Waiver claim failed:", err);
-      alert("Waiver claim failed");
-    }
+    alert("Waiver claims are unavailable until the season starts.");
   };
 
   // -----------------------------
@@ -171,3 +151,4 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
+
