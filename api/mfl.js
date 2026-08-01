@@ -37,22 +37,37 @@ export default async function handler(req, res) {
     }
     
 // -----------------------------
-// ACTION: freeAgents (correct ID system, no rate limits)
+// ACTION: freeAgents (correct ID system + playerInfo + universal fields)
 // -----------------------------
 if (action === "freeAgents") {
   const leagueId = req.query.leagueId || req.cookies.leagueId;
   const year = req.query.year || req.cookies.year;
   const apiKey = process.env.MFL_API_KEY;
 
+  console.log("FREE AGENTS CALL:", { leagueId, year });
   console.log("APIKEY FROM ENV:", apiKey);
 
-  // 1. Get free agent IDs + status
+  if (!leagueId || !year) {
+    return res.status(400).json({ error: "Missing leagueId or year" });
+  }
+
+  if (!apiKey) {
+    return res.status(400).json({ error: "Missing APIKEY" });
+  }
+
+  // ---------------------------------------------------------
+  // 1. Get free agent IDs + status (unit-based IDs)
+  // ---------------------------------------------------------
   const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+  console.log("FREE AGENTS URL:", faUrl);
+
   const faData = await callMFL(faUrl);
+  console.log("RAW FREE AGENTS RESPONSE:", JSON.stringify(faData, null, 2));
 
   const units = faData?.freeAgents?.leagueUnit || [];
-  const faPlayers = [];
+  console.log("LEAGUE UNITS FOUND:", units.length);
 
+  const faPlayers = [];
   for (const unit of units) {
     if (unit.player && Array.isArray(unit.player)) {
       faPlayers.push(...unit.player);
@@ -61,23 +76,49 @@ if (action === "freeAgents") {
 
   console.log("FREE AGENT IDS:", faPlayers.slice(0, 10));
 
-  // 2. Get playerInfo (unit-ID based metadata)
+  // ---------------------------------------------------------
+  // 2. Get playerInfo (metadata for unit-based IDs)
+  // ---------------------------------------------------------
   const infoUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=playerInfo&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+  console.log("PLAYERINFO URL:", infoUrl);
+
   const infoData = await callMFL(infoUrl);
+  console.log("PLAYERINFO RAW:", JSON.stringify(infoData, null, 2));
 
   const infoPlayers = infoData?.playerInfo?.player || [];
-
   console.log("PLAYERINFO SAMPLE:", infoPlayers.slice(0, 10));
 
-  // 3. Merge freeAgents with playerInfo
+  // ---------------------------------------------------------
+  // 3. Merge freeAgents with playerInfo (correct ID system)
+  // ---------------------------------------------------------
   const results = faPlayers.map(fa => {
     const p = infoPlayers.find(x => x.id === fa.id);
 
+    // Universal field extraction (handles all MFL formats)
+    const name =
+      p?.name?.$t ||
+      p?.name ||
+      p?.label ||
+      p?.fullName ||
+      "Unknown";
+
+    const pos =
+      p?.position?.$t ||
+      p?.position ||
+      p?.pos ||
+      "UNK";
+
+    const team =
+      p?.team?.$t ||
+      p?.team ||
+      p?.nflTeam ||
+      "";
+
     return {
       id: fa.id,
-      name: p?.name || "Unknown",
-      pos: p?.position || "UNK",
-      team: p?.team || "",
+      name,
+      pos,
+      team,
       status: fa.status || "locked",
       rank: null,
       avg: null,
