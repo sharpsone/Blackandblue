@@ -1,0 +1,116 @@
+.fa-card {
+  background: #15151f;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  padding: 12px 12px 10px 0;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #26263a;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.fa-card::before {
+  content: "";
+  width: 6px;
+  background: linear-gradient(180deg, #a855f7, #7c3aed);
+  border-radius: 6px 0 0 6px;
+  margin-right: 10px;
+}
+
+.fa-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.75);
+  border-color: #a855f7;
+}
+
+.fa-main {
+  flex: 1;
+  cursor: pointer;
+}
+
+.fa-name {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.fa-pos-team {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: #a1a1b5;
+  margin-bottom: 8px;
+}
+
+.fa-pos {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.fa-team {
+  opacity: 0.85;
+}
+
+.fa-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.fa-stat {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+.fa-stat label {
+  color: #8b8ba3;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fa-stat span {
+  color: #f5f5f7;
+  font-weight: 500;
+}
+
+.fa-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  margin-left: 10px;
+}
+
+.fa-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.fa-btn.add {
+  background: #22c55e;
+  color: #041007;
+}
+
+.fa-btn.waiver {
+  background: #a855f7;
+  color: #0f071b;
+}
+
+.fa-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+.fa-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}

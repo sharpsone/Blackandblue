@@ -1,0 +1,19 @@
+.fa-search {
+  flex: 1;
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid #2b2b3f;
+  background: #15151f;
+  color: #e5e5f0;
+  padding: 6px 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.fa-search::placeholder {
+  color: #6b6b80;
+}
+
+.fa-search:focus {
+  border-color: #a855f7;
+}
