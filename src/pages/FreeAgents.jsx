@@ -1,3 +1,4 @@
+// src/pages/FreeAgents.jsx
 import { useEffect, useState } from "react";
 import "./FreeAgents.css";
 
@@ -16,27 +17,36 @@ export default function FreeAgents({ leagueInfo }) {
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
-  // Load free agents on mount
+  // -----------------------------
+  // LOAD FREE AGENTS
+  // -----------------------------
   useEffect(() => {
-    async function loadFreeAgents() {
-      try {
-        const res = await fetch("/api/mfl?action=freeAgents", {
-          credentials: "include",
-        });
-        const data = await res.json();
+    if (!leagueInfo) return;
 
+    async function loadFreeAgents() {
+      setLoading(true);
+
+      try {
+        const res = await fetch(
+          `/api/mfl?action=freeAgents&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+        );
+
+        const data = await res.json();
         setPlayers(data.players || []);
       } catch (err) {
         console.error("Failed to load free agents:", err);
+        setPlayers([]);
       } finally {
         setLoading(false);
       }
     }
 
     loadFreeAgents();
-  }, []);
+  }, [leagueInfo]);
 
-  // Apply filters + search + sorting
+  // -----------------------------
+  // FILTER + SEARCH + SORT
+  // -----------------------------
   useEffect(() => {
     let list = [...players];
 
@@ -59,59 +69,85 @@ export default function FreeAgents({ leagueInfo }) {
     setFiltered(list);
   }, [players, search, position, sortBy]);
 
+  // -----------------------------
+  // PLAYER MODAL: LOAD STATS
+  // -----------------------------
   const openPlayer = async (player) => {
     setSelectedPlayer({ loading: true });
 
-    const res = await fetch(
-      `/api/mfl?action=playerStats&playerId=${player.id}`,
-      { credentials: "include" }
-    );
-    const stats = await res.json();
+    try {
+      const res = await fetch(
+        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
 
-    setSelectedPlayer({
-      ...player,
-      ...stats,
-      loading: false,
-    });
+      const stats = await res.json();
+
+      setSelectedPlayer({
+        ...player,
+        ...stats,
+        loading: false,
+      });
+    } catch (err) {
+      console.error("Failed to load player stats:", err);
+      setSelectedPlayer({
+        ...player,
+        stats: [],
+        loading: false,
+      });
+    }
   };
 
   const closePlayer = () => setSelectedPlayer(null);
 
+  // -----------------------------
+  // ADD PLAYER
+  // -----------------------------
   const handleAdd = async (playerId) => {
-    const res = await fetch(
-      `/api/mfl?action=addPlayer&playerId=${playerId}`,
-      { credentials: "include" }
-    );
-    const data = await res.json();
+    try {
+      const res = await fetch(
+        `/api/mfl?action=addPlayer&playerId=${playerId}&franchiseId=${leagueInfo.franchiseId}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
 
-    alert(data.status || "Add request sent");
+      const data = await res.json();
+      alert(data.result?.status || "Add request sent");
+    } catch (err) {
+      console.error("Add player failed:", err);
+      alert("Add failed");
+    }
   };
 
+  // -----------------------------
+  // WAIVER CLAIM
+  // -----------------------------
   const handleWaiver = async (playerId) => {
-    const res = await fetch(
-      `/api/mfl?action=waiverClaim&playerId=${playerId}`,
-      { credentials: "include" }
-    );
-    const data = await res.json();
+    try {
+      const res = await fetch(
+        `/api/mfl?action=waiverClaim&playerId=${playerId}&franchiseId=${leagueInfo.franchiseId}&bid=0&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
 
-    alert(data.status || "Waiver claim submitted");
+      const data = await res.json();
+      alert(data.result?.status || "Waiver claim submitted");
+    } catch (err) {
+      console.error("Waiver claim failed:", err);
+      alert("Waiver claim failed");
+    }
   };
 
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="free-agents-page">
       <h2>Free Agents</h2>
 
-      {/* NEW FILTER BAR */}
       <div className="fa-controls">
         <SearchBar value={search} onChange={setSearch} />
         <PositionFilter value={position} onChange={setPosition} />
         <SortDropdown value={sortBy} onChange={setSortBy} />
       </div>
 
-      {/* Loading */}
       {loading && <div className="loading">Loading free agents...</div>}
 
-      {/* Player List */}
       {!loading && (
         <div className="fa-player-list">
           {filtered.map((p) => (
@@ -126,7 +162,6 @@ export default function FreeAgents({ leagueInfo }) {
         </div>
       )}
 
-      {/* Player Modal */}
       <PlayerModal
         player={selectedPlayer}
         onClose={closePlayer}
