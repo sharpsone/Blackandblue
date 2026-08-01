@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
-    // ACTION: freeAgents
+    // ACTION: freeAgents (preseason-safe)
     // -----------------------------
     if (action === "freeAgents") {
     const leagueId = req.query.leagueId || req.cookies.leagueId;
@@ -47,26 +47,38 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Missing leagueId or year" });
     }
 
-    // DETAILS=1 is REQUIRED for your league
-    const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&DETAILS=1&JSON=1`;
+    // 1. Get free agent IDs + status (locked)
+    const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
+    const faData = await callMFL(faUrl);
 
-    const data = await callMFL(url);
+    const faPlayers =
+        faData?.freeAgents?.leagueUnit?.unit?.player || [];
 
-    // MFL returns: freeAgents → leagueUnit → unit → player[]
-    const rawPlayers =
-        data?.freeAgents?.leagueUnit?.unit?.player || [];
+    const faIds = new Set(faPlayers.map(p => p.id));
 
-    const players = rawPlayers.map((p) => ({
-        id: p.id,
-        name: p.name,
-        pos: p.position,
-        team: p.team,
-        status: p.status,
-        rank: null,
-        avg: null,
-    }));
+    // 2. Get full player metadata
+    const playersUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&L=${leagueId}&JSON=1`;
+    const playersData = await callMFL(playersUrl);
 
-    return res.status(200).json({ players });
+    const allPlayers = playersData?.players?.player || [];
+
+    // 3. Merge: only players whose ID is in freeAgents
+    const merged = allPlayers
+        .filter(p => faIds.has(p.id))
+        .map(p => {
+        const fa = faPlayers.find(x => x.id === p.id);
+        return {
+            id: p.id,
+            name: p.name,
+            pos: p.position,
+            team: p.team,
+            status: fa?.status || "locked",
+            rank: null,
+            avg: null,
+        };
+        });
+
+    return res.status(200).json({ players: merged });
     }
 
     // --- ACTION: addPlayer ---
