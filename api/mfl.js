@@ -36,50 +36,48 @@ export default async function handler(req, res) {
       }
     }
 
-    // -----------------------------
-    // ACTION: freeAgents (preseason-safe)
-    // -----------------------------
-    if (action === "freeAgents") {
-    const leagueId = req.query.leagueId || req.cookies.leagueId;
-    const year = req.query.year || req.cookies.year;
+// -----------------------------
+// ACTION: freeAgents (preseason-safe, correct ID lookup)
+// -----------------------------
+if (action === "freeAgents") {
+  const leagueId = req.query.leagueId || req.cookies.leagueId;
+  const year = req.query.year || req.cookies.year;
 
-    if (!leagueId || !year) {
-        return res.status(400).json({ error: "Missing leagueId or year" });
-    }
+  if (!leagueId || !year) {
+    return res.status(400).json({ error: "Missing leagueId or year" });
+  }
 
-    // 1. Get free agent IDs + status (locked)
-    const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
-    const faData = await callMFL(faUrl);
+  // 1. Get free agent IDs + status
+  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
+  const faData = await callMFL(faUrl);
 
-    const faPlayers =
-        faData?.freeAgents?.leagueUnit?.unit?.player || [];
+  const faPlayers =
+    faData?.freeAgents?.leagueUnit?.unit?.player || [];
 
-    const faIds = new Set(faPlayers.map(p => p.id));
+  // 2. Lookup each player individually (correct for preseason)
+  const results = [];
 
-    // 2. Get full player metadata
-    const playersUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&L=${leagueId}&JSON=1`;
-    const playersData = await callMFL(playersUrl);
+  for (const fa of faPlayers) {
+    const pUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=player&L=${leagueId}&P=${fa.id}&JSON=1`;
+    const pData = await callMFL(pUrl);
 
-    const allPlayers = playersData?.players?.player || [];
+    const p = pData?.player;
 
-    // 3. Merge: only players whose ID is in freeAgents
-    const merged = allPlayers
-        .filter(p => faIds.has(p.id))
-        .map(p => {
-        const fa = faPlayers.find(x => x.id === p.id);
-        return {
-            id: p.id,
-            name: p.name,
-            pos: p.position,
-            team: p.team,
-            status: fa?.status || "locked",
-            rank: null,
-            avg: null,
-        };
-        });
+    if (!p) continue;
 
-    return res.status(200).json({ players: merged });
-    }
+    results.push({
+      id: p.id,
+      name: p.name,
+      pos: p.position,
+      team: p.team,
+      status: fa.status || "locked",
+      rank: null,
+      avg: null,
+    });
+  }
+
+  return res.status(200).json({ players: results });
+}
 
     // --- ACTION: addPlayer ---
     if (action === "addPlayer") {
