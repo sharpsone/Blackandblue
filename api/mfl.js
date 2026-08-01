@@ -37,23 +37,26 @@ export default async function handler(req, res) {
     }
 
 // -----------------------------
-// ACTION: freeAgents (correct leagueUnit flattening)
+// ACTION: freeAgents (with logging)
 // -----------------------------
 if (action === "freeAgents") {
   const leagueId = req.query.leagueId || req.cookies.leagueId;
   const year = req.query.year || req.cookies.year;
 
-  if (!leagueId || !year) {
-    return res.status(400).json({ error: "Missing leagueId or year" });
-  }
+  console.log("FREE AGENTS CALL:", { leagueId, year });
 
   // 1. Get free agent IDs + status
   const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&JSON=1`;
-  const faData = await callMFL(faUrl);
+  console.log("FREE AGENTS URL:", faUrl);
 
-  // ⭐ Flatten ALL leagueUnit entries
+  const faData = await callMFL(faUrl);
+  console.log("RAW FREE AGENTS RESPONSE:", JSON.stringify(faData, null, 2));
+
+  // Flatten leagueUnit blocks
   const faPlayers = [];
   const units = faData?.freeAgents?.leagueUnit || [];
+
+  console.log("LEAGUE UNITS FOUND:", units.length);
 
   for (const unit of units) {
     if (unit.player && Array.isArray(unit.player)) {
@@ -61,15 +64,25 @@ if (action === "freeAgents") {
     }
   }
 
+  console.log("FLATTENED FREE AGENTS:", faPlayers.length, faPlayers.slice(0, 10));
+
   // 2. Lookup each player individually
   const results = [];
 
   for (const fa of faPlayers) {
+    console.log("LOOKUP PLAYER:", fa.id);
+
     const pUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=player&L=${leagueId}&P=${fa.id}&JSON=1`;
+    console.log("PLAYER LOOKUP URL:", pUrl);
+
     const pData = await callMFL(pUrl);
+    console.log("PLAYER LOOKUP RESULT:", JSON.stringify(pData, null, 2));
 
     const p = pData?.player;
-    if (!p) continue;
+    if (!p) {
+      console.log("NO PLAYER DATA FOR ID:", fa.id);
+      continue;
+    }
 
     results.push({
       id: p.id,
@@ -81,6 +94,8 @@ if (action === "freeAgents") {
       avg: null,
     });
   }
+
+  console.log("MERGED FREE AGENTS:", results.length);
 
   return res.status(200).json({ players: results });
 }
