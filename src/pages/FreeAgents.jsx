@@ -20,7 +20,7 @@ export default function FreeAgents({ leagueInfo }) {
   useEffect(() => {
     async function loadFreeAgents() {
       try {
-        const res = await fetch("/api/freeAgents", {
+        const res = await fetch("/api/mfl?action=freeAgents", {
           credentials: "include",
         });
         const data = await res.json();
@@ -62,9 +62,10 @@ export default function FreeAgents({ leagueInfo }) {
   const openPlayer = async (player) => {
     setSelectedPlayer({ loading: true });
 
-    const res = await fetch(`/api/playerStats?playerId=${player.id}`, {
-      credentials: "include",
-    });
+    const res = await fetch(
+      `/api/mfl?action=playerStats&playerId=${player.id}`,
+      { credentials: "include" }
+    );
     const stats = await res.json();
 
     setSelectedPlayer({
@@ -77,18 +78,20 @@ export default function FreeAgents({ leagueInfo }) {
   const closePlayer = () => setSelectedPlayer(null);
 
   const handleAdd = async (playerId) => {
-    const res = await fetch(`/api/addPlayer?playerId=${playerId}`, {
-      credentials: "include",
-    });
+    const res = await fetch(
+      `/api/mfl?action=addPlayer&playerId=${playerId}`,
+      { credentials: "include" }
+    );
     const data = await res.json();
 
     alert(data.status || "Add request sent");
   };
 
   const handleWaiver = async (playerId) => {
-    const res = await fetch(`/api/waiverClaim?playerId=${playerId}`, {
-      credentials: "include",
-    });
+    const res = await fetch(
+      `/api/mfl?action=waiverClaim&playerId=${playerId}`,
+      { credentials: "include" }
+    );
     const data = await res.json();
 
     alert(data.status || "Waiver claim submitted");
@@ -133,4 +136,3 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
-
