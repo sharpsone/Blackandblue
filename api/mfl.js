@@ -39,69 +39,70 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
-    // ACTION: freeAgents (global ID system, same as roster)
-    // -----------------------------
-    if (action === "freeAgents") {
-      const apiKey = process.env.MFL_API_KEY;
+// ACTION: freeAgents (global ID system, same as roster)
+// -----------------------------
+if (action === "freeAgents") {
+  const apiKey = process.env.MFL_API_KEY;
 
-      console.log("FREE AGENTS CALL:", { leagueId, year });
-      console.log("APIKEY FROM ENV:", apiKey);
+  console.log("FREE AGENTS CALL:", { leagueId, year });
+  console.log("APIKEY FROM ENV:", apiKey);
 
-      if (!apiKey) {
-        return res.status(400).json({ error: "Missing APIKEY" });
-      }
+  if (!apiKey) {
+    return res.status(400).json({ error: "Missing APIKEY" });
+  }
 
-      // ---------------------------------------------------------
-      // 1. Get ALL players (global IDs, full metadata)
-      // ---------------------------------------------------------
-      const playersUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
-      console.log("PLAYERS URL:", playersUrl);
+  // ---------------------------------------------------------
+  // 1. Get ALL players (global IDs, full metadata)
+  //    MUST use api.myfantasyleague.com
+  // ---------------------------------------------------------
+  const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
+  console.log("PLAYERS URL:", playersUrl);
 
-      const playersData = await callMFL(playersUrl);
-      const allPlayers = playersData?.players?.player || [];
-      console.log("TOTAL PLAYERS:", allPlayers.length);
+  const playersData = await callMFL(playersUrl);
+  const allPlayers = playersData?.players?.player || [];
+  console.log("TOTAL PLAYERS:", allPlayers.length);
 
-      // ---------------------------------------------------------
-      // 2. Get free agent IDs + status (global IDs)
-      // ---------------------------------------------------------
-      const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
-      console.log("FREE AGENTS URL:", faUrl);
+  // ---------------------------------------------------------
+  // 2. Get free agent IDs + status (global IDs)
+  // ---------------------------------------------------------
+  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+  console.log("FREE AGENTS URL:", faUrl);
 
-      const faData = await callMFL(faUrl);
+  const faData = await callMFL(faUrl);
 
-      const units = faData?.freeAgents?.leagueUnit || [];
-      const faPlayers = [];
+  const units = faData?.freeAgents?.leagueUnit || [];
+  const faPlayers = [];
 
-      for (const unit of units) {
-        if (unit.player && Array.isArray(unit.player)) {
-          faPlayers.push(...unit.player);
-        }
-      }
-
-      console.log("FREE AGENT IDS SAMPLE:", faPlayers.slice(0, 10));
-      console.log("TOTAL FREE AGENTS:", faPlayers.length);
-
-      // ---------------------------------------------------------
-      // 3. Merge freeAgents with players (global ID match)
-      // ---------------------------------------------------------
-      const results = faPlayers.map(fa => {
-        const p = allPlayers.find(x => x.id === fa.id);
-
-        return {
-          id: fa.id,
-          name: p?.name || "Unknown",
-          pos: p?.position || "UNK",
-          team: p?.team || "",
-          status: fa.status || "locked",
-          rank: null,
-          avg: null,
-        };
-      });
-
-      console.log("MERGED FREE AGENTS:", results.length);
-
-      return res.status(200).json({ players: results });
+  for (const unit of units) {
+    if (unit.player && Array.isArray(unit.player)) {
+      faPlayers.push(...unit.player);
     }
+  }
+
+  console.log("FREE AGENT IDS SAMPLE:", faPlayers.slice(0, 10));
+  console.log("TOTAL FREE AGENTS:", faPlayers.length);
+
+  // ---------------------------------------------------------
+  // 3. Merge freeAgents with players (global ID match)
+  // ---------------------------------------------------------
+  const results = faPlayers.map(fa => {
+    const p = allPlayers.find(x => x.id === fa.id);
+
+    return {
+      id: fa.id,
+      name: p?.name || "Unknown",
+      pos: p?.position || "UNK",
+      team: p?.team || "",
+      status: fa.status || "locked",
+      rank: null,
+      avg: null,
+    };
+  });
+
+  console.log("MERGED FREE AGENTS:", results.length);
+
+  return res.status(200).json({ players: results });
+}
 
     // --- ACTION: addPlayer ---
     if (action === "addPlayer") {
