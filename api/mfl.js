@@ -34,42 +34,39 @@ export default async function handler(req, res) {
       }
     }
 
-// FREE AGENTS (conference separated)
+// -----------------------------
+// ACTION: freeAgents (with conference separation)
+// -----------------------------
 if (action === "freeAgents") {
   const apiKey = process.env.MFL_API_KEY;
 
-  if (!apiKey) {
-    return res.status(500).json({
-      error: "Missing MFL_API_KEY",
-      detail: "Private leagues require an API key."
-    });
-  }
+  console.log("FREE AGENTS CALL:", { leagueId, year });
 
+  // 1. Load players
   const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
   const playersData = await callMFL(playersUrl);
   const allPlayers = playersData?.players?.player || [];
 
+  // 2. Load ranks
   const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
   const ranksData = await callMFL(ranksUrl);
   const ranksList = ranksData?.player_ranks?.player || [];
 
+  // 3. Load projections
   const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
   const projData = await callMFL(projUrl);
   const projList = projData?.projectedScores?.playerScore || [];
 
+  // 4. Load free agents (two conferences)
   const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
   const faData = await callMFL(faUrl);
 
   const units = faData?.freeAgents?.leagueUnit || [];
+
   const conferencePools = {};
 
   for (const unit of units) {
-    let unitName = unit.unit || "UNKNOWN";
-
-    // Normalize to UI expected keys
-    if (unitName === "00" || unitName === "Black Conference") unitName = "CONFERENCE00";
-    if (unitName === "01" || unitName === "Blue Conference") unitName = "CONFERENCE01";
-
+    const unitName = unit.unit || "UNKNOWN";
     const players = unit.player || [];
 
     conferencePools[unitName] = players.map(fa => {
@@ -80,37 +77,20 @@ if (action === "freeAgents") {
       return {
         id: fa.id,
         name: p?.name || "Unknown",
+        position: p?.position || "UNK",
         pos: p?.position || "UNK",
         team: p?.team || "",
         status: fa.status || "locked",
         rank: Number(r?.rank) || 9999,
         avg: Number(s?.score) || 0,
-        news: fa.news || null
       };
     });
   }
 
   return res.status(200).json({ conferences: conferencePools });
 }
-    // -----------------------------
-    // PLAYER NEWS (MFL ONLY)
-    // -----------------------------
-    if (action === "playerNews") {
-      const { playerId } = req.query;
 
-      if (!playerId) {
-        return res.status(400).json({ error: "Missing playerId" });
-      }
-
-      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=playerNews&P=${playerId}&L=${leagueId}&JSON=1`;
-      const data = await callMFL(url);
-
-      return res.status(200).json({ news: data?.news || [] });
-    }
-
-    // -----------------------------
-    // ADD PLAYER
-    // -----------------------------
+    // --- ACTION: addPlayer ---
     if (action === "addPlayer") {
       const { playerId, franchiseId } = req.query;
       if (!playerId || !franchiseId) {
@@ -123,9 +103,7 @@ if (action === "freeAgents") {
       return res.status(200).json({ result: data });
     }
 
-    // -----------------------------
-    // WAIVER CLAIM
-    // -----------------------------
+    // --- ACTION: waiverClaim ---
     if (action === "waiverClaim") {
       const { playerId, franchiseId, bid } = req.query;
       if (!playerId || !franchiseId || !bid) {
@@ -138,27 +116,21 @@ if (action === "freeAgents") {
       return res.status(200).json({ result: data });
     }
 
-    // -----------------------------
-    // LEAGUE INFO
-    // -----------------------------
+    // --- ACTION: league ---
     if (action === "league") {
       const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=league&L=${leagueId}&JSON=1`;
       const data = await callMFL(url);
       return res.status(200).json(data);
     }
 
-    // -----------------------------
-    // ROSTERS
-    // -----------------------------
+    // --- ACTION: rosters ---
     if (action === "rosters") {
       const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=rosters&L=${leagueId}&JSON=1`;
       const data = await callMFL(url);
       return res.status(200).json(data);
     }
 
-    // -----------------------------
-    // WEEKLY RESULTS
-    // -----------------------------
+    // --- ACTION: weekly ---
     if (action === "weekly") {
       const { week } = req.query;
       const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=weeklyResults&L=${leagueId}&W=${week || ""}&JSON=1`;
@@ -166,20 +138,44 @@ if (action === "freeAgents") {
       return res.status(200).json(data);
     }
 
-    // -----------------------------
-    // PLAYERS (FULL LIST)
-    // -----------------------------
+    // --- ACTION: players ---
     if (action === "players") {
       const url = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
       const data = await callMFL(url);
       return res.status(200).json(data);
     }
 
-    // -----------------------------
-    // SUBMIT LINEUP
-    // -----------------------------
+    // --- ACTION: submitLineup ---
     if (action === "submitLineup") {
       const { franchiseId, week, lineup } = req.body || {};
       if (!franchiseId || !week || !lineup) {
         return res.status(400).json({ error: "Missing franchiseId, week, or lineup" });
+      }
 
+      const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=submitLineup&L=${leagueId}&FRANCHISE=${franchiseId}&W=${week}&JSON=1`;
+      const params = new URLSearchParams();
+      params.append("LINEUP", lineup);
+
+      const resp = await fetch(url, {
+        method: "POST",
+        body: params,
+      });
+
+      const text = await resp.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text };
+      }
+
+      return res.status(200).json(data);
+    }
+
+    return res.status(400).json({ error: "Unknown action", action });
+
+  } catch (err) {
+    console.error("mfl.js error:", err);
+    return res.status(500).json({ error: "Server error", detail: err.message });
+  }
+}
