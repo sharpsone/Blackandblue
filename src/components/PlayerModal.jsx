@@ -1,61 +1,61 @@
+// src/components/PlayerModal.jsx
 import "./PlayerModal.css";
 
 export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
   if (!player) return null;
 
+  const isLocked = player.status === "locked";
+
   return (
-    <div className="fa-modal-overlay" onClick={onClose}>
-      <div className="fa-modal" onClick={(e) => e.stopPropagation()}>
-        {player.loading ? (
-          <div className="fa-loading">Loading player stats...</div>
-        ) : (
-          <>
-            <h2 className="fa-modal-name">{player.name}</h2>
-            <div className="fa-modal-sub">
-              {player.pos} — {player.team}
-            </div>
+    <div className="modal-overlay">
+      <div className="modal">
+        <h2>{player.name}</h2>
+        <div className="modal-meta">
+          <span>{player.pos}</span> — <span>{player.team}</span>
+        </div>
 
-            <div className="fa-modal-stats">
-              <div className="fa-modal-stat">
-                <label>Rank</label>
-                <span>{player.rank ?? "—"}</span>
-              </div>
-              <div className="fa-modal-stat">
-                <label>Avg</label>
-                <span>{player.avg ?? "—"}</span>
-              </div>
-              <div className="fa-modal-stat">
-                <label>Last 3</label>
-                <span>{player.last3 ?? "—"}</span>
-              </div>
-            </div>
+        <div className="modal-stats">
+          <div>
+            <strong>RANK</strong>
+            <div>{player.rank}</div>
+          </div>
+          <div>
+            <strong>AVG</strong>
+            <div>{player.avg}</div>
+          </div>
+          <div>
+            <strong>LAST 3</strong>
+            <div>{player.last3 || "—"}</div>
+          </div>
+        </div>
 
-            <h3 className="fa-section-title">Weekly Points</h3>
-            <ul className="fa-weekly-list">
-              {player.weekly?.map((pts, i) => (
-                <li key={i}>
-                  Week {i + 1}: <strong>{pts}</strong>
-                </li>
-              ))}
-            </ul>
+        <h3>Weekly Points</h3>
 
-            <div className="fa-modal-buttons">
-              <button className="fa-btn add" onClick={() => onAdd(player.id)}>
-                Add Player
-              </button>
-              <button
-                className="fa-btn waiver"
-                onClick={() => onWaiver(player.id)}
-              >
-                Submit Waiver Claim
-              </button>
-              <button className="fa-btn close" onClick={onClose}>
-                Close
-              </button>
-            </div>
-          </>
-        )}
+        <div className="modal-actions">
+          <button
+            className={`modal-btn add-btn ${isLocked ? "locked" : ""}`}
+            disabled={isLocked}
+            title={isLocked ? "Locked until F/A opens" : ""}
+            onClick={() => !isLocked && onAdd(player.id)}
+          >
+            Add Player
+          </button>
+
+          <button
+            className={`modal-btn waiver-btn ${isLocked ? "locked" : ""}`}
+            disabled={isLocked}
+            title={isLocked ? "Locked until F/A opens" : ""}
+            onClick={() => !isLocked && onWaiver(player.id)}
+          >
+            Submit Waiver Claim
+          </button>
+
+          <button className="modal-btn close-btn" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+

@@ -105,3 +105,14 @@
   background: #272738;
   color: #e5e5f0;
 }
+
+/* Dim + disable modal buttons when locked */
+.modal-btn.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Optional: match tile dimming */
+.modal.locked {
+  opacity: 0.75;
+}
