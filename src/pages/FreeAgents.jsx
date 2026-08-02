@@ -31,13 +31,7 @@ export default function FreeAgents({ leagueInfo }) {
       );
       const data = await res.json();
 
-      // Simple list, no external news, no grouped stats
-      const list = (data.conferences[conference] || []).map((p) => ({
-        ...p,
-        news: p.news || null,
-      }));
-
-      setPlayers(list);
+      setPlayers(data.conferences[conference] || []);
     } catch (err) {
       console.error("Failed to load free agents:", err);
       setPlayers([]);
@@ -92,7 +86,7 @@ export default function FreeAgents({ leagueInfo }) {
     Object.values(grouped).forEach((group) => {
       group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
       group.forEach((p, i) => {
-        p.posRank = i + 1;
+        p.posRank = i + 1; // ⭐ Add position rank
       });
     });
 
@@ -100,21 +94,47 @@ export default function FreeAgents({ leagueInfo }) {
   }, [players, search, position, sortBy]);
 
   // -----------------------------
-  // PLAYER MODAL OPEN/CLOSE (NO STATS/NEWS FETCH)
+  // PLAYER MODAL
   // -----------------------------
-  const openPlayer = (player) => {
+  const openPlayer = async (player) => {
     console.log("[openPlayer] clicked player:", player);
 
-    // Just pass the player through; no async, no stats, no external news
-    setSelectedPlayer({
-      ...player,
-      loading: false,
-    });
+    setSelectedPlayer({ loading: true });
+    console.log("[openPlayer] selectedPlayer set to loading");
+
+    try {
+      const res = await fetch(
+        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
+      const stats = await res.json();
+      console.log("[openPlayer] fetched stats:", stats);
+
+      setSelectedPlayer({
+        ...player,
+        ...stats,
+        loading: false,
+      });
+      console.log("[openPlayer] selectedPlayer after merge:", {
+        ...player,
+        ...stats,
+        loading: false,
+      });
+    } catch (err) {
+      console.error("[openPlayer] Failed to load player stats:", err);
+      setSelectedPlayer({
+        ...player,
+        stats: [],
+        loading: false,
+      });
+      console.log("[openPlayer] selectedPlayer after error:", {
+        ...player,
+        stats: [],
+        loading: false,
+      });
+    }
   };
 
-  const closePlayer = () => {
-    setSelectedPlayer(null);
-  };
+  const closePlayer = () => setSelectedPlayer(null);
 
   // -----------------------------
   // ADD / WAIVER (LOCKED)
@@ -170,6 +190,7 @@ export default function FreeAgents({ leagueInfo }) {
           ))}
       </div>
 
+      {/* Modal stays mounted */}
       <PlayerModal
         player={selectedPlayer}
         onClose={closePlayer}
@@ -179,3 +200,5 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
+
+
