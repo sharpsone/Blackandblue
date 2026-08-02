@@ -2,7 +2,13 @@
 import "./PlayerModal.css";
 
 export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
-  if (!player) return null;
+  // Debug: modal render state
+  if (!player) {
+    console.log("[PlayerModal] No player → modal not rendered");
+    return null;
+  }
+
+  console.log("[PlayerModal] Rendering modal with player:", player);
 
   const isLocked = player.status === "locked";
 
@@ -10,11 +16,13 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
     <div className="modal-overlay">
       <div className="modal">
         <h2>{player.name}</h2>
+
         {isLocked && (
           <div className="modal-lock-banner">
             🔒 Locked until Free Agency opens
           </div>
         )}
+
         <div className="modal-meta">
           <span>{player.pos}</span> — <span>{player.team}</span>
         </div>
