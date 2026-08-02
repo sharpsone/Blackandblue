@@ -1,32 +1,46 @@
+// src/components/PlayerCard.jsx
 import "./PlayerCard.css";
 
 export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
+  const isLocked = player.status === "locked";
+
   return (
-    <div className="fa-card">
-      <div className="fa-main" onClick={() => onOpen(player)}>
-        <div className="fa-name">{player.name}</div>
-        <div className="fa-pos-team">
-          <span className="fa-pos">{player.pos}</span>
-          <span className="fa-team">{player.team}</span>
+    <div className={`player-card ${isLocked ? "locked" : ""}`}>
+      {/* Lock Badge */}
+      {isLocked && (
+        <div className="lock-badge">
+          🔒 Locked
+        </div>
+      )}
+
+      <div className="player-main" onClick={() => onOpen(player)}>
+        <div className="player-name">{player.name}</div>
+
+        <div className="player-meta">
+          <span className="player-pos">{player.pos}</span>
+          <span className="player-team">{player.team}</span>
         </div>
 
-        <div className="fa-stats">
-          <div className="fa-stat">
-            <label>Rank</label>
-            <span>{player.rank ?? "—"}</span>
-          </div>
-          <div className="fa-stat">
-            <label>Avg</label>
-            <span>{player.avg ?? "—"}</span>
-          </div>
+        <div className="player-stats">
+          <span className="player-rank">Rank {player.rank}</span>
+          <span className="player-avg">Avg {player.avg}</span>
         </div>
       </div>
 
-      <div className="fa-actions">
-        <button className="fa-btn add" onClick={() => onAdd(player.id)}>
+      <div className="player-actions">
+        <button
+          className="add-btn"
+          disabled={isLocked}
+          onClick={() => !isLocked && onAdd(player.id)}
+        >
           Add
         </button>
-        <button className="fa-btn waiver" onClick={() => onWaiver(player.id)}>
+
+        <button
+          className="waiver-btn"
+          disabled={isLocked}
+          onClick={() => !isLocked && onWaiver(player.id)}
+        >
           Waiver
         </button>
       </div>

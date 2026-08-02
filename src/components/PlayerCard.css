@@ -114,3 +114,30 @@
   transform: translateY(0);
   box-shadow: none;
 }
+
+/* Dim the card when locked */
+.player-card.locked {
+  opacity: 0.55;
+  position: relative;
+}
+
+/* Lock badge */
+.lock-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #ff4d4d;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 5;
+}
+
+/* Disable buttons visually */
+.player-card.locked .add-btn,
+.player-card.locked .waiver-btn {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
