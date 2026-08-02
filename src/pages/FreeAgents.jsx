@@ -16,33 +16,35 @@ export default function FreeAgents({ leagueInfo }) {
   const [sortBy, setSortBy] = useState("rank");
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [conference, setConference] = useState("CONFERENCE00");
 
   // -----------------------------
   // LOAD FREE AGENTS (PRESEASON SAFE)
   // -----------------------------
+  async function loadFreeAgents() {
+    if (!leagueInfo) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `/api/mfl?action=freeAgents&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
+      const data = await res.json();
+      // ✅ Updated to use conference-specific data
+      setPlayers(data.conferences[conference] || []);
+    } catch (err) {
+      console.error("Failed to load free agents:", err);
+      setPlayers([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ✅ Updated to reload when conference changes
   useEffect(() => {
     if (!leagueInfo) return;
-
-    async function loadFreeAgents() {
-      setLoading(true);
-
-      try {
-        const res = await fetch(
-          `/api/mfl?action=freeAgents&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-        );
-
-        const data = await res.json();
-        setPlayers(data.players || []);
-      } catch (err) {
-        console.error("Failed to load free agents:", err);
-        setPlayers([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadFreeAgents();
-  }, [leagueInfo]);
+  }, [leagueInfo, conference]);
 
   // -----------------------------
   // FILTER + SEARCH + SORT
@@ -79,7 +81,6 @@ export default function FreeAgents({ leagueInfo }) {
       const res = await fetch(
         `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
       );
-
       const stats = await res.json();
 
       setSelectedPlayer({
@@ -100,14 +101,14 @@ export default function FreeAgents({ leagueInfo }) {
   const closePlayer = () => setSelectedPlayer(null);
 
   // -----------------------------
-  // ADD PLAYER (WILL BE LOCKED PRESEASON)
+  // ADD PLAYER (LOCKED PRESEASON)
   // -----------------------------
   const handleAdd = async (playerId) => {
     alert("Players are locked until the season starts.");
   };
 
   // -----------------------------
-  // WAIVER CLAIM (ALSO LOCKED PRESEASON)
+  // WAIVER CLAIM (LOCKED PRESEASON)
   // -----------------------------
   const handleWaiver = async (playerId) => {
     alert("Waiver claims are unavailable until the season starts.");
@@ -119,6 +120,22 @@ export default function FreeAgents({ leagueInfo }) {
   return (
     <div className="free-agents-page">
       <h2>Free Agents</h2>
+
+      {/* ✅ Added conference toggle UI */}
+      <div className="conference-toggle">
+        <button
+          className={conference === "CONFERENCE00" ? "active" : ""}
+          onClick={() => setConference("CONFERENCE00")}
+        >
+          Conference 00
+        </button>
+        <button
+          className={conference === "CONFERENCE01" ? "active" : ""}
+          onClick={() => setConference("CONFERENCE01")}
+        >
+          Conference 01
+        </button>
+      </div>
 
       <div className="fa-controls">
         <SearchBar value={search} onChange={setSearch} />
@@ -151,4 +168,5 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
+
 
