@@ -77,21 +77,53 @@ function MainApp() {
 
         {isLoggedIn && leagueInfo && (
           <>
-            {page === "standings" && <Standings leagueInfo={leagueInfo} />}
-            {page === "roster" && <Roster leagueInfo={leagueInfo} />}
-            {page === "matchups" && <Matchups leagueInfo={leagueInfo} />}
-            {page === "freeagents" && <FreeAgents leagueInfo={leagueInfo} />}
-            {page === "playerstats" && <PlayerStats leagueInfo={leagueInfo} />}
-            {page === "transactions" && <Transactions leagueInfo={leagueInfo} />}
-            {page === "draft" && <DraftResults leagueInfo={leagueInfo} />}
-            {page === "messages" && <MessageBoard leagueInfo={leagueInfo} />}
-            {page === "schedule" && <Schedule leagueInfo={leagueInfo} />}
-            {page === "playoffs" && <PlayoffBracket leagueInfo={leagueInfo} />}
-            {page === "live" && <LiveScoring leagueInfo={leagueInfo} />}
+            {/* ⭐ Pages stay mounted — only visibility changes */}
+            <div style={{ display: page === "standings" ? "block" : "none" }}>
+              <Standings leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "roster" ? "block" : "none" }}>
+              <Roster leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "matchups" ? "block" : "none" }}>
+              <Matchups leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "freeagents" ? "block" : "none" }}>
+              <FreeAgents leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "playerstats" ? "block" : "none" }}>
+              <PlayerStats leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "transactions" ? "block" : "none" }}>
+              <Transactions leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "draft" ? "block" : "none" }}>
+              <DraftResults leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "messages" ? "block" : "none" }}>
+              <MessageBoard leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "schedule" ? "block" : "none" }}>
+              <Schedule leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "playoffs" ? "block" : "none" }}>
+              <PlayoffBracket leagueInfo={leagueInfo} />
+            </div>
+
+            <div style={{ display: page === "live" ? "block" : "none" }}>
+              <LiveScoring leagueInfo={leagueInfo} />
+            </div>
           </>
         )}
       </div>
     </>
   );
 }
-
