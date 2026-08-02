@@ -5,10 +5,14 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
   const isLocked = player.status === "locked";
 
   return (
-    <div
-      className={`player-card ${isLocked ? "locked" : ""}`}
-      onClick={() => onOpen(player)}
-    >
+      <div
+        className={`player-card ${isLocked ? "locked" : ""}`}
+        onClick={() => {
+          console.log("CARD CLICKED");
+          onOpen(player);
+        }}
+      >
+
       {/* Small always-visible lock icon */}
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
