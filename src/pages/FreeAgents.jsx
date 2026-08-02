@@ -19,7 +19,7 @@ export default function FreeAgents({ leagueInfo }) {
   const [conference, setConference] = useState("CONFERENCE00");
 
   // -----------------------------
-  // LOAD FREE AGENTS (PRESEASON SAFE)
+  // LOAD FREE AGENTS
   // -----------------------------
   async function loadFreeAgents() {
     if (!leagueInfo) return;
@@ -30,7 +30,8 @@ export default function FreeAgents({ leagueInfo }) {
         `/api/mfl?action=freeAgents&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
       );
       const data = await res.json();
-      // ✅ Updated to use conference-specific data
+
+      // Load only selected conference
       setPlayers(data.conferences[conference] || []);
     } catch (err) {
       console.error("Failed to load free agents:", err);
@@ -40,7 +41,7 @@ export default function FreeAgents({ leagueInfo }) {
     }
   }
 
-  // ✅ Updated to reload when conference changes
+  // Reload when conference changes
   useEffect(() => {
     if (!leagueInfo) return;
     loadFreeAgents();
@@ -52,15 +53,24 @@ export default function FreeAgents({ leagueInfo }) {
   useEffect(() => {
     let list = [...players];
 
+    // Position filtering with DL/DB mapping
     if (position !== "ALL") {
-      list = list.filter((p) => p.pos === position);
+      if (position === "DL") {
+        list = list.filter((p) => ["DE", "DT"].includes(p.pos));
+      } else if (position === "DB") {
+        list = list.filter((p) => ["CB", "S"].includes(p.pos));
+      } else {
+        list = list.filter((p) => p.pos === position);
+      }
     }
 
+    // Search
     if (search.trim() !== "") {
       const s = search.toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(s));
     }
 
+    // Sorting
     list.sort((a, b) => {
       if (sortBy === "rank") return (a.rank || 9999) - (b.rank || 9999);
       if (sortBy === "avg") return (b.avg || 0) - (a.avg || 0);
@@ -72,7 +82,7 @@ export default function FreeAgents({ leagueInfo }) {
   }, [players, search, position, sortBy]);
 
   // -----------------------------
-  // PLAYER MODAL: LOAD STATS
+  // PLAYER MODAL
   // -----------------------------
   const openPlayer = async (player) => {
     setSelectedPlayer({ loading: true });
@@ -101,18 +111,10 @@ export default function FreeAgents({ leagueInfo }) {
   const closePlayer = () => setSelectedPlayer(null);
 
   // -----------------------------
-  // ADD PLAYER (LOCKED PRESEASON)
+  // ADD / WAIVER (LOCKED)
   // -----------------------------
-  const handleAdd = async (playerId) => {
-    alert("Players are locked until the season starts.");
-  };
-
-  // -----------------------------
-  // WAIVER CLAIM (LOCKED PRESEASON)
-  // -----------------------------
-  const handleWaiver = async (playerId) => {
-    alert("Waiver claims are unavailable until the season starts.");
-  };
+  const handleAdd = () => alert("Players are locked until the season starts.");
+  const handleWaiver = () => alert("Waiver claims are unavailable until the season starts.");
 
   // -----------------------------
   // RENDER
@@ -121,7 +123,7 @@ export default function FreeAgents({ leagueInfo }) {
     <div className="free-agents-page">
       <h2>Free Agents</h2>
 
-      {/* ✅ Added conference toggle UI */}
+      {/* Conference Toggle */}
       <div className="conference-filter">
         <button
           className={`fa-btn ${conference === "CONFERENCE00" ? "active" : ""}`}
@@ -142,7 +144,6 @@ export default function FreeAgents({ leagueInfo }) {
         <SearchBar value={search} onChange={setSearch} />
 
         <div className="fa-controls-right">
-          <conference-filter />
           <PositionFilter value={position} onChange={setPosition} />
           <SortDropdown value={sortBy} onChange={setSortBy} />
         </div>
@@ -173,5 +174,3 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
-
-
