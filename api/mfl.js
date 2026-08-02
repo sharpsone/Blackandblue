@@ -24,14 +24,16 @@ export default async function handler(req, res) {
 
     // --- helper: call MFL ---
     async function callMFL(url) {
+      console.log("CALLING MFL:", url);
       const resp = await fetch(url);
-      if (!resp.ok) {
-        throw new Error(`MFL error: ${resp.status} ${resp.statusText}`);
-      }
       const text = await resp.text();
+
       try {
-        return JSON.parse(text);
+        const json = JSON.parse(text);
+        console.log("MFL RESPONSE:", JSON.stringify(json).slice(0, 500));
+        return json;
       } catch (e) {
+        console.log("RAW MFL TEXT:", text.slice(0, 500));
         throw new Error("Failed to parse MFL JSON");
       }
     }
@@ -56,8 +58,6 @@ export default async function handler(req, res) {
       console.log("PLAYERS URL:", playersUrl);
 
       const playersData = await callMFL(playersUrl);
-      console.log("RAW PLAYERS RESPONSE:", JSON.stringify(playersData, null, 2));
-
       const allPlayers = playersData?.players?.player || [];
       console.log("TOTAL PLAYERS:", allPlayers.length);
 
@@ -68,7 +68,6 @@ export default async function handler(req, res) {
       console.log("FREE AGENTS URL:", faUrl);
 
       const faData = await callMFL(faUrl);
-      console.log("RAW FREE AGENTS RESPONSE:", JSON.stringify(faData, null, 2));
 
       const units = faData?.freeAgents?.leagueUnit || [];
       const faPlayers = [];
@@ -79,7 +78,7 @@ export default async function handler(req, res) {
         }
       }
 
-      console.log("FREE AGENT IDS:", faPlayers.slice(0, 10));
+      console.log("FREE AGENT IDS SAMPLE:", faPlayers.slice(0, 10));
       console.log("TOTAL FREE AGENTS:", faPlayers.length);
 
       // ---------------------------------------------------------
