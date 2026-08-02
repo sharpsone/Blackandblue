@@ -104,7 +104,7 @@ export default function FreeAgents({ leagueInfo }) {
 const openPlayer = async (player) => {
   console.log("[openPlayer] clicked player:", player);
 
-  setSelectedPlayer({ loading: true });
+  setSelectedPlayer({ ...player, loading: true });
 
   try {
     // Fetch stats

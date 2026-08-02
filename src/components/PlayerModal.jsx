@@ -12,7 +12,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
   const isLocked = player.status === "locked";
 
   const news = player.news || null;
-  const weekly = player.stats?.weekly || [];
+  const weekly = Array.isArray(player.stats?.weekly) ? player.stats.weekly : [];
   const season = player.stats?.season || null;
   const projections = player.stats?.projections || null;
   const profile = player.stats?.profile || null;
