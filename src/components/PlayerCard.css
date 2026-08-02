@@ -127,17 +127,17 @@
 }
 
 /* Dim card slightly when locked */
-.player-card.locked {
+.fa-card.locked {
   opacity: 0.75;
   position: relative;
 }
 
-/* Disable buttons visually */
-.player-card.locked .add-btn,
-.player-card.locked .waiver-btn {
+.fa-card.locked .fa-btn.add,
+.fa-card.locked .fa-btn.waiver {
   cursor: not-allowed;
   opacity: 0.4;
 }
+
 
 .lock-icon {
   position: absolute;

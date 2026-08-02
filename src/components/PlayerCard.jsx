@@ -5,7 +5,8 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
   const isLocked = player.status === "locked";
 
   return (
-    <div className={`player-card ${isLocked ? "locked" : ""}`}>
+    <div className={`fa-card ${isLocked ? "locked" : ""}`}>
+
       
       {/* Always-visible small lock icon */}
       {isLocked && (
