@@ -5,19 +5,19 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
   const isLocked = player.status === "locked";
 
   return (
-      <div
-        className={`player-card ${isLocked ? "locked" : ""}`}
-        onClick={() => {
-          console.log("CARD CLICKED");
-          console.log("selectedPlayer BEFORE:", selectedPlayer);
-          openPlayer(player);
-          setTimeout(() => {
-            console.log("selectedPlayer AFTER:", selectedPlayer);
-          }, 500);
-        }}
-      >
-
-      {/* Small always-visible lock icon */}
+    <div
+      className={`player-card ${isLocked ? "locked" : ""}`}
+      onClick={() => {
+        console.log("[PlayerCard] CARD CLICKED:", {
+          id: player.id,
+          name: player.name,
+          pos: player.pos,
+          team: player.team,
+          status: player.status,
+        });
+        onOpen(player);
+      }}
+    >
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
           🔒
@@ -70,5 +70,3 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
     </div>
   );
 }
-
-
