@@ -31,7 +31,13 @@ export default function FreeAgents({ leagueInfo }) {
       );
       const data = await res.json();
 
-      setPlayers(data.conferences[conference] || []);
+      // ⭐ Attach news if MFL provides it in freeAgents response
+      const list = (data.conferences[conference] || []).map((p) => ({
+        ...p,
+        news: p.news || null,
+      }));
+
+      setPlayers(list);
     } catch (err) {
       console.error("Failed to load free agents:", err);
       setPlayers([]);
@@ -86,7 +92,7 @@ export default function FreeAgents({ leagueInfo }) {
     Object.values(grouped).forEach((group) => {
       group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
       group.forEach((p, i) => {
-        p.posRank = i + 1; // ⭐ Add position rank
+        p.posRank = i + 1;
       });
     });
 
@@ -96,7 +102,7 @@ export default function FreeAgents({ leagueInfo }) {
   // -----------------------------
   // PLAYER MODAL
   // -----------------------------
-    const openPlayer = async (player) => {
+  const openPlayer = async (player) => {
     console.log("[openPlayer] clicked player:", player);
 
     setSelectedPlayer({ loading: true });
@@ -116,9 +122,8 @@ export default function FreeAgents({ leagueInfo }) {
       const newsData = await newsRes.json();
       console.log("[openPlayer] fetched news:", newsData);
 
-      // Extract first news item (if any)
       const newsText =
-        newsData?.news?.length > 0 ? newsData.news[0].headline : null;
+        newsData?.news?.length > 0 ? newsData.news[0].headline : player.news || null;
 
       setSelectedPlayer({
         ...player,
@@ -139,7 +144,7 @@ export default function FreeAgents({ leagueInfo }) {
       setSelectedPlayer({
         ...player,
         stats: [],
-        news: null,
+        news: player.news || null,
         loading: false,
       });
     }
@@ -201,7 +206,6 @@ export default function FreeAgents({ leagueInfo }) {
           ))}
       </div>
 
-      {/* Modal stays mounted */}
       <PlayerModal
         player={selectedPlayer}
         onClose={closePlayer}
@@ -211,4 +215,5 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
+
 
