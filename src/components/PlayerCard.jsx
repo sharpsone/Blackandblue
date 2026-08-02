@@ -6,10 +6,11 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
 
   return (
     <div className={`player-card ${isLocked ? "locked" : ""}`}>
-      {/* Lock Badge */}
+      
+      {/* Small lock icon with tooltip */}
       {isLocked && (
-        <div className="lock-badge">
-          🔒 Locked
+        <div className="lock-icon" title="Locked until F/A opens">
+          🔒
         </div>
       )}
 

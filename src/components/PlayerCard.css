@@ -115,24 +115,19 @@
   box-shadow: none;
 }
 
-/* Dim the card when locked */
-.player-card.locked {
-  opacity: 0.55;
-  position: relative;
-}
-
-/* Lock badge */
-.lock-badge {
+/* Small lock icon */
+.lock-icon {
   position: absolute;
   top: 6px;
   right: 6px;
-  background: #ff4d4d;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: bold;
-  z-index: 5;
+  font-size: 16px;
+  opacity: 0.85;
+  cursor: default;
+}
+
+/* Dim card slightly when locked */
+.player-card.locked {
+  opacity: 0.75;
 }
 
 /* Disable buttons visually */
