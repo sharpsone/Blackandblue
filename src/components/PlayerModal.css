@@ -131,3 +131,42 @@
 .fa-btn.close {
   background: #444;
 }
+
+/* OVERRIDE GLOBAL CENTERING */
+.modal * {
+  text-align: left !important;
+}
+
+/* FIX WIDTH */
+.modal {
+  width: 540px !important;
+  max-width: 90vw;
+}
+
+/* FIX STATS GRID */
+.fa-modal-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+}
+
+/* FIX SECTION TITLES */
+.fa-section-title {
+  text-align: left !important;
+}
+
+/* FIX NEWS BOX */
+.fa-news-box {
+  text-align: left !important;
+}
+
+/* FIX WEEKLY LIST */
+.fa-weekly-list li {
+  text-align: left !important;
+}
+
+/* FIX BUTTON ROW */
+.fa-modal-buttons {
+  display: flex !important;
+  justify-content: space-between !important;
+}
