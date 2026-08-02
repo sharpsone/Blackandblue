@@ -31,7 +31,6 @@ export default function FreeAgents({ leagueInfo }) {
       );
       const data = await res.json();
 
-      // Load only selected conference
       setPlayers(data.conferences[conference] || []);
     } catch (err) {
       console.error("Failed to load free agents:", err);
@@ -41,7 +40,6 @@ export default function FreeAgents({ leagueInfo }) {
     }
   }
 
-  // Reload when conference changes
   useEffect(() => {
     if (!leagueInfo) return;
     loadFreeAgents();
@@ -53,7 +51,6 @@ export default function FreeAgents({ leagueInfo }) {
   useEffect(() => {
     let list = [...players];
 
-    // Position filtering with DL/DB mapping
     if (position !== "ALL") {
       if (position === "DL") {
         list = list.filter((p) => ["DE", "DT"].includes(p.pos));
@@ -64,13 +61,11 @@ export default function FreeAgents({ leagueInfo }) {
       }
     }
 
-    // Search
     if (search.trim() !== "") {
       const s = search.toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(s));
     }
 
-    // Sorting
     list.sort((a, b) => {
       if (sortBy === "rank") return (a.rank || 9999) - (b.rank || 9999);
       if (sortBy === "avg") return (b.avg || 0) - (a.avg || 0);
@@ -123,7 +118,6 @@ export default function FreeAgents({ leagueInfo }) {
     <div className="free-agents-page">
       <h2>Free Agents</h2>
 
-      {/* Conference Toggle */}
       <div className="conference-filter">
         <button
           className={`fa-btn ${conference === "CONFERENCE00" ? "active" : ""}`}
@@ -151,9 +145,9 @@ export default function FreeAgents({ leagueInfo }) {
 
       {loading && <div className="loading">Loading free agents...</div>}
 
-      {!loading && (
-        <div className="fa-player-list">
-          {filtered.map((p) => (
+      <div className="fa-player-list">
+        {!loading &&
+          filtered.map((p) => (
             <PlayerCard
               key={p.id}
               player={p}
@@ -162,9 +156,9 @@ export default function FreeAgents({ leagueInfo }) {
               onWaiver={handleWaiver}
             />
           ))}
-        </div>
-      )}
+      </div>
 
+      {/* ⭐ Modal stays mounted ALWAYS */}
       <PlayerModal
         player={selectedPlayer}
         onClose={closePlayer}
@@ -174,3 +168,4 @@ export default function FreeAgents({ leagueInfo }) {
     </div>
   );
 }
+
