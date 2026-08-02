@@ -91,19 +91,28 @@ export default async function handler(req, res) {
       // 4. Merge freeAgents + players + stats
       // ---------------------------------------------------------
       const results = faPlayers.map(fa => {
-        const p = allPlayers.find(x => x.id === fa.id);
-        const s = statsList.find(x => x.id === fa.id);
+      const p = allPlayers.find(x => x.id === fa.id);
+      const s = statsList.find(x => x.id === fa.id);
 
-        return {
-          id: fa.id,
-          name: p?.name || "Unknown",
-          position: p?.position || "UNK",
-          team: p?.team || "",
-          status: fa.status || "locked",
-          rank: s?.rank || "--",
-          avg: s?.avg || "--",
-        };
-      });
+      const rank = Number(s?.rank) || 9999;
+      const avg = Number(s?.score) || 0;   // projectedScores uses "score"
+
+      return {
+        id: fa.id,
+        name: p?.name || "Unknown",
+
+        // FIX: return BOTH fields
+        position: p?.position || "UNK",
+        pos: p?.position || "UNK",
+
+        team: p?.team || "",
+        status: fa.status || "locked",
+
+        // FIX: numeric values
+        rank,
+        avg,
+      };
+    });
 
       console.log("MERGED FREE AGENTS:", results.length);
 
