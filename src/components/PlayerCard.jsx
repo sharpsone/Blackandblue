@@ -7,7 +7,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
   return (
     <div className={`player-card ${isLocked ? "locked" : ""}`}>
       
-      {/* Small lock icon with tooltip */}
+      {/* Always-visible small lock icon */}
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
           🔒
@@ -48,3 +48,4 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
     </div>
   );
 }
+

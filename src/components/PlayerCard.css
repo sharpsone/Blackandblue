@@ -115,19 +115,21 @@
   box-shadow: none;
 }
 
-/* Small lock icon */
+/* Small lock icon always visible */
 .lock-icon {
   position: absolute;
   top: 6px;
   right: 6px;
   font-size: 16px;
-  opacity: 0.85;
+  opacity: 0.9;
   cursor: default;
+  z-index: 5;
 }
 
 /* Dim card slightly when locked */
 .player-card.locked {
   opacity: 0.75;
+  position: relative;
 }
 
 /* Disable buttons visually */
