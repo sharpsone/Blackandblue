@@ -138,3 +138,16 @@
   cursor: not-allowed;
   opacity: 0.4;
 }
+
+.lock-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 16px;
+  opacity: 0.9;
+  cursor: default;
+  z-index: 5;
+
+  /* ⭐ Critical fix: allow clicks to pass through */
+  pointer-events: none;
+}
