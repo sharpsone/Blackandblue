@@ -29,18 +29,19 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
         <div className="modal-stats">
           <div>
-            <strong>RANK</strong>
+            <strong>RANK (Overall)</strong>
             <div>{player.rank}</div>
+          </div>
+          <div>
+            <strong>RANK (Position)</strong>
+            <div>{player.posRank}</div>
           </div>
           <div>
             <strong>AVG</strong>
             <div>{player.avg}</div>
           </div>
-          <div>
-            <strong>LAST 3</strong>
-            <div>{player.last3 || "—"}</div>
-          </div>
         </div>
+
 
         <h3>Weekly Points</h3>
 
