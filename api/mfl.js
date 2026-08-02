@@ -34,8 +34,8 @@ export default async function handler(req, res) {
       }
     }
 
- // -----------------------------
-// ACTION: freeAgents (final version)
+// -----------------------------
+// ACTION: freeAgents (final version using playerStats)
 // -----------------------------
 if (action === "freeAgents") {
   const apiKey = process.env.MFL_API_KEY;
@@ -56,23 +56,15 @@ if (action === "freeAgents") {
   console.log("TOTAL PLAYERS:", allPlayers.length);
 
   // ---------------------------------------------------------
-  // 2. Get ALL ranks (no POS → returns all players)
+  // 2. Get ALL player stats (rank, avg, points)
   // ---------------------------------------------------------
-  const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=8&JSON=1`;
-  const ranksData = await callMFL(ranksUrl);
-  const ranksList = ranksData?.player_ranks?.player || [];
-  console.log("TOTAL RANKS:", ranksList.length);
+  const statsUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerStats&L=${leagueId}&W=0&JSON=1`;
+  const statsData = await callMFL(statsUrl);
+  const statsList = statsData?.playerStats?.player || [];
+  console.log("TOTAL STATS:", statsList.length);
 
   // ---------------------------------------------------------
-  // 3. Get ALL projected scores (avg)
-  // ---------------------------------------------------------
-  const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&W=1&JSON=1`;
-  const projData = await callMFL(projUrl);
-  const projList = projData?.projectedScores?.playerScore || [];
-  console.log("TOTAL PROJECTIONS:", projList.length);
-
-  // ---------------------------------------------------------
-  // 4. Get free agent IDs
+  // 3. Get free agent IDs
   // ---------------------------------------------------------
   const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
   const faData = await callMFL(faUrl);
@@ -89,27 +81,26 @@ if (action === "freeAgents") {
   console.log("TOTAL FREE AGENTS:", faPlayers.length);
 
   // ---------------------------------------------------------
-  // 5. Merge everything
+  // 4. Merge everything
   // ---------------------------------------------------------
   const results = faPlayers.map(fa => {
     const p = allPlayers.find(x => x.id === fa.id);
-    const r = ranksList.find(x => x.id === fa.id);
-    const s = projList.find(x => x.id === fa.id);
+    const s = statsList.find(x => x.id === fa.id);
 
     return {
       id: fa.id,
       name: p?.name || "Unknown",
 
-      // FIX: return BOTH fields
+      // return BOTH fields for frontend compatibility
       position: p?.position || "UNK",
       pos: p?.position || "UNK",
 
       team: p?.team || "",
       status: fa.status || "locked",
 
-      // FIX: numeric rank + avg
-      rank: Number(r?.rank) || 9999,
-      avg: Number(s?.score) || 0,
+      // numeric rank + avg
+      rank: Number(s?.rank) || 9999,
+      avg: Number(s?.avg) || 0,
     };
   });
 
