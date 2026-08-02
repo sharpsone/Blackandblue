@@ -31,7 +31,7 @@ export default function FreeAgents({ leagueInfo }) {
       );
       const data = await res.json();
 
-      // ⭐ Attach news if MFL provides it in freeAgents response
+      // Simple list, no external news, no grouped stats
       const list = (data.conferences[conference] || []).map((p) => ({
         ...p,
         news: p.news || null,
@@ -99,65 +99,22 @@ export default function FreeAgents({ leagueInfo }) {
     setFiltered(list);
   }, [players, search, position, sortBy]);
 
-//Player modal open/close  
-// -----------------------------
-const openPlayer = async (player) => {
-  console.log("[openPlayer] clicked player:", player);
+  // -----------------------------
+  // PLAYER MODAL OPEN/CLOSE (NO STATS/NEWS FETCH)
+  // -----------------------------
+  const openPlayer = (player) => {
+    console.log("[openPlayer] clicked player:", player);
 
-  setSelectedPlayer({ ...player, loading: true });
-
-  try {
-    // Fetch stats
-    const statsRes = await fetch(
-      `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-    );
-    const stats = await statsRes.json();
-    console.log("[openPlayer] fetched stats:", stats);
-
-    // Fetch external news (Sleeper + FantasyPros)
-    const newsRes = await fetch(
-      `/api/mfl?action=playerExternalNews&name=${encodeURIComponent(
-        player.name
-      )}&team=${encodeURIComponent(player.team || "")}`
-    );
-    const newsData = await newsRes.json();
-    console.log("[openPlayer] fetched external news:", newsData);
-
-    // Pick the best news item
-    let newsText = null;
-
-    if (newsData?.news?.length > 0) {
-      const item = newsData.news[0];
-
-      // Prefer headline, fallback to body
-      newsText = item.headline || item.body || null;
-    }
-
+    // Just pass the player through; no async, no stats, no external news
     setSelectedPlayer({
       ...player,
-      stats, // keep stats grouped
-      news: newsText,
       loading: false,
     });
+  };
 
-    console.log("[openPlayer] merged player:", {
-      ...player,
-      stats,
-      news: newsText,
-      loading: false,
-    });
-  } catch (err) {
-    console.error("[openPlayer] Failed:", err);
-
-    setSelectedPlayer({
-      ...player,
-      stats: null,
-      news: null,
-      loading: false,
-    });
-  }
-};
-
+  const closePlayer = () => {
+    setSelectedPlayer(null);
+  };
 
   // -----------------------------
   // ADD / WAIVER (LOCKED)
@@ -222,5 +179,3 @@ const openPlayer = async (player) => {
     </div>
   );
 }
-
-
