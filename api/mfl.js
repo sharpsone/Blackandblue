@@ -34,55 +34,64 @@ export default async function handler(req, res) {
       }
     }
 
-    // -----------------------------
-    // FREE AGENTS (conference separated)
-    // -----------------------------
-    if (action === "freeAgents") {
-      const apiKey = process.env.MFL_API_KEY;
+// FREE AGENTS (conference separated)
+if (action === "freeAgents") {
+  const apiKey = process.env.MFL_API_KEY;
 
-      const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
-      const playersData = await callMFL(playersUrl);
-      const allPlayers = playersData?.players?.player || [];
+  if (!apiKey) {
+    return res.status(500).json({
+      error: "Missing MFL_API_KEY",
+      detail: "Private leagues require an API key."
+    });
+  }
 
-      const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
-      const ranksData = await callMFL(ranksUrl);
-      const ranksList = ranksData?.player_ranks?.player || [];
+  const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
+  const playersData = await callMFL(playersUrl);
+  const allPlayers = playersData?.players?.player || [];
 
-      const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
-      const projData = await callMFL(projUrl);
-      const projList = projData?.projectedScores?.playerScore || [];
+  const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
+  const ranksData = await callMFL(ranksUrl);
+  const ranksList = ranksData?.player_ranks?.player || [];
 
-      const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
-      const faData = await callMFL(faUrl);
+  const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
+  const projData = await callMFL(projUrl);
+  const projList = projData?.projectedScores?.playerScore || [];
 
-      const units = faData?.freeAgents?.leagueUnit || [];
-      const conferencePools = {};
+  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+  const faData = await callMFL(faUrl);
 
-      for (const unit of units) {
-        const unitName = unit.unit || "UNKNOWN";
-        const players = unit.player || [];
+  const units = faData?.freeAgents?.leagueUnit || [];
+  const conferencePools = {};
 
-        conferencePools[unitName] = players.map(fa => {
-          const p = allPlayers.find(x => x.id === fa.id);
-          const r = ranksList.find(x => x.id === fa.id);
-          const s = projList.find(x => x.id === fa.id);
+  for (const unit of units) {
+    let unitName = unit.unit || "UNKNOWN";
 
-          return {
-            id: fa.id,
-            name: p?.name || "Unknown",
-            pos: p?.position || "UNK",
-            team: p?.team || "",
-            status: fa.status || "locked",
-            rank: Number(r?.rank) || 9999,
-            avg: Number(s?.score) || 0,
-            news: fa.news || null
-          };
-        });
-      }
+    // Normalize to UI expected keys
+    if (unitName === "00" || unitName === "Black Conference") unitName = "CONFERENCE00";
+    if (unitName === "01" || unitName === "Blue Conference") unitName = "CONFERENCE01";
 
-      return res.status(200).json({ conferences: conferencePools });
-    }
+    const players = unit.player || [];
 
+    conferencePools[unitName] = players.map(fa => {
+      const p = allPlayers.find(x => x.id === fa.id);
+      const r = ranksList.find(x => x.id === fa.id);
+      const s = projList.find(x => x.id === fa.id);
+
+      return {
+        id: fa.id,
+        name: p?.name || "Unknown",
+        pos: p?.position || "UNK",
+        team: p?.team || "",
+        status: fa.status || "locked",
+        rank: Number(r?.rank) || 9999,
+        avg: Number(s?.score) || 0,
+        news: fa.news || null
+      };
+    });
+  }
+
+  return res.status(200).json({ conferences: conferencePools });
+}
     // -----------------------------
     // PLAYER NEWS (MFL ONLY)
     // -----------------------------
