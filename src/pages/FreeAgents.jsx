@@ -99,58 +99,65 @@ export default function FreeAgents({ leagueInfo }) {
     setFiltered(list);
   }, [players, search, position, sortBy]);
 
-  // -----------------------------
-  // PLAYER MODAL
-  // -----------------------------
-  const openPlayer = async (player) => {
-    console.log("[openPlayer] clicked player:", player);
+//Player modal open/close  
+// -----------------------------
+const openPlayer = async (player) => {
+  console.log("[openPlayer] clicked player:", player);
 
-    setSelectedPlayer({ loading: true });
+  setSelectedPlayer({ loading: true });
 
-    try {
-      // Fetch stats
-      const statsRes = await fetch(
-        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-      const stats = await statsRes.json();
-      console.log("[openPlayer] fetched stats:", stats);
+  try {
+    // Fetch stats
+    const statsRes = await fetch(
+      `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+    );
+    const stats = await statsRes.json();
+    console.log("[openPlayer] fetched stats:", stats);
 
-      // Fetch news
-      const newsRes = await fetch(
-        `/api/mfl?action=playerNews&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-      const newsData = await newsRes.json();
-      console.log("[openPlayer] fetched news:", newsData);
+    // Fetch external news (Sleeper + FantasyPros)
+    const newsRes = await fetch(
+      `/api/mfl?action=playerExternalNews&name=${encodeURIComponent(
+        player.name
+      )}&team=${encodeURIComponent(player.team || "")}`
+    );
+    const newsData = await newsRes.json();
+    console.log("[openPlayer] fetched external news:", newsData);
 
-      const newsText =
-        newsData?.news?.length > 0 ? newsData.news[0].headline : player.news || null;
+    // Pick the best news item
+    let newsText = null;
 
-      setSelectedPlayer({
-        ...player,
-        ...stats,
-        news: newsText,
-        loading: false,
-      });
+    if (newsData?.news?.length > 0) {
+      const item = newsData.news[0];
 
-      console.log("[openPlayer] merged player:", {
-        ...player,
-        ...stats,
-        news: newsText,
-        loading: false,
-      });
-    } catch (err) {
-      console.error("[openPlayer] Failed:", err);
-
-      setSelectedPlayer({
-        ...player,
-        stats: [],
-        news: player.news || null,
-        loading: false,
-      });
+      // Prefer headline, fallback to body
+      newsText = item.headline || item.body || null;
     }
-  };
 
-  const closePlayer = () => setSelectedPlayer(null);
+    setSelectedPlayer({
+      ...player,
+      stats, // keep stats grouped
+      news: newsText,
+      loading: false,
+    });
+
+    console.log("[openPlayer] merged player:", {
+      ...player,
+      stats,
+      news: newsText,
+      loading: false,
+    });
+  } catch (err) {
+    console.error("[openPlayer] Failed:", err);
+
+    setSelectedPlayer({
+      ...player,
+      stats: null,
+      news: null,
+      loading: false,
+    });
+  }
+};
+
 
   // -----------------------------
   // ADD / WAIVER (LOCKED)

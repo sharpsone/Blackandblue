@@ -11,8 +11,11 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
   const isLocked = player.status === "locked";
 
-  // Placeholder news until API is added
   const news = player.news || null;
+  const weekly = player.stats?.weekly || [];
+  const season = player.stats?.season || null;
+  const projections = player.stats?.projections || null;
+  const profile = player.stats?.profile || null;
 
   return (
     <div className="modal-overlay">
@@ -54,23 +57,57 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         {/* NEWS SECTION */}
         <div className="fa-section-title">Recent News</div>
         <div className="fa-news-box">
-          {player.news ? (
-            <div className="fa-news-text">{player.news}</div>
+          {news ? (
+            <>
+              <div className="fa-news-text">{news}</div>
+              {player.newsSource && (
+                <div className="fa-news-source">Source: {player.newsSource}</div>
+              )}
+            </>
           ) : (
             <div className="fa-news-none">No recent news available.</div>
           )}
         </div>
 
-
-        {/* WEEKLY POINTS HEADER */}
+        {/* WEEKLY POINTS */}
         <div className="fa-section-title">Weekly Points</div>
-
-        {/* WEEKLY LIST (placeholder until stats added) */}
         <ul className="fa-weekly-list">
-          {(player.weekly || []).map((w, i) => (
-            <li key={i}>{w}</li>
+          {weekly.map((w, i) => (
+            <li key={i}>
+              Week {w.week}: {w.score}
+            </li>
           ))}
         </ul>
+
+        {/* SEASON TOTALS */}
+        {season && (
+          <>
+            <div className="fa-section-title">Season Stats</div>
+            <pre className="fa-season-block">
+              {JSON.stringify(season, null, 2)}
+            </pre>
+          </>
+        )}
+
+        {/* PROJECTIONS */}
+        {projections && (
+          <>
+            <div className="fa-section-title">Projections</div>
+            <pre className="fa-proj-block">
+              {JSON.stringify(projections, null, 2)}
+            </pre>
+          </>
+        )}
+
+        {/* PROFILE */}
+        {profile && (
+          <>
+            <div className="fa-section-title">Player Profile</div>
+            <pre className="fa-profile-block">
+              {JSON.stringify(profile, null, 2)}
+            </pre>
+          </>
+        )}
 
         {/* BUTTONS */}
         <div className="fa-modal-buttons">

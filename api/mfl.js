@@ -233,6 +233,87 @@ export default async function handler(req, res) {
       });
     }
 
+// -----------------------------
+// ACTION: playerExternalNews (Sleeper + FantasyPros)
+// -----------------------------
+if (action === "playerExternalNews") {
+  const { name, team } = req.query;
+
+  if (!name) {
+    return res.status(400).json({ error: "Missing player name" });
+  }
+
+  // --- Build FantasyPros slug from MFL name: "Last, First"
+  let fantasyProsNews = null;
+  try {
+    const [lastRaw, firstRaw] = name.split(",");
+    const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const last = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const slug = `${first}-${last}`;
+    const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+
+    const fpResp = await fetch(fpUrl);
+    const fpHtml = await fpResp.text();
+
+    // Very simple headline scrape: grab first <h2> or <h3> text
+    const headlineMatch = fpHtml.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i);
+    const bodyMatch = fpHtml.match(/<p[^>]*>([^<]+)<\/p>/i);
+
+    if (headlineMatch) {
+      fantasyProsNews = {
+        source: "FantasyPros",
+        headline: headlineMatch[1].trim(),
+        body: bodyMatch ? bodyMatch[1].trim() : "",
+      };
+    }
+  } catch (e) {
+    console.log("FantasyPros scrape failed:", e.message);
+  }
+
+  // --- Sleeper news: filter last 4 weeks and match by name
+  let sleeperNews = null;
+  try {
+    const sleeperUrl = "https://api.sleeper.app/v1/news/nfl";
+    const sResp = await fetch(sleeperUrl);
+    const sJson = await sResp.json();
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const fourWeeksSec = 28 * 24 * 60 * 60;
+
+    const mflNameLower = name.toLowerCase();
+
+    const recent = sJson
+      .filter((item) => {
+        // created is epoch seconds
+        if (!item.created) return false;
+        const age = nowSec - item.created;
+        if (age > fourWeeksSec) return false;
+
+        const text = `${item.title || ""} ${item.body || ""}`.toLowerCase();
+        return text.includes(mflNameLower);
+      })
+      .sort((a, b) => b.created - a.created);
+
+    if (recent.length > 0) {
+      const n = recent[0];
+      sleeperNews = {
+        source: "Sleeper",
+        headline: n.title || "",
+        body: n.body || "",
+        date: n.created,
+      };
+    }
+  } catch (e) {
+    console.log("Sleeper news fetch failed:", e.message);
+  }
+
+  return res.status(200).json({
+    player: name,
+    team: team || null,
+    news: [fantasyProsNews, sleeperNews].filter(Boolean),
+  });
+}
+
     return res.status(400).json({ error: "Unknown action", action });
 
   } catch (err) {
