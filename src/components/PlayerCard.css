@@ -1,4 +1,4 @@
-.fa-card {
+.player-card {
   background: #15151f;
   border-radius: 14px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
@@ -6,12 +6,12 @@
   display: flex;
   align-items: stretch;
   position: relative;
-  overflow: visible; /* ⭐ CRITICAL FIX */
+  overflow: visible; /* IMPORTANT */
   border: 1px solid #26263a;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.fa-card::before {
+.player-card::before {
   content: "";
   width: 6px;
   background: linear-gradient(180deg, #a855f7, #7c3aed);
@@ -19,7 +19,7 @@
   margin-right: 10px;
 }
 
-.fa-card:hover {
+.player-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.75);
   border-color: #a855f7;
@@ -115,7 +115,7 @@
   box-shadow: none;
 }
 
-/* ⭐ Always-visible lock icon */
+/* Small lock icon */
 .lock-icon {
   position: absolute;
   top: 6px;
@@ -124,17 +124,17 @@
   opacity: 0.9;
   cursor: default;
   z-index: 10;
-  pointer-events: none; /* ⭐ CRITICAL */
+  pointer-events: none; /* CRITICAL */
 }
 
-/* Dim card slightly when locked */
-.fa-card.locked {
+/* Dim card when locked */
+.player-card.locked {
   opacity: 0.75;
 }
 
-/* Disable buttons visually when locked */
-.fa-card.locked .fa-btn.add,
-.fa-card.locked .fa-btn.waiver {
+/* Disable buttons when locked */
+.player-card.locked .fa-btn.add,
+.player-card.locked .fa-btn.waiver {
   cursor: not-allowed;
   opacity: 0.4;
 }

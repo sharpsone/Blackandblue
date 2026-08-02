@@ -4,16 +4,16 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
   const isLocked = player.status === "locked";
 
   return (
-    <div className={`fa-card ${isLocked ? "locked" : ""}`}>
+    <div className={`player-card ${isLocked ? "locked" : ""}`}>
       
-      {/* Always-visible small lock icon */}
+      {/* Small always-visible lock icon */}
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
           🔒
         </div>
       )}
 
-      {/* MAIN CLICK AREA — MUST BE FULL WIDTH */}
+      {/* Main clickable area */}
       <div className="fa-main" onClick={() => onOpen(player)}>
         <div className="fa-name">{player.name}</div>
 
@@ -34,7 +34,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         </div>
       </div>
 
-      {/* ACTION BUTTONS */}
+      {/* Action buttons */}
       <div className="fa-actions">
         <button
           className="fa-btn add"
@@ -55,4 +55,5 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
     </div>
   );
 }
+
 
