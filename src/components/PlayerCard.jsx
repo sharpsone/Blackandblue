@@ -4,17 +4,17 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
   const isLocked = player.status === "locked";
 
   return (
-    <div className={`player-card ${isLocked ? "locked" : ""}`}>
-      
-      {/* Small always-visible lock icon */}
+    <div
+      className={`player-card ${isLocked ? "locked" : ""}`}
+      onClick={() => onOpen(player)}
+    >
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
           🔒
         </div>
       )}
 
-      {/* Main clickable area */}
-      <div className="fa-main" onClick={() => onOpen(player)}>
+      <div className="fa-main">
         <div className="fa-name">{player.name}</div>
 
         <div className="fa-pos-team">
@@ -34,12 +34,14 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="fa-actions">
         <button
           className="fa-btn add"
           disabled={isLocked}
-          onClick={() => !isLocked && onAdd(player.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            !isLocked && onAdd(player.id);
+          }}
         >
           Add
         </button>
@@ -47,7 +49,10 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         <button
           className="fa-btn waiver"
           disabled={isLocked}
-          onClick={() => !isLocked && onWaiver(player.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            !isLocked && onWaiver(player.id);
+          }}
         >
           Waiver
         </button>
