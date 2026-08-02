@@ -34,14 +34,18 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
 
         <div className="fa-stats">
           <div className="fa-stat">
-            <label>Rank</label>
-            <span>{player.rank}</span>
+              <label>Rank</label>
+              <span>{player.rank}</span>
           </div>
           <div className="fa-stat">
-            <label>Avg</label>
-            <span>{player.avg}</span>
+              <label>Pos Rank</label>
+              <span>{player.posRank}</span>
           </div>
-        </div>
+          <div className="fa-stat">
+              <label>Avg</label>
+              <span>{player.avg}</span>
+          </div>
+          </div>
       </div>
 
       <div className="fa-actions">
