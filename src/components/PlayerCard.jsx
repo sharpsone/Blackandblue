@@ -6,8 +6,6 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
 
   return (
     <div className={`fa-card ${isLocked ? "locked" : ""}`}>
-
-      
       {/* Always-visible small lock icon */}
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
@@ -15,23 +13,31 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         </div>
       )}
 
-      <div className="player-main" onClick={() => onOpen(player)}>
-        <div className="player-name">{player.name}</div>
+      {/* Main clickable area opens modal */}
+      <div className="fa-main" onClick={() => onOpen(player)}>
+        <div className="fa-name">{player.name}</div>
 
-        <div className="player-meta">
-          <span className="player-pos">{player.pos}</span>
-          <span className="player-team">{player.team}</span>
+        <div className="fa-pos-team">
+          <span className="fa-pos">{player.pos}</span>
+          <span className="fa-team">{player.team}</span>
         </div>
 
-        <div className="player-stats">
-          <span className="player-rank">Rank {player.rank}</span>
-          <span className="player-avg">Avg {player.avg}</span>
+        <div className="fa-stats">
+          <div className="fa-stat">
+            <label>Rank</label>
+            <span>{player.rank}</span>
+          </div>
+          <div className="fa-stat">
+            <label>Avg</label>
+            <span>{player.avg}</span>
+          </div>
         </div>
       </div>
 
-      <div className="player-actions">
+      {/* Action buttons */}
+      <div className="fa-actions">
         <button
-          className="add-btn"
+          className="fa-btn add"
           disabled={isLocked}
           onClick={() => !isLocked && onAdd(player.id)}
         >
@@ -39,7 +45,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         </button>
 
         <button
-          className="waiver-btn"
+          className="fa-btn waiver"
           disabled={isLocked}
           onClick={() => !isLocked && onWaiver(player.id)}
         >
@@ -49,4 +55,3 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
     </div>
   );
 }
-

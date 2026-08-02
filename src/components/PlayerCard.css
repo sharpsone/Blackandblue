@@ -124,30 +124,17 @@
   opacity: 0.9;
   cursor: default;
   z-index: 5;
+  pointer-events: none; /* critical: don't block clicks */
 }
 
 /* Dim card slightly when locked */
 .fa-card.locked {
   opacity: 0.75;
-  position: relative;
 }
 
+/* Disable buttons visually when locked */
 .fa-card.locked .fa-btn.add,
 .fa-card.locked .fa-btn.waiver {
   cursor: not-allowed;
   opacity: 0.4;
-}
-
-
-.lock-icon {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  font-size: 16px;
-  opacity: 0.9;
-  cursor: default;
-  z-index: 5;
-
-  /* ⭐ Critical fix: allow clicks to pass through */
-  pointer-events: none;
 }
