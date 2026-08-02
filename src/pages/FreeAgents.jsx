@@ -46,11 +46,12 @@ export default function FreeAgents({ leagueInfo }) {
   }, [leagueInfo, conference]);
 
   // -----------------------------
-  // FILTER + SEARCH + SORT
+  // FILTER + SEARCH + SORT + POS RANK
   // -----------------------------
   useEffect(() => {
     let list = [...players];
 
+    // Position filtering with DL/DB mapping
     if (position !== "ALL") {
       if (position === "DL") {
         list = list.filter((p) => ["DE", "DT"].includes(p.pos));
@@ -61,16 +62,32 @@ export default function FreeAgents({ leagueInfo }) {
       }
     }
 
+    // Search
     if (search.trim() !== "") {
       const s = search.toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(s));
     }
 
+    // Sort by overall rank
     list.sort((a, b) => {
       if (sortBy === "rank") return (a.rank || 9999) - (b.rank || 9999);
       if (sortBy === "avg") return (b.avg || 0) - (a.avg || 0);
       if (sortBy === "name") return a.name.localeCompare(b.name);
       return 0;
+    });
+
+    // ⭐ Compute position rank
+    const grouped = {};
+    list.forEach((p) => {
+      if (!grouped[p.pos]) grouped[p.pos] = [];
+      grouped[p.pos].push(p);
+    });
+
+    Object.values(grouped).forEach((group) => {
+      group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
+      group.forEach((p, i) => {
+        p.posRank = i + 1; // ⭐ Add position rank
+      });
     });
 
     setFiltered(list);
@@ -79,45 +96,43 @@ export default function FreeAgents({ leagueInfo }) {
   // -----------------------------
   // PLAYER MODAL
   // -----------------------------
-  // PLAYER MODAL
-const openPlayer = async (player) => {
-  console.log("[openPlayer] clicked player:", player);
+  const openPlayer = async (player) => {
+    console.log("[openPlayer] clicked player:", player);
 
-  setSelectedPlayer({ loading: true });
-  console.log("[openPlayer] selectedPlayer set to loading");
+    setSelectedPlayer({ loading: true });
+    console.log("[openPlayer] selectedPlayer set to loading");
 
-  try {
-    const res = await fetch(
-      `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-    );
-    const stats = await res.json();
-    console.log("[openPlayer] fetched stats:", stats);
+    try {
+      const res = await fetch(
+        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
+      const stats = await res.json();
+      console.log("[openPlayer] fetched stats:", stats);
 
-    setSelectedPlayer({
-      ...player,
-      ...stats,
-      loading: false,
-    });
-    console.log("[openPlayer] selectedPlayer after merge:", {
-      ...player,
-      ...stats,
-      loading: false,
-    });
-  } catch (err) {
-    console.error("[openPlayer] Failed to load player stats:", err);
-    setSelectedPlayer({
-      ...player,
-      stats: [],
-      loading: false,
-    });
-    console.log("[openPlayer] selectedPlayer after error:", {
-      ...player,
-      stats: [],
-      loading: false,
-    });
-  }
-};
-
+      setSelectedPlayer({
+        ...player,
+        ...stats,
+        loading: false,
+      });
+      console.log("[openPlayer] selectedPlayer after merge:", {
+        ...player,
+        ...stats,
+        loading: false,
+      });
+    } catch (err) {
+      console.error("[openPlayer] Failed to load player stats:", err);
+      setSelectedPlayer({
+        ...player,
+        stats: [],
+        loading: false,
+      });
+      console.log("[openPlayer] selectedPlayer after error:", {
+        ...player,
+        stats: [],
+        loading: false,
+      });
+    }
+  };
 
   const closePlayer = () => setSelectedPlayer(null);
 
@@ -125,7 +140,8 @@ const openPlayer = async (player) => {
   // ADD / WAIVER (LOCKED)
   // -----------------------------
   const handleAdd = () => alert("Players are locked until the season starts.");
-  const handleWaiver = () => alert("Waiver claims are unavailable until the season starts.");
+  const handleWaiver = () =>
+    alert("Waiver claims are unavailable until the season starts.");
 
   // -----------------------------
   // RENDER
@@ -174,7 +190,7 @@ const openPlayer = async (player) => {
           ))}
       </div>
 
-      {/* ⭐ Modal stays mounted ALWAYS */}
+      {/* Modal stays mounted */}
       <PlayerModal
         player={selectedPlayer}
         onClose={closePlayer}
