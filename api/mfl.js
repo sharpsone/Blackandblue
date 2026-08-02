@@ -185,6 +185,54 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // -----------------------------
+    // ACTION: playerStats (FULL STATS)
+    // -----------------------------
+    if (action === "playerStats") {
+      const { playerId } = req.query;
+
+      if (!playerId) {
+        return res.status(400).json({ error: "Missing playerId" });
+      }
+
+      // --- Weekly stats (weeks 1–18) ---
+      const weeklyStats = [];
+      for (let w = 1; w <= 18; w++) {
+        const weeklyUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerScores&W=${w}&L=${leagueId}&P=${playerId}&JSON=1`;
+        const weeklyData = await callMFL(weeklyUrl);
+        const score = weeklyData?.playerScores?.playerScore?.[0] || null;
+
+        weeklyStats.push({
+          week: w,
+          score: score?.score || 0,
+          stats: score || null,
+        });
+      }
+
+      // --- Season-to-date stats ---
+      const seasonUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerScores&L=${leagueId}&P=${playerId}&JSON=1`;
+      const seasonData = await callMFL(seasonUrl);
+      const seasonStats = seasonData?.playerScores?.playerScore?.[0] || null;
+
+      // --- Projections ---
+      const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&P=${playerId}&JSON=1`;
+      const projData = await callMFL(projUrl);
+      const projections = projData?.projectedScores?.playerScore?.[0] || null;
+
+      // --- Career profile ---
+      const profileUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerProfile&P=${playerId}&JSON=1`;
+      const profileData = await callMFL(profileUrl);
+      const profile = profileData?.playerProfile || null;
+
+      return res.status(200).json({
+        playerId,
+        weekly: weeklyStats,
+        season: seasonStats,
+        projections,
+        profile,
+      });
+    }
+
     return res.status(400).json({ error: "Unknown action", action });
 
   } catch (err) {

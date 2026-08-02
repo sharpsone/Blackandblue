@@ -117,7 +117,7 @@ export default function FreeAgents({ leagueInfo }) {
 
       // Fetch news
       const newsRes = await fetch(
-        `/api/mfl?action=playerNews&playerId=${player.id}&leagueId=${leagueInfo.leagueId}`
+        `/api/mfl?action=playerNews&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
       );
       const newsData = await newsRes.json();
       console.log("[openPlayer] fetched news:", newsData);
