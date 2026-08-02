@@ -1,151 +1,4 @@
-.fa-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(5, 5, 15, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.fa-modal {
-  background: #101019;
-  border-radius: 18px;
-  padding: 20px 22px;
-  max-width: 520px;
-  width: 100%;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
-  border: 1px solid #2b2b3f;
-}
-
-.fa-loading {
-  text-align: center;
-  padding: 20px;
-  color: #c4c4d8;
-}
-
-.fa-modal-name {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.fa-modal-sub {
-  font-size: 13px;
-  color: #9b9bb5;
-  margin-bottom: 14px;
-}
-
-.fa-modal-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.fa-modal-stat {
-  display: flex;
-  flex-direction: column;
-  font-size: 12px;
-}
-
-.fa-modal-stat label {
-  color: #8b8ba3;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.fa-modal-stat span {
-  color: #f5f5f7;
-  font-weight: 500;
-}
-
-.fa-section-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.fa-weekly-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 16px 0;
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.fa-weekly-list li {
-  font-size: 13px;
-  padding: 4px 0;
-  border-bottom: 1px solid #1c1c2a;
-}
-
-.fa-weekly-list li:last-child {
-  border-bottom: none;
-}
-
-.fa-modal-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.fa-btn.add {
-  background: #22c55e;
-  color: #041007;
-}
-
-.fa-btn.waiver {
-  background: #a855f7;
-  color: #0f071b;
-}
-
-.fa-btn.close {
-  background: #272738;
-  color: #e5e5f0;
-}
-
-/* Dim + disable modal buttons when locked */
-.modal-btn.locked {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Optional: match tile dimming */
-.modal.locked {
-  opacity: 0.75;
-}
-
-/* Modal fade + slide animation */
-.modal {
-  animation: modalPop 0.25s ease-out;
-}
-
-@keyframes modalPop {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Lock banner inside modal */
-.modal-lock-banner {
-  background: #ff4d4d;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  margin: 10px 0;
-  text-align: center;
-}
-
-/* Correct overlay class used by PlayerModal.jsx */
+/* MODAL OVERLAY */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -153,38 +6,128 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* critical */
+  z-index: 9999;
 }
 
-/* Correct modal class used by PlayerModal.jsx */
+/* MODAL CONTAINER */
 .modal {
   background: #101019;
   border-radius: 18px;
-  padding: 20px 22px;
-  max-width: 520px;
-  width: 100%;
+  padding: 24px 28px;
+  width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
   border: 1px solid #2b2b3f;
-  z-index: 10000; /* critical */
   animation: modalPop 0.25s ease-out;
 }
 
+/* NAME */
+.fa-modal-name {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+/* LOCK BANNER */
+.modal-lock-banner {
+  background: #8b0000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* POSITION + TEAM */
+.fa-modal-sub {
+  font-size: 16px;
+  opacity: 0.85;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+/* STATS GRID */
+.fa-modal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.fa-modal-stat label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.fa-modal-stat span {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* SECTION TITLES */
+.fa-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 18px 0 8px;
+  text-align: left;
+}
+
+/* NEWS BOX */
 .fa-news-box {
-  background: #1c1c2a;
-  border: 1px solid #2b2b3f;
-  padding: 12px;
+  background: #181820;
+  padding: 14px;
   border-radius: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  text-align: left;
 }
 
 .fa-news-text {
-  font-size: 13px;
-  color: #e5e5f0;
+  font-size: 14px;
   line-height: 1.4;
 }
 
 .fa-news-none {
-  font-size: 13px;
-  color: #8b8ba3;
-  font-style: italic;
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+/* WEEKLY LIST */
+.fa-weekly-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.fa-weekly-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #2b2b3f;
+  font-size: 14px;
+}
+
+/* BUTTONS */
+.fa-modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.fa-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.fa-btn.add {
+  background: #1e8f3e;
+}
+
+.fa-btn.waiver {
+  background: #1e3e8f;
+}
+
+.fa-btn.close {
+  background: #444;
 }
