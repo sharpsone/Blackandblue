@@ -6,7 +6,7 @@
   display: flex;
   align-items: stretch;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* ⭐ CRITICAL FIX */
   border: 1px solid #26263a;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
@@ -115,7 +115,7 @@
   box-shadow: none;
 }
 
-/* Small lock icon always visible */
+/* ⭐ Always-visible lock icon */
 .lock-icon {
   position: absolute;
   top: 6px;
@@ -123,8 +123,8 @@
   font-size: 16px;
   opacity: 0.9;
   cursor: default;
-  z-index: 5;
-  pointer-events: none; /* critical: don't block clicks */
+  z-index: 10;
+  pointer-events: none; /* ⭐ CRITICAL */
 }
 
 /* Dim card slightly when locked */

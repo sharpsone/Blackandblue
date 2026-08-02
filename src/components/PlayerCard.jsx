@@ -1,4 +1,3 @@
-// src/components/PlayerCard.jsx
 import "./PlayerCard.css";
 
 export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
@@ -6,6 +5,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
 
   return (
     <div className={`fa-card ${isLocked ? "locked" : ""}`}>
+      
       {/* Always-visible small lock icon */}
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
@@ -13,7 +13,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         </div>
       )}
 
-      {/* Main clickable area opens modal */}
+      {/* MAIN CLICK AREA — MUST BE FULL WIDTH */}
       <div className="fa-main" onClick={() => onOpen(player)}>
         <div className="fa-name">{player.name}</div>
 
@@ -34,7 +34,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* ACTION BUTTONS */}
       <div className="fa-actions">
         <button
           className="fa-btn add"
@@ -55,3 +55,4 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
     </div>
   );
 }
+
