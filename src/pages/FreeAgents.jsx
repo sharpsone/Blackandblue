@@ -122,25 +122,30 @@ export default function FreeAgents({ leagueInfo }) {
       <h2>Free Agents</h2>
 
       {/* ✅ Added conference toggle UI */}
-      <div className="conference-toggle">
+      <div className="conference-filter">
         <button
-          className={conference === "CONFERENCE00" ? "active" : ""}
+          className={`fa-btn ${conference === "CONFERENCE00" ? "active" : ""}`}
           onClick={() => setConference("CONFERENCE00")}
         >
-          Conference 00
+          Black
         </button>
+
         <button
-          className={conference === "CONFERENCE01" ? "active" : ""}
+          className={`fa-btn ${conference === "CONFERENCE01" ? "active" : ""}`}
           onClick={() => setConference("CONFERENCE01")}
         >
-          Conference 01
+          Blue
         </button>
       </div>
 
       <div className="fa-controls">
         <SearchBar value={search} onChange={setSearch} />
-        <PositionFilter value={position} onChange={setPosition} />
-        <SortDropdown value={sortBy} onChange={setSortBy} />
+
+        <div className="fa-controls-right">
+          <conference-filter />
+          <PositionFilter value={position} onChange={setPosition} />
+          <SortDropdown value={sortBy} onChange={setSortBy} />
+        </div>
       </div>
 
       {loading && <div className="loading">Loading free agents...</div>}

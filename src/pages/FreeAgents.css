@@ -32,3 +32,31 @@
   gap: 16px;
   margin-top: 16px;
 }
+
+.conference-filter {
+  display: flex;
+  gap: 10px;
+  margin-right: 12px;
+}
+
+.fa-btn {
+  background: #2a2a3a;
+  color: #cfcfff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.fa-btn:hover {
+  background: #3a3a4a;
+  border-color: #6a6aff;
+}
+
+.fa-btn.active {
+  background: #6a6aff;
+  color: white;
+  border-color: #8a8aff;
+}
