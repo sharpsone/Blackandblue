@@ -9,7 +9,11 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
         className={`player-card ${isLocked ? "locked" : ""}`}
         onClick={() => {
           console.log("CARD CLICKED");
-          onOpen(player);
+          console.log("selectedPlayer BEFORE:", selectedPlayer);
+          openPlayer(player);
+          setTimeout(() => {
+            console.log("selectedPlayer AFTER:", selectedPlayer);
+          }, 500);
         }}
       >
 
