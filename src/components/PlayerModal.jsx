@@ -54,12 +54,13 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         {/* NEWS SECTION */}
         <div className="fa-section-title">Recent News</div>
         <div className="fa-news-box">
-          {news ? (
-            <div className="fa-news-text">{news}</div>
+          {player.news ? (
+            <div className="fa-news-text">{player.news}</div>
           ) : (
             <div className="fa-news-none">No recent news available.</div>
           )}
         </div>
+
 
         {/* WEEKLY POINTS HEADER */}
         <div className="fa-section-title">Weekly Points</div>

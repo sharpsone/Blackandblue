@@ -96,39 +96,50 @@ export default function FreeAgents({ leagueInfo }) {
   // -----------------------------
   // PLAYER MODAL
   // -----------------------------
-  const openPlayer = async (player) => {
+    const openPlayer = async (player) => {
     console.log("[openPlayer] clicked player:", player);
 
     setSelectedPlayer({ loading: true });
-    console.log("[openPlayer] selectedPlayer set to loading");
 
     try {
-      const res = await fetch(
+      // Fetch stats
+      const statsRes = await fetch(
         `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
       );
-      const stats = await res.json();
+      const stats = await statsRes.json();
       console.log("[openPlayer] fetched stats:", stats);
+
+      // Fetch news
+      const newsRes = await fetch(
+        `/api/mfl?action=playerNews&playerId=${player.id}&leagueId=${leagueInfo.leagueId}`
+      );
+      const newsData = await newsRes.json();
+      console.log("[openPlayer] fetched news:", newsData);
+
+      // Extract first news item (if any)
+      const newsText =
+        newsData?.news?.length > 0 ? newsData.news[0].headline : null;
 
       setSelectedPlayer({
         ...player,
         ...stats,
+        news: newsText,
         loading: false,
       });
-      console.log("[openPlayer] selectedPlayer after merge:", {
+
+      console.log("[openPlayer] merged player:", {
         ...player,
         ...stats,
+        news: newsText,
         loading: false,
       });
     } catch (err) {
-      console.error("[openPlayer] Failed to load player stats:", err);
+      console.error("[openPlayer] Failed:", err);
+
       setSelectedPlayer({
         ...player,
         stats: [],
-        loading: false,
-      });
-      console.log("[openPlayer] selectedPlayer after error:", {
-        ...player,
-        stats: [],
+        news: null,
         loading: false,
       });
     }
