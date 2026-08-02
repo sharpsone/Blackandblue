@@ -10,6 +10,11 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
     <div className="modal-overlay">
       <div className="modal">
         <h2>{player.name}</h2>
+        {isLocked && (
+          <div className="modal-lock-banner">
+            🔒 Locked until Free Agency opens
+          </div>
+        )}
         <div className="modal-meta">
           <span>{player.pos}</span> — <span>{player.team}</span>
         </div>

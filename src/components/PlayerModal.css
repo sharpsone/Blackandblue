@@ -116,3 +116,31 @@
 .modal.locked {
   opacity: 0.75;
 }
+
+/* Modal fade + slide animation */
+.modal {
+  animation: modalPop 0.25s ease-out;
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Lock banner inside modal */
+.modal-lock-banner {
+  background: #ff4d4d;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 10px 0;
+  text-align: center;
+}

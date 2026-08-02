@@ -138,3 +138,20 @@
   cursor: not-allowed;
   opacity: 0.4;
 }
+
+/* Full-card hover highlight */
+.player-card:hover {
+  border-color: #a855f7;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Outline showing the card is clickable */
+.player-card {
+  cursor: pointer;
+  border: 1px solid #26263a;
+}
+
+.player-card:hover {
+  border-color: #a855f7;
+}
