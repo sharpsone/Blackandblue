@@ -25,6 +25,12 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
       )}
 
       <div className="fa-main">
+        {player.news && (
+          <div className="fa-news-icon" title="Player has recent news">
+            📰
+          </div>
+        )}
+        
         <div className="fa-name">{player.name}</div>
 
         <div className="fa-pos-team">

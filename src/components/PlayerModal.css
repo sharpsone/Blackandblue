@@ -168,3 +168,23 @@
   z-index: 10000; /* critical */
   animation: modalPop 0.25s ease-out;
 }
+
+.fa-news-box {
+  background: #1c1c2a;
+  border: 1px solid #2b2b3f;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.fa-news-text {
+  font-size: 13px;
+  color: #e5e5f0;
+  line-height: 1.4;
+}
+
+.fa-news-none {
+  font-size: 13px;
+  color: #8b8ba3;
+  font-style: italic;
+}
