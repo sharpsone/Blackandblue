@@ -9,6 +9,7 @@
   overflow: visible; /* IMPORTANT */
   border: 1px solid #26263a;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  cursor: pointer; /* whole card clickable */
 }
 
 .player-card::before {
@@ -21,13 +22,12 @@
 
 .player-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 14px 32px rgba(168, 85, 247, 0.45);
   border-color: #a855f7;
 }
 
 .fa-main {
   flex: 1;
-  cursor: pointer;
 }
 
 .fa-name {
@@ -137,21 +137,4 @@
 .player-card.locked .fa-btn.waiver {
   cursor: not-allowed;
   opacity: 0.4;
-}
-
-/* Full-card hover highlight */
-.player-card:hover {
-  border-color: #a855f7;
-  box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
-  transform: translateY(-2px);
-}
-
-/* Outline showing the card is clickable */
-.player-card {
-  cursor: pointer;
-  border: 1px solid #26263a;
-}
-
-.player-card:hover {
-  border-color: #a855f7;
 }

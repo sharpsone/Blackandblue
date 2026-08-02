@@ -1,3 +1,4 @@
+// src/components/PlayerCard.jsx
 import "./PlayerCard.css";
 
 export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
@@ -8,6 +9,7 @@ export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
       className={`player-card ${isLocked ? "locked" : ""}`}
       onClick={() => onOpen(player)}
     >
+      {/* Small always-visible lock icon */}
       {isLocked && (
         <div className="lock-icon" title="Locked until F/A opens">
           🔒
