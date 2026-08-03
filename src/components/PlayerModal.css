@@ -170,3 +170,23 @@
   display: flex !important;
   justify-content: space-between !important;
 }
+
+.fa-news-time {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #b5b5c9;
+}
+
+.fa-news-impact {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #e5e5f0;
+  line-height: 1.4;
+}
+
+.fa-news-source {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #8b8ba3;
+  font-style: italic;
+}

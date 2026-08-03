@@ -46,23 +46,42 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         </div>
 
-        {/* ----------------------------- */}
-        {/* NEWS SECTION (NEW) */}
-        {/* ----------------------------- */}
-        <h3 className="fa-section-title">Recent News</h3>
+{/* ----------------------------- */}
+{/* NEWS SECTION */}
+{/* ----------------------------- */}
+    <h3 className="fa-section-title">Recent News</h3>
 
-        <div className="fa-news-box">
-          {player.news ? (
-            <>
-              <div className="fa-news-text">{player.news}</div>
-              {player.newsSource && (
-                <div className="fa-news-source">Source: {player.newsSource}</div>
-              )}
-            </>
-          ) : (
-            <div className="fa-news-none">No recent news available.</div>
+    <div className="fa-news-box">
+      {player.news ? (
+        <>
+          {/* Headline */}
+          <div className="fa-news-text">{player.news}</div>
+
+          {/* Timestamp */}
+          {player.newsTimestamp && (
+            <div className="fa-news-time">
+              <strong>Reported:</strong> {player.newsTimestamp}
+            </div>
           )}
-        </div>
+
+          {/* Fantasy Impact */}
+          {player.fantasyImpact && (
+            <div className="fa-news-impact">
+              <strong>Fantasy Impact:</strong> {player.fantasyImpact}
+            </div>
+          )}
+
+          {/* Source */}
+          {player.newsSource && (
+            <div className="fa-news-source">
+              <strong>Source:</strong> {player.newsSource}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="fa-news-none">No recent news available.</div>
+      )}
+    </div>
 
         {/* WEEKLY POINTS HEADER */}
         <h3>Weekly Points</h3>
