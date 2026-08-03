@@ -192,9 +192,10 @@ if (action === "freeAgents") {
       }
 
       // -----------------------------
-      // FantasyPros News (headline, body, timestamp, fantasy impact)
+      // FantasyPros News (robust parser)
       // -----------------------------
       let fpItem = null;
+
       try {
         const [lastRaw, firstRaw] = name.split(",");
         const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -205,17 +206,26 @@ if (action === "freeAgents") {
         const fpResp = await fetch(fpUrl);
         const fpHtml = await fpResp.text();
 
-        // Headline
-        const headlineMatch = fpHtml.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i);
+        // HEADLINE (multiple possible structures)
+        const headlineMatch =
+          fpHtml.match(/<h2[^>]*class="news-title"[^>]*>([^<]+)<\/h2>/i) ||
+          fpHtml.match(/<h2[^>]*>([^<]+)<\/h2>/i) ||
+          fpHtml.match(/<h3[^>]*>([^<]+)<\/h3>/i);
 
-        // Timestamp
-        const timeMatch = fpHtml.match(/<span class="news-date">([^<]+)<\/span>/i);
+        // TIMESTAMP (multiple possible structures)
+        const timeMatch =
+          fpHtml.match(/<span[^>]*class="news-date"[^>]*>([^<]+)<\/span>/i) ||
+          fpHtml.match(/<div[^>]*class="news-date"[^>]*>([^<]+)<\/div>/i);
 
-        // Main body (inside .news-body)
-        const bodyMatch = fpHtml.match(/<div class="news-body">[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
+        // MAIN BODY (multiple possible wrappers)
+        const bodyMatch =
+          fpHtml.match(/<div[^>]*class="news-body"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
+          fpHtml.match(/<div[^>]*class="content"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
+          fpHtml.match(/<p[^>]*class="news-body"[^>]*>([^<]+)<\/p>/i);
 
-        // Fantasy Impact
-        const impactMatch = fpHtml.match(/<h3[^>]*>Fantasy Impact<\/h3>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
+        // FANTASY IMPACT (always under an H3 but layout varies)
+        const impactMatch =
+          fpHtml.match(/Fantasy Impact[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
 
         fpItem = {
           source: "FantasyPros",
