@@ -191,8 +191,10 @@ if (action === "freeAgents") {
         console.log("Sleeper news failed:", err.message);
       }
 
+      import { JSDOM } from "jsdom";
+
       // -----------------------------
-      // FantasyPros News (robust parser)
+      // FantasyPros News (DOM parser)
       // -----------------------------
       let fpItem = null;
 
@@ -206,33 +208,45 @@ if (action === "freeAgents") {
         const fpResp = await fetch(fpUrl);
         const fpHtml = await fpResp.text();
 
-        // HEADLINE (multiple possible structures)
-        const headlineMatch =
-          fpHtml.match(/<h2[^>]*class="news-title"[^>]*>([^<]+)<\/h2>/i) ||
-          fpHtml.match(/<h2[^>]*>([^<]+)<\/h2>/i) ||
-          fpHtml.match(/<h3[^>]*>([^<]+)<\/h3>/i);
+        const dom = new JSDOM(fpHtml);
+        const doc = dom.window.document;
 
-        // TIMESTAMP (multiple possible structures)
-        const timeMatch =
-          fpHtml.match(/<span[^>]*class="news-date"[^>]*>([^<]+)<\/span>/i) ||
-          fpHtml.match(/<div[^>]*class="news-date"[^>]*>([^<]+)<\/div>/i);
+        // HEADLINE
+        const headline =
+          doc.querySelector(".news-title")?.textContent?.trim() ||
+          doc.querySelector("h2")?.textContent?.trim() ||
+          doc.querySelector("h3")?.textContent?.trim() ||
+          null;
 
-        // MAIN BODY (multiple possible wrappers)
-        const bodyMatch =
-          fpHtml.match(/<div[^>]*class="news-body"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
-          fpHtml.match(/<div[^>]*class="content"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
-          fpHtml.match(/<p[^>]*class="news-body"[^>]*>([^<]+)<\/p>/i);
+        // TIMESTAMP
+        const timestamp =
+          doc.querySelector(".news-date")?.textContent?.trim() ||
+          null;
 
-        // FANTASY IMPACT (always under an H3 but layout varies)
-        const impactMatch =
-          fpHtml.match(/Fantasy Impact[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
+        // MAIN BODY
+        const body =
+          doc.querySelector(".news-body p")?.textContent?.trim() ||
+          doc.querySelector(".content p")?.textContent?.trim() ||
+          null;
+
+        // FANTASY IMPACT
+        let fantasyImpact = null;
+        const impactHeader = [...doc.querySelectorAll("h3")]
+          .find(h => h.textContent.includes("Fantasy Impact"));
+
+        if (impactHeader) {
+          const impactPara = impactHeader.nextElementSibling;
+          if (impactPara && impactPara.tagName === "P") {
+            fantasyImpact = impactPara.textContent.trim();
+          }
+        }
 
         fpItem = {
           source: "FantasyPros",
-          headline: headlineMatch ? headlineMatch[1].trim() : null,
-          timestamp: timeMatch ? timeMatch[1].trim() : null,
-          body: bodyMatch ? bodyMatch[1].trim() : null,
-          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+          headline,
+          timestamp,
+          body,
+          fantasyImpact,
         };
 
       } catch (err) {
