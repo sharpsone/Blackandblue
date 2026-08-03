@@ -191,8 +191,6 @@ if (action === "freeAgents") {
         console.log("Sleeper news failed:", err.message);
       }
 
-      import { JSDOM } from "jsdom";
-
       // -----------------------------
       // FantasyPros News (robust parser)
       // -----------------------------
