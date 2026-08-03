@@ -86,86 +86,65 @@ export default function FreeAgents({ leagueInfo }) {
     Object.values(grouped).forEach((group) => {
       group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
       group.forEach((p, i) => {
-        p.posRank = i + 1; // ⭐ Add position rank
+        p.posRank = i + 1;
       });
     });
 
     setFiltered(list);
   }, [players, search, position, sortBy]);
 
-// -----------------------------
-// PLAYER MODAL
-// -----------------------------
-const openPlayer = async (player) => {
-  console.log("[openPlayer] clicked player:", player);
+  // -----------------------------
+  // PLAYER MODAL (stats + news)
+  // -----------------------------
+  const openPlayer = async (player) => {
+    console.log("[openPlayer] clicked player:", player);
 
-  setSelectedPlayer({ loading: true });
+    setSelectedPlayer({ loading: true });
 
-  try {
-    // Fetch stats
-    const statsRes = await fetch(
-      `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-    );
-    const stats = await statsRes.json();
-    console.log("[openPlayer] fetched stats:", stats);
+    try {
+      // Fetch stats
+      const statsRes = await fetch(
+        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
+      const stats = await statsRes.json();
+      console.log("[openPlayer] fetched stats:", stats);
 
-    // Fetch external news (FIXED: added leagueId + year)
-    const newsRes = await fetch(
-      `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-    );
-    const newsData = await newsRes.json();
-    console.log("[openPlayer] fetched external news:", newsData);
+      // Fetch external news (FantasyPros + Sleeper)
+      const newsRes = await fetch(
+        `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+      );
+      const newsData = await newsRes.json();
+      console.log("[openPlayer] fetched external news:", newsData);
 
-    let newsText = null;
-    let newsSource = null;
+      let newsText = null;
+      let newsSource = null;
 
-    if (newsData?.news?.length > 0) {
-      const item = newsData.news[0];
-      newsText = item.headline || item.body || null;
-      newsSource = item.source || null;
+      if (newsData?.news?.length > 0) {
+        const item = newsData.news[0];
+        newsText = item.headline || item.body || null;
+        newsSource = item.source || null;
+      }
+
+      setSelectedPlayer({
+        ...player,
+        ...stats,
+        news: newsText,
+        newsSource,
+        loading: false,
+      });
+
+    } catch (err) {
+      console.error("[openPlayer] Failed:", err);
+
+      setSelectedPlayer({
+        ...player,
+        stats: [],
+        news: null,
+        newsSource: null,
+        loading: false,
+      });
     }
-
-    setSelectedPlayer({
-      ...player,
-      ...stats,
-      news: newsText,
-      newsSource,
-      loading: false,
-    });
-
-  } catch (err) {
-    console.error("[openPlayer] Failed:", err);
-
-    setSelectedPlayer({
-      ...player,
-      stats: [],
-      news: null,
-      newsSource: null,
-      loading: false,
-    });
-  }
-};
-
-  } catch (err) {
-    console.error("[openPlayer] Failed:", err);
-
-    setSelectedPlayer({
-      ...player,
-      stats: [],
-      news: null,
-      newsSource: null,
-      loading: false,
-    });
-
-    console.log("[openPlayer] selectedPlayer after error:", {
-      ...player,
-      stats: [],
-      news: null,
-      newsSource: null,
-      loading: false,
-    });
-  }
-};
+  };
 
   const closePlayer = () => setSelectedPlayer(null);
 
@@ -223,7 +202,6 @@ const openPlayer = async (player) => {
           ))}
       </div>
 
-      {/* Modal stays mounted */}
       <PlayerModal
         player={selectedPlayer}
         onClose={closePlayer}
@@ -233,5 +211,3 @@ const openPlayer = async (player) => {
     </div>
   );
 }
-
-
