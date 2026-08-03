@@ -206,6 +206,10 @@ if (action === "freeAgents") {
         const fpResp = await fetch(fpUrl);
         const fpHtml = await fpResp.text();
 
+        console.log("[FantasyPros RAW HTML START]");
+        console.log(fpHtml);
+        console.log("[FantasyPros RAW HTML END]");
+
         // HEADLINE (same as before)
         const headlineMatch =
           fpHtml.match(/<h2[^>]*class="news-title"[^>]*>([^<]+)<\/h2>/i) ||
