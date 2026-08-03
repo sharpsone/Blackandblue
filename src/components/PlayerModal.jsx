@@ -15,18 +15,22 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
   return (
     <div className="modal-overlay">
       <div className="modal">
+        {/* NAME */}
         <h2>{player.name}</h2>
 
+        {/* LOCK BANNER */}
         {isLocked && (
           <div className="modal-lock-banner">
             🔒 Locked until Free Agency opens
           </div>
         )}
 
+        {/* POSITION + TEAM */}
         <div className="modal-meta">
           <span>{player.pos}</span> — <span>{player.team}</span>
         </div>
 
+        {/* STATS GRID */}
         <div className="modal-stats">
           <div>
             <strong>RANK (Overall)</strong>
@@ -42,9 +46,28 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         </div>
 
+        {/* ----------------------------- */}
+        {/* NEWS SECTION (NEW) */}
+        {/* ----------------------------- */}
+        <h3 className="fa-section-title">Recent News</h3>
 
+        <div className="fa-news-box">
+          {player.news ? (
+            <>
+              <div className="fa-news-text">{player.news}</div>
+              {player.newsSource && (
+                <div className="fa-news-source">Source: {player.newsSource}</div>
+              )}
+            </>
+          ) : (
+            <div className="fa-news-none">No recent news available.</div>
+          )}
+        </div>
+
+        {/* WEEKLY POINTS HEADER */}
         <h3>Weekly Points</h3>
 
+        {/* BUTTONS */}
         <div className="modal-actions">
           <button
             className={`modal-btn add-btn ${isLocked ? "locked" : ""}`}
@@ -72,5 +95,3 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
     </div>
   );
 }
-
-
