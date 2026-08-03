@@ -192,7 +192,7 @@ if (action === "freeAgents") {
       }
 
       // -----------------------------
-      // FantasyPros News (robust parser)
+      // FantasyPros News (regex-only, separated body + impact)
       // -----------------------------
       let fpItem = null;
 
@@ -206,26 +206,37 @@ if (action === "freeAgents") {
         const fpResp = await fetch(fpUrl);
         const fpHtml = await fpResp.text();
 
-        // HEADLINE (multiple possible structures)
+        // HEADLINE (same as before)
         const headlineMatch =
           fpHtml.match(/<h2[^>]*class="news-title"[^>]*>([^<]+)<\/h2>/i) ||
           fpHtml.match(/<h2[^>]*>([^<]+)<\/h2>/i) ||
           fpHtml.match(/<h3[^>]*>([^<]+)<\/h3>/i);
 
-        // TIMESTAMP (multiple possible structures)
+        // TIMESTAMP (span or div with news-date)
         const timeMatch =
-          fpHtml.match(/<span[^>]*class="news-date"[^>]*>([^<]+)<\/span>/i) ||
-          fpHtml.match(/<div[^>]*class="news-date"[^>]*>([^<]+)<\/div>/i);
+          fpHtml.match(/<[^>]*class="news-date"[^>]*>([^<]+)<\/[^>]+>/i);
 
-        // MAIN BODY (multiple possible wrappers)
-        const bodyMatch =
-          fpHtml.match(/<div[^>]*class="news-body"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
-          fpHtml.match(/<div[^>]*class="content"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
-          fpHtml.match(/<p[^>]*class="news-body"[^>]*>([^<]+)<\/p>/i);
+        // BODY = last <p> BEFORE "Fantasy Impact"
+        let bodyMatch = null;
+        const impactIndex = fpHtml.indexOf("Fantasy Impact");
 
-        // FANTASY IMPACT (always under an H3 but layout varies)
-        const impactMatch =
-          fpHtml.match(/Fantasy Impact[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
+        if (impactIndex !== -1) {
+          const beforeImpact = fpHtml.slice(0, impactIndex);
+          // grab the LAST <p> before the Fantasy Impact header
+          bodyMatch = beforeImpact.match(/<p[^>]*>([^<]+)<\/p>\s*$/i);
+        } else {
+          // fallback: first <p> in news-body or anywhere
+          bodyMatch =
+            fpHtml.match(/<div[^>]*class="news-body"[^>]*>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i) ||
+            fpHtml.match(/<p[^>]*>([^<]+)<\/p>/i);
+        }
+
+        // FANTASY IMPACT = <p> AFTER "Fantasy Impact" header
+        let impactMatch = null;
+        const impactBlockMatch = fpHtml.match(/Fantasy Impact[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
+        if (impactBlockMatch) {
+          impactMatch = impactBlockMatch;
+        }
 
         fpItem = {
           source: "FantasyPros",
