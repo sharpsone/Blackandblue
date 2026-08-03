@@ -191,47 +191,43 @@ if (action === "freeAgents") {
         console.log("Sleeper news failed:", err.message);
       }
 
-    // -----------------------------
-    // FantasyPros News (with timestamp + fantasy impact)
-    // -----------------------------
-    let fpItem = null;
-    try {
-      const [lastRaw, firstRaw] = name.split(",");
-      const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const last = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const slug = `${first}-${last}`;
+      // -----------------------------
+      // FantasyPros News (headline, body, timestamp, fantasy impact)
+      // -----------------------------
+      let fpItem = null;
+      try {
+        const [lastRaw, firstRaw] = name.split(",");
+        const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const slug = `${first}-${last}`;
 
-      const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
-      const fpResp = await fetch(fpUrl);
-      const fpHtml = await fpResp.text();
+        const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+        const fpResp = await fetch(fpUrl);
+        const fpHtml = await fpResp.text();
 
-      // Headline
-      const headlineMatch = fpHtml.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i);
+        // Headline
+        const headlineMatch = fpHtml.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i);
 
-      // Timestamp
-      const timeMatch = fpHtml.match(/<span class="news-date">([^<]+)<\/span>/i);
+        // Timestamp
+        const timeMatch = fpHtml.match(/<span class="news-date">([^<]+)<\/span>/i);
 
-      // Fantasy Impact section
-      const impactHeader = fpHtml.indexOf("Fantasy Impact");
-      let impactText = null;
-      if (impactHeader !== -1) {
-        const impactMatch = fpHtml.slice(impactHeader).match(/<p[^>]*>([^<]+)<\/p>/i);
-        if (impactMatch) {
-          impactText = impactMatch[1].trim();
-        }
-      }
+        // Main body (inside .news-body)
+        const bodyMatch = fpHtml.match(/<div class="news-body">[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
 
-      if (headlineMatch) {
+        // Fantasy Impact
+        const impactMatch = fpHtml.match(/<h3[^>]*>Fantasy Impact<\/h3>[\s\S]*?<p[^>]*>([^<]+)<\/p>/i);
+
         fpItem = {
           source: "FantasyPros",
-          headline: headlineMatch[1].trim(),
+          headline: headlineMatch ? headlineMatch[1].trim() : null,
           timestamp: timeMatch ? timeMatch[1].trim() : null,
-          fantasyImpact: impactText,
+          body: bodyMatch ? bodyMatch[1].trim() : null,
+          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
         };
+
+      } catch (err) {
+        console.log("FantasyPros news failed:", err.message);
       }
-    } catch (err) {
-      console.log("FantasyPros news failed:", err.message);
-    }
 
       // -----------------------------
       // Return merged news
