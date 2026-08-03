@@ -46,42 +46,49 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         </div>
 
-{/* ----------------------------- */}
-{/* NEWS SECTION */}
-{/* ----------------------------- */}
-    <h3 className="fa-section-title">Recent News</h3>
+        {/* ----------------------------- */}
+        {/* NEWS SECTION */}
+        {/* ----------------------------- */}
+        <h3 className="fa-section-title">Recent News</h3>
 
-    <div className="fa-news-box">
-      {player.news ? (
-        <>
-          {/* Headline */}
-          <div className="fa-news-text">{player.news}</div>
+        <div className="fa-news-box">
+          {player.externalNews && player.externalNews.length > 0 ? (
+            player.externalNews.map((item, idx) => (
+              <div key={idx} className="fa-news-item">
 
-          {/* Timestamp */}
-          {player.newsTimestamp && (
-            <div className="fa-news-time">
-              <strong>Reported:</strong> {player.newsTimestamp}
-            </div>
+                {/* Headline */}
+                {item.headline && (
+                  <div className="fa-news-headline">{item.headline}</div>
+                )}
+
+                {/* Timestamp + Source */}
+                <div className="fa-news-meta">
+                  {item.timestamp && (
+                    <span className="fa-news-time">Reported: {item.timestamp}</span>
+                  )}
+                  {item.source && (
+                    <span className="fa-news-source">Source: {item.source}</span>
+                  )}
+                </div>
+
+                {/* Body */}
+                {item.body && (
+                  <div className="fa-news-body">{item.body}</div>
+                )}
+
+                {/* Fantasy Impact */}
+                {item.fantasyImpact && (
+                  <div className="fa-news-impact">
+                    <strong>Fantasy Impact:</strong> {item.fantasyImpact}
+                  </div>
+                )}
+
+              </div>
+            ))
+          ) : (
+            <div className="fa-news-none">No recent news available.</div>
           )}
-
-          {/* Fantasy Impact */}
-          {player.fantasyImpact && (
-            <div className="fa-news-impact">
-              <strong>Fantasy Impact:</strong> {player.fantasyImpact}
-            </div>
-          )}
-
-          {/* Source */}
-          {player.newsSource && (
-            <div className="fa-news-source">
-              <strong>Source:</strong> {player.newsSource}
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="fa-news-none">No recent news available.</div>
-      )}
-    </div>
+        </div>
 
         {/* WEEKLY POINTS HEADER */}
         <h3>Weekly Points</h3>

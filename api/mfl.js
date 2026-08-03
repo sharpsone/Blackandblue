@@ -191,8 +191,8 @@ if (action === "freeAgents") {
         console.log("Sleeper news failed:", err.message);
       }
 
-      // -----------------------------
-      // FantasyPros News (regex parser for new layout)
+     // -----------------------------
+      // FantasyPros News (multi-item support)
       // -----------------------------
       let fpItems = [];
 
@@ -207,25 +207,17 @@ if (action === "freeAgents") {
         const fpHtml = await fpResp.text();
 
         // Match each news block
-        const blocks = fpHtml.match(/<div class="subsection feature-stretch[\s\S]*?<\/div>\s*<\/div>/gi);
+        const blocks = fpHtml.match(
+          /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+        );
 
         if (blocks) {
           for (const block of blocks) {
 
-            // HEADLINE
             const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-
-            // BODY (first <p>)
             const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
-
-            // FANTASY IMPACT (third <p>)
             const impactMatch = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-
-            // TIMESTAMP
             const timestampMatch = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
-
-            // AUTHOR
-            const authorMatch = block.match(/<a[^>]*class="pull-left"[^>]*>([^<]+)<\/a>/i);
 
             fpItems.push({
               source: "FantasyPros",
@@ -233,7 +225,6 @@ if (action === "freeAgents") {
               body: bodyMatch ? bodyMatch[1].trim() : null,
               fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
               timestamp: timestampMatch ? timestampMatch[1].trim() : null,
-              author: authorMatch ? authorMatch[1].trim() : null,
             });
           }
         }
@@ -241,6 +232,10 @@ if (action === "freeAgents") {
       } catch (err) {
         console.log("FantasyPros news failed:", err.message);
       }
+
+      // IMPORTANT: return fpItems instead of fpItem
+      externalNews = fpItems;
+
 
       // -----------------------------
       // Return merged news
