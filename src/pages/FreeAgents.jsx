@@ -99,25 +99,19 @@ export default function FreeAgents({ leagueInfo }) {
 const openPlayer = async (player) => {
   console.log("[openPlayer] clicked player:", player);
 
-  // Keep your loading state
   setSelectedPlayer({ loading: true });
-  console.log("[openPlayer] selectedPlayer set to loading");
 
   try {
-    // -----------------------------
-    // 1. Fetch Stats (your existing code)
-    // -----------------------------
+    // Fetch stats
     const statsRes = await fetch(
       `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
     );
     const stats = await statsRes.json();
     console.log("[openPlayer] fetched stats:", stats);
 
-    // -----------------------------
-    // 2. Fetch External News (NEW)
-    // -----------------------------
+    // Fetch external news (FIXED: added leagueId + year)
     const newsRes = await fetch(
-      `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}`
+      `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
     );
     const newsData = await newsRes.json();
     console.log("[openPlayer] fetched external news:", newsData);
@@ -131,24 +125,26 @@ const openPlayer = async (player) => {
       newsSource = item.source || null;
     }
 
-    // -----------------------------
-    // 3. Merge into selectedPlayer
-    // -----------------------------
     setSelectedPlayer({
-      ...player,
-      ...stats,          // keep your stats grouped exactly as-is
-      news: newsText,    // NEW
-      newsSource,        // NEW
-      loading: false,
-    });
-
-    console.log("[openPlayer] selectedPlayer after merge:", {
       ...player,
       ...stats,
       news: newsText,
       newsSource,
       loading: false,
     });
+
+  } catch (err) {
+    console.error("[openPlayer] Failed:", err);
+
+    setSelectedPlayer({
+      ...player,
+      stats: [],
+      news: null,
+      newsSource: null,
+      loading: false,
+    });
+  }
+};
 
   } catch (err) {
     console.error("[openPlayer] Failed:", err);
