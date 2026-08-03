@@ -195,6 +195,7 @@ if (action === "freeAgents") {
       // FantasyPros News (multi-item support)
       // -----------------------------
       let fpItems = [];
+      let externalNews = [];
 
       try {
         const [lastRaw, firstRaw] = name.split(",");
