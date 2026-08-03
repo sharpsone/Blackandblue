@@ -145,6 +145,92 @@ if (action === "freeAgents") {
       return res.status(200).json(data);
     }
 
+    // -----------------------------
+    // ACTION: playerNewsFeed (Sleeper + FantasyPros)
+    // -----------------------------
+    if (action === "playerNewsFeed") {
+      const { name } = req.query;
+
+      if (!name) {
+        return res.status(400).json({ error: "Missing player name" });
+      }
+
+      const normalizedName = name.toLowerCase();
+      const nowSec = Math.floor(Date.now() / 1000);
+      const fourWeeksSec = 28 * 24 * 60 * 60;
+
+      // -----------------------------
+      // Sleeper News
+      // -----------------------------
+      let sleeperItem = null;
+      try {
+        const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
+        const sleeperJson = await sleeperResp.json();
+
+        const recent = sleeperJson
+          .filter(n => {
+            if (!n.created) return false;
+            const age = nowSec - n.created;
+            if (age > fourWeeksSec) return false;
+
+            const text = `${n.title || ""} ${n.body || ""}`.toLowerCase();
+            return text.includes(normalizedName);
+          })
+          .sort((a, b) => b.created - a.created);
+
+        if (recent.length > 0) {
+          const n = recent[0];
+          sleeperItem = {
+            source: "Sleeper",
+            headline: n.title || "",
+            body: n.body || "",
+            date: n.created
+          };
+        }
+      } catch (err) {
+        console.log("Sleeper news failed:", err.message);
+      }
+
+      // -----------------------------
+      // FantasyPros News
+      // -----------------------------
+      let fpItem = null;
+      try {
+        const [lastRaw, firstRaw] = name.split(",");
+        const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const slug = `${first}-${last}`;
+
+        const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+        const fpResp = await fetch(fpUrl);
+        const fpHtml = await fpResp.text();
+
+        const headlineMatch = fpHtml.match(/<h[23][^>]*>([^<]+)<\/h[23]>/i);
+        const bodyMatch = fpHtml.match(/<p[^>]*>([^<]+)<\/p>/i);
+
+        if (headlineMatch) {
+          fpItem = {
+            source: "FantasyPros",
+            headline: headlineMatch[1].trim(),
+            body: bodyMatch ? bodyMatch[1].trim() : "",
+            date: null
+          };
+        }
+      } catch (err) {
+        console.log("FantasyPros news failed:", err.message);
+      }
+
+      // -----------------------------
+      // Return merged news
+      // -----------------------------
+      const merged = [fpItem, sleeperItem].filter(Boolean);
+
+      return res.status(200).json({
+        player: name,
+        news: merged
+      });
+    }
+
     // --- ACTION: submitLineup ---
     if (action === "submitLineup") {
       const { franchiseId, week, lineup } = req.body || {};

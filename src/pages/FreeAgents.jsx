@@ -93,46 +93,83 @@ export default function FreeAgents({ leagueInfo }) {
     setFiltered(list);
   }, [players, search, position, sortBy]);
 
-  // -----------------------------
-  // PLAYER MODAL
-  // -----------------------------
-  const openPlayer = async (player) => {
-    console.log("[openPlayer] clicked player:", player);
+// -----------------------------
+// PLAYER MODAL
+// -----------------------------
+const openPlayer = async (player) => {
+  console.log("[openPlayer] clicked player:", player);
 
-    setSelectedPlayer({ loading: true });
-    console.log("[openPlayer] selectedPlayer set to loading");
+  // Keep your loading state
+  setSelectedPlayer({ loading: true });
+  console.log("[openPlayer] selectedPlayer set to loading");
 
-    try {
-      const res = await fetch(
-        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-      const stats = await res.json();
-      console.log("[openPlayer] fetched stats:", stats);
+  try {
+    // -----------------------------
+    // 1. Fetch Stats (your existing code)
+    // -----------------------------
+    const statsRes = await fetch(
+      `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+    );
+    const stats = await statsRes.json();
+    console.log("[openPlayer] fetched stats:", stats);
 
-      setSelectedPlayer({
-        ...player,
-        ...stats,
-        loading: false,
-      });
-      console.log("[openPlayer] selectedPlayer after merge:", {
-        ...player,
-        ...stats,
-        loading: false,
-      });
-    } catch (err) {
-      console.error("[openPlayer] Failed to load player stats:", err);
-      setSelectedPlayer({
-        ...player,
-        stats: [],
-        loading: false,
-      });
-      console.log("[openPlayer] selectedPlayer after error:", {
-        ...player,
-        stats: [],
-        loading: false,
-      });
+    // -----------------------------
+    // 2. Fetch External News (NEW)
+    // -----------------------------
+    const newsRes = await fetch(
+      `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}`
+    );
+    const newsData = await newsRes.json();
+    console.log("[openPlayer] fetched external news:", newsData);
+
+    let newsText = null;
+    let newsSource = null;
+
+    if (newsData?.news?.length > 0) {
+      const item = newsData.news[0];
+      newsText = item.headline || item.body || null;
+      newsSource = item.source || null;
     }
-  };
+
+    // -----------------------------
+    // 3. Merge into selectedPlayer
+    // -----------------------------
+    setSelectedPlayer({
+      ...player,
+      ...stats,          // keep your stats grouped exactly as-is
+      news: newsText,    // NEW
+      newsSource,        // NEW
+      loading: false,
+    });
+
+    console.log("[openPlayer] selectedPlayer after merge:", {
+      ...player,
+      ...stats,
+      news: newsText,
+      newsSource,
+      loading: false,
+    });
+
+  } catch (err) {
+    console.error("[openPlayer] Failed:", err);
+
+    setSelectedPlayer({
+      ...player,
+      stats: [],
+      news: null,
+      newsSource: null,
+      loading: false,
+    });
+
+    console.log("[openPlayer] selectedPlayer after error:", {
+      ...player,
+      stats: [],
+      news: null,
+      newsSource: null,
+      loading: false,
+    });
+  }
+};
 
   const closePlayer = () => setSelectedPlayer(null);
 
