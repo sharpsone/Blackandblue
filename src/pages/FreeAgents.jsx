@@ -116,20 +116,10 @@ export default function FreeAgents({ leagueInfo }) {
       const newsData = await newsRes.json();
       console.log("[openPlayer] fetched external news:", newsData);
 
-      let newsText = null;
-      let newsSource = null;
-
-      if (newsData?.news?.length > 0) {
-        const item = newsData.news[0];
-        newsText = item.headline || item.body || null;
-        newsSource = item.source || null;
-      }
-
       setSelectedPlayer({
         ...player,
         ...stats,
-        news: newsText,
-        newsSource,
+        externalNews: newsData.news || [],
         loading: false,
       });
 
