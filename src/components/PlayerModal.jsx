@@ -1,4 +1,5 @@
 // src/components/PlayerModal.jsx
+import { useState } from "react";
 import "./PlayerModal.css";
 
 export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
@@ -11,6 +12,9 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
   console.log("[PlayerModal] Rendering modal with player:", player);
 
   const isLocked = player.status === "locked";
+
+  // Collapsible state for news items
+  const [openNews, setOpenNews] = useState({});
 
   return (
     <div className="modal-overlay">
@@ -54,7 +58,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         <div className="fa-news-box">
           {player.externalNews && player.externalNews.length > 0 ? (
             player.externalNews.map((item, idx) => {
-              const [open, setOpen] = useState(false);
+              const isOpen = openNews[idx] || false;
 
               return (
                 <div key={idx} className="fa-news-item">
@@ -62,21 +66,27 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                   {/* Collapsible Header */}
                   <div
                     className="fa-news-headline collapsible-header"
-                    onClick={() => setOpen(!open)}
+                    onClick={() =>
+                      setOpenNews(prev => ({ ...prev, [idx]: !isOpen }))
+                    }
                   >
                     {item.headline || "News Update"}
-                    <span className="fa-collapse-icon">{open ? "▲" : "▼"}</span>
+                    <span className="fa-collapse-icon">{isOpen ? "▲" : "▼"}</span>
                   </div>
 
                   {/* Collapsible Body */}
-                  {open && (
+                  {isOpen && (
                     <div className="fa-news-content">
                       <div className="fa-news-meta">
                         {item.timestamp && (
-                          <span className="fa-news-time">Reported: {item.timestamp}</span>
+                          <span className="fa-news-time">
+                            Reported: {item.timestamp}
+                          </span>
                         )}
                         {item.source && (
-                          <span className="fa-news-source">Source: {item.source}</span>
+                          <span className="fa-news-source">
+                            Source: {item.source}
+                          </span>
                         )}
                       </div>
 
