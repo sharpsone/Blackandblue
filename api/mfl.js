@@ -34,61 +34,56 @@ export default async function handler(req, res) {
       }
     }
 
-// -----------------------------
-// ACTION: freeAgents (with conference separation)
-// -----------------------------
-if (action === "freeAgents") {
-  const apiKey = process.env.MFL_API_KEY;
+    // -----------------------------
+    // ACTION: freeAgents (with conference separation)
+    // -----------------------------
+    if (action === "freeAgents") {
+      const apiKey = process.env.MFL_API_KEY;
 
-  console.log("FREE AGENTS CALL:", { leagueId, year });
+      console.log("FREE AGENTS CALL:", { leagueId, year });
 
-  // 1. Load players
-  const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
-  const playersData = await callMFL(playersUrl);
-  const allPlayers = playersData?.players?.player || [];
+      const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
+      const playersData = await callMFL(playersUrl);
+      const allPlayers = playersData?.players?.player || [];
 
-  // 2. Load ranks
-  const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
-  const ranksData = await callMFL(ranksUrl);
-  const ranksList = ranksData?.player_ranks?.player || [];
+      const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
+      const ranksData = await callMFL(ranksUrl);
+      const ranksList = ranksData?.player_ranks?.player || [];
 
-  // 3. Load projections
-  const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
-  const projData = await callMFL(projUrl);
-  const projList = projData?.projectedScores?.playerScore || [];
+      const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
+      const projData = await callMFL(projUrl);
+      const projList = projData?.projectedScores?.playerScore || [];
 
-  // 4. Load free agents (two conferences)
-  const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
-  const faData = await callMFL(faUrl);
+      const faUrl = `https://www44.myfantasyleague.com/${year}/export?TYPE=freeAgents&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+      const faData = await callMFL(faUrl);
 
-  const units = faData?.freeAgents?.leagueUnit || [];
+      const units = faData?.freeAgents?.leagueUnit || [];
+      const conferencePools = {};
 
-  const conferencePools = {};
+      for (const unit of units) {
+        const unitName = unit.unit || "UNKNOWN";
+        const players = unit.player || [];
 
-  for (const unit of units) {
-    const unitName = unit.unit || "UNKNOWN";
-    const players = unit.player || [];
+        conferencePools[unitName] = players.map(fa => {
+          const p = allPlayers.find(x => x.id === fa.id);
+          const r = ranksList.find(x => x.id === fa.id);
+          const s = projList.find(x => x.id === fa.id);
 
-    conferencePools[unitName] = players.map(fa => {
-      const p = allPlayers.find(x => x.id === fa.id);
-      const r = ranksList.find(x => x.id === fa.id);
-      const s = projList.find(x => x.id === fa.id);
+          return {
+            id: fa.id,
+            name: p?.name || "Unknown",
+            position: p?.position || "UNK",
+            pos: p?.position || "UNK",
+            team: p?.team || "",
+            status: fa.status || "locked",
+            rank: Number(r?.rank) || 9999,
+            avg: Number(s?.score) || 0,
+          };
+        });
+      }
 
-      return {
-        id: fa.id,
-        name: p?.name || "Unknown",
-        position: p?.position || "UNK",
-        pos: p?.position || "UNK",
-        team: p?.team || "",
-        status: fa.status || "locked",
-        rank: Number(r?.rank) || 9999,
-        avg: Number(s?.score) || 0,
-      };
-    });
-  }
-
-  return res.status(200).json({ conferences: conferencePools });
-}
+      return res.status(200).json({ conferences: conferencePools });
+    }
 
     // --- ACTION: addPlayer ---
     if (action === "addPlayer") {
@@ -191,11 +186,10 @@ if (action === "freeAgents") {
         console.log("Sleeper news failed:", err.message);
       }
 
-     // -----------------------------
+      // -----------------------------
       // FantasyPros News (multi-item support)
       // -----------------------------
       let fpItems = [];
-      let externalNews = [];
 
       try {
         const [lastRaw, firstRaw] = name.split(",");
@@ -207,14 +201,12 @@ if (action === "freeAgents") {
         const fpResp = await fetch(fpUrl);
         const fpHtml = await fpResp.text();
 
-        // Match each news block
         const blocks = fpHtml.match(
           /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
         );
 
         if (blocks) {
           for (const block of blocks) {
-
             const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
             const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
             const impactMatch = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
@@ -234,14 +226,11 @@ if (action === "freeAgents") {
         console.log("FantasyPros news failed:", err.message);
       }
 
-      // IMPORTANT: return fpItems instead of fpItem
-      externalNews = fpItems;
-
-
       // -----------------------------
       // Return merged news
       // -----------------------------
-      const merged = [fpItem, sleeperItem].filter(Boolean);
+      const merged = [...fpItems];
+      if (sleeperItem) merged.push(sleeperItem);
 
       return res.status(200).json({
         player: name,
