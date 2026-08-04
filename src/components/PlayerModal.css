@@ -266,13 +266,17 @@
 }
 
 /* ============================== */
-/* TAB TRANSITION ANIMATION */
+/* TAB TRANSITION: SLIDE-IN */
 /* ============================== */
 
-@keyframes fadeIn {
+.pm-tab-content {
+  animation: slideIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
