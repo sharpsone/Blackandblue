@@ -240,18 +240,6 @@
   position: relative;
 }
 
-/* Fade-out bottom */
-.fa-news-box::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 30px;
-  background: linear-gradient(to bottom, transparent, #101019);
-  pointer-events: none;
-}
-
 /* ============================== */
 /* FORCE LEFT ALIGNMENT */
 /* ============================== */
