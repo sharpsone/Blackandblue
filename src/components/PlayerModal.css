@@ -209,3 +209,11 @@
   padding-left: 4px;
   border-left: 2px solid #444;
 }
+
+.always-visible {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #b5b5c9;
+  display: flex;
+  gap: 12px;   /* ← adds space between timestamp and source */
+}
