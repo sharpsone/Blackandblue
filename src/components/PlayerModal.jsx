@@ -7,24 +7,18 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
   const isLocked = player.status === "locked";
 
-  // Collapsible news state
   const [openNews, setOpenNews] = useState({});
-
-  // Tab state
   const [tab, setTab] = useState("overview");
 
-  // Player image (same pattern as MyRoster)
-  const headshotUrl = player.id
-    ? `https://www.myfantasyleague.com/player_photos/${player.id}.jpg`
-    : "/default-player.png";
+  // ⭐ EXACT SAME IMAGE LOGIC AS ROSTER.JSX
+  const headshotUrl = `/api/headshot?id=${player.id}`;
+  const fallbackUrl = "/silhouettes/player.png";
 
   return (
     <div className="modal-overlay">
       <div className="modal player-modal">
 
-        {/* ============================== */}
-        {/* TOP LOCK BANNER */}
-        {/* ============================== */}
+        {/* LOCK BANNER */}
         {isLocked && (
           <div className="modal-lock-banner top-lock">
             🔒 Locked until Free Agency opens
@@ -48,17 +42,16 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           <div className="pm-photo">
             <img
               src={headshotUrl}
-              onError={(e) => (e.target.src = "/default-player.png")}
               alt={player.name}
+              onError={(e) => (e.target.src = fallbackUrl)}
             />
           </div>
         </div>
 
-        {/* Divider */}
         <div className="pm-divider"></div>
 
         {/* ============================== */}
-        {/* MID SECTION: Fantasy Points + Pos Rank */}
+        {/* MID SECTION */}
         {/* ============================== */}
         <div className="pm-mid">
           <div className="pm-mid-box">
@@ -77,7 +70,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="pm-divider"></div>
 
         {/* ============================== */}
@@ -108,21 +100,17 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         {/* TAB CONTENT */}
         {/* ============================== */}
 
-        {/* OVERVIEW TAB */}
         {tab === "overview" && (
           <div className="pm-section">
 
-            {/* Week 1 Matchup Placeholder */}
             <div className="pm-matchup">
               <div className="pm-matchup-title">Week 1 Matchup</div>
               <div className="pm-matchup-line">Opponent: TBD</div>
               <div className="pm-matchup-line">Game Time: TBD</div>
             </div>
 
-            {/* Divider */}
             <div className="pm-divider"></div>
 
-            {/* Recent News */}
             <h3 className="fa-section-title">Recent News</h3>
 
             <div className="fa-news-box">
@@ -133,7 +121,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                   return (
                     <div key={idx} className="fa-news-item">
 
-                      {/* Collapsible Header */}
                       <div
                         className="fa-news-headline collapsible-header"
                         onClick={() =>
@@ -144,7 +131,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                         <span className="fa-collapse-icon">{isOpen ? "▲" : "▼"}</span>
                       </div>
 
-                      {/* Timestamp + Source */}
                       <div className="fa-news-meta always-visible">
                         {item.timestamp && (
                           <span className="fa-news-time">Reported: {item.timestamp}</span>
@@ -154,7 +140,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                         )}
                       </div>
 
-                      {/* Collapsible Body */}
                       {isOpen && (
                         <div className="fa-news-content">
                           {item.body && (
@@ -178,7 +163,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
-        {/* GAME LOG TAB */}
         {tab === "gamelog" && (
           <div className="pm-section">
             <h3>Game Log</h3>
@@ -186,7 +170,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
-        {/* STATS TAB */}
         {tab === "stats" && (
           <div className="pm-section">
             <h3>Stats</h3>
