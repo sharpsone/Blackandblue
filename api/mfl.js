@@ -219,6 +219,17 @@ export default async function handler(req, res) {
               fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
               timestamp: timestampMatch ? timestampMatch[1].trim() : null,
             });
+
+            // Filter out items older than 10 weeks
+            fpItems = fpItems.filter(item => {
+              if (!item.timestamp) return true;
+
+              const match = item.timestamp.match(/(\d+)\s+weeks?/i);
+              if (!match) return true;
+
+              const weeks = parseInt(match[1], 10);
+              return weeks <= 10;
+            });
           }
         }
 

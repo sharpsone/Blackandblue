@@ -53,38 +53,47 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
         <div className="fa-news-box">
           {player.externalNews && player.externalNews.length > 0 ? (
-            player.externalNews.map((item, idx) => (
-              <div key={idx} className="fa-news-item">
+            player.externalNews.map((item, idx) => {
+              const [open, setOpen] = useState(false);
 
-                {/* Headline */}
-                {item.headline && (
-                  <div className="fa-news-headline">{item.headline}</div>
-                )}
+              return (
+                <div key={idx} className="fa-news-item">
 
-                {/* Timestamp + Source */}
-                <div className="fa-news-meta">
-                  {item.timestamp && (
-                    <span className="fa-news-time">Reported: {item.timestamp}</span>
-                  )}
-                  {item.source && (
-                    <span className="fa-news-source">Source: {item.source}</span>
+                  {/* Collapsible Header */}
+                  <div
+                    className="fa-news-headline collapsible-header"
+                    onClick={() => setOpen(!open)}
+                  >
+                    {item.headline || "News Update"}
+                    <span className="fa-collapse-icon">{open ? "▲" : "▼"}</span>
+                  </div>
+
+                  {/* Collapsible Body */}
+                  {open && (
+                    <div className="fa-news-content">
+                      <div className="fa-news-meta">
+                        {item.timestamp && (
+                          <span className="fa-news-time">Reported: {item.timestamp}</span>
+                        )}
+                        {item.source && (
+                          <span className="fa-news-source">Source: {item.source}</span>
+                        )}
+                      </div>
+
+                      {item.body && (
+                        <div className="fa-news-body">{item.body}</div>
+                      )}
+
+                      {item.fantasyImpact && (
+                        <div className="fa-news-impact">
+                          <strong>Fantasy Impact:</strong> {item.fantasyImpact}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-
-                {/* Body */}
-                {item.body && (
-                  <div className="fa-news-body">{item.body}</div>
-                )}
-
-                {/* Fantasy Impact */}
-                {item.fantasyImpact && (
-                  <div className="fa-news-impact">
-                    <strong>Fantasy Impact:</strong> {item.fantasyImpact}
-                  </div>
-                )}
-
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="fa-news-none">No recent news available.</div>
           )}
