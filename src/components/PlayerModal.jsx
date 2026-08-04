@@ -3,7 +3,6 @@ import { useState } from "react";
 import "./PlayerModal.css";
 
 export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
-  // Debug: modal render state
   if (!player) {
     console.log("[PlayerModal] No player → modal not rendered");
     return null;
@@ -74,22 +73,19 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                     <span className="fa-collapse-icon">{isOpen ? "▲" : "▼"}</span>
                   </div>
 
+                  {/* ALWAYS SHOW TIMESTAMP + SOURCE */}
+                  <div className="fa-news-meta always-visible">
+                    {item.timestamp && (
+                      <span className="fa-news-time">Reported: {item.timestamp}</span>
+                    )}
+                    {item.source && (
+                      <span className="fa-news-source">Source: {item.source}</span>
+                    )}
+                  </div>
+
                   {/* Collapsible Body */}
                   {isOpen && (
                     <div className="fa-news-content">
-                      <div className="fa-news-meta">
-                        {item.timestamp && (
-                          <span className="fa-news-time">
-                            Reported: {item.timestamp}
-                          </span>
-                        )}
-                        {item.source && (
-                          <span className="fa-news-source">
-                            Source: {item.source}
-                          </span>
-                        )}
-                      </div>
-
                       {item.body && (
                         <div className="fa-news-body">{item.body}</div>
                       )}
