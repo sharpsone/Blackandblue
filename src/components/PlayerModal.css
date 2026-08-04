@@ -288,7 +288,11 @@
   cursor: not-allowed;
 }
 
-.pm-section {
+/* ============================== */
+/* TAB TRANSITION ANIMATION */
+/* ============================== */
+
+.pm-tab-content {
   animation: fadeIn 0.25s ease-in-out;
 }
 
@@ -302,3 +306,4 @@
     transform: translateY(0);
   }
 }
+
