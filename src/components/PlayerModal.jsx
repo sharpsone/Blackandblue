@@ -3,117 +3,204 @@ import { useState } from "react";
 import "./PlayerModal.css";
 
 export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
-  if (!player) {
-    console.log("[PlayerModal] No player → modal not rendered");
-    return null;
-  }
-
-  console.log("[PlayerModal] Rendering modal with player:", player);
+  if (!player) return null;
 
   const isLocked = player.status === "locked";
 
-  // Collapsible state for news items
+  // Collapsible news state
   const [openNews, setOpenNews] = useState({});
+
+  // Tab state
+  const [tab, setTab] = useState("overview");
+
+  // Player image (same pattern as MyRoster)
+  const headshotUrl = player.id
+    ? `https://www.myfantasyleague.com/player_photos/${player.id}.jpg`
+    : "/default-player.png";
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
-        {/* NAME */}
-        <h2>{player.name}</h2>
+      <div className="modal player-modal">
 
-        {/* LOCK BANNER */}
+        {/* ============================== */}
+        {/* TOP LOCK BANNER */}
+        {/* ============================== */}
         {isLocked && (
-          <div className="modal-lock-banner">
+          <div className="modal-lock-banner top-lock">
             🔒 Locked until Free Agency opens
           </div>
         )}
 
-        {/* POSITION + TEAM */}
-        <div className="modal-meta">
-          <span>{player.pos}</span> — <span>{player.team}</span>
+        {/* ============================== */}
+        {/* TOP SECTION */}
+        {/* ============================== */}
+        <div className="pm-top">
+          {/* LEFT SIDE INFO */}
+          <div className="pm-info">
+            <h2 className="pm-name">{player.name}</h2>
+
+            <div className="pm-line">{player.pos} — {player.team}</div>
+            <div className="pm-line">Week 1</div>
+            <div className="pm-line">Free Agent</div>
+          </div>
+
+          {/* RIGHT SIDE IMAGE */}
+          <div className="pm-photo">
+            <img
+              src={headshotUrl}
+              onError={(e) => (e.target.src = "/default-player.png")}
+              alt={player.name}
+            />
+          </div>
         </div>
 
-        {/* STATS GRID */}
-        <div className="modal-stats">
-          <div>
-            <strong>RANK (Overall)</strong>
-            <div>{player.rank}</div>
+        {/* Divider */}
+        <div className="pm-divider"></div>
+
+        {/* ============================== */}
+        {/* MID SECTION: Fantasy Points + Pos Rank */}
+        {/* ============================== */}
+        <div className="pm-mid">
+          <div className="pm-mid-box">
+            <div className="pm-mid-label">Fantasy Points</div>
+            <div className="pm-mid-value">{player.avg || 0}</div>
           </div>
-          <div>
-            <strong>RANK (Position)</strong>
-            <div>{player.posRank}</div>
+
+          <div className="pm-mid-box">
+            <div className="pm-mid-label">Position Rank</div>
+            <div className="pm-mid-value">{player.posRank}</div>
           </div>
-          <div>
-            <strong>AVG</strong>
-            <div>{player.avg}</div>
+
+          <div className="pm-mid-box pm-status">
+            <div className="pm-mid-label">Status</div>
+            <div className="pm-mid-value">Healthy</div>
           </div>
         </div>
 
-        {/* ----------------------------- */}
-        {/* NEWS SECTION */}
-        {/* ----------------------------- */}
-        <h3 className="fa-section-title">Recent News</h3>
+        {/* Divider */}
+        <div className="pm-divider"></div>
 
-        <div className="fa-news-box">
-          {player.externalNews && player.externalNews.length > 0 ? (
-            player.externalNews.map((item, idx) => {
-              const isOpen = openNews[idx] || false;
+        {/* ============================== */}
+        {/* TABS */}
+        {/* ============================== */}
+        <div className="pm-tabs">
+          <button
+            className={`pm-tab ${tab === "overview" ? "active" : ""}`}
+            onClick={() => setTab("overview")}
+          >
+            Overview
+          </button>
+          <button
+            className={`pm-tab ${tab === "gamelog" ? "active" : ""}`}
+            onClick={() => setTab("gamelog")}
+          >
+            Game Log
+          </button>
+          <button
+            className={`pm-tab ${tab === "stats" ? "active" : ""}`}
+            onClick={() => setTab("stats")}
+          >
+            Stats
+          </button>
+        </div>
 
-              return (
-                <div key={idx} className="fa-news-item">
+        {/* ============================== */}
+        {/* TAB CONTENT */}
+        {/* ============================== */}
 
-                  {/* Collapsible Header */}
-                  <div
-                    className="fa-news-headline collapsible-header"
-                    onClick={() =>
-                      setOpenNews(prev => ({ ...prev, [idx]: !isOpen }))
-                    }
-                  >
-                    {item.headline || "News Update"}
-                    <span className="fa-collapse-icon">{isOpen ? "▲" : "▼"}</span>
-                  </div>
+        {/* OVERVIEW TAB */}
+        {tab === "overview" && (
+          <div className="pm-section">
 
-                  {/* ALWAYS SHOW TIMESTAMP + SOURCE */}
-                  <div className="fa-news-meta always-visible">
-                    {item.timestamp && (
-                      <span className="fa-news-time">Reported: {item.timestamp}</span>
-                    )}
-                    {item.source && (
-                      <span className="fa-news-source">Source: {item.source}</span>
-                    )}
-                  </div>
+            {/* Week 1 Matchup Placeholder */}
+            <div className="pm-matchup">
+              <div className="pm-matchup-title">Week 1 Matchup</div>
+              <div className="pm-matchup-line">Opponent: TBD</div>
+              <div className="pm-matchup-line">Game Time: TBD</div>
+            </div>
 
-                  {/* Collapsible Body */}
-                  {isOpen && (
-                    <div className="fa-news-content">
-                      {item.body && (
-                        <div className="fa-news-body">{item.body}</div>
-                      )}
+            {/* Divider */}
+            <div className="pm-divider"></div>
 
-                      {item.fantasyImpact && (
-                        <div className="fa-news-impact">
-                          <strong>Fantasy Impact:</strong> {item.fantasyImpact}
+            {/* Recent News */}
+            <h3 className="fa-section-title">Recent News</h3>
+
+            <div className="fa-news-box">
+              {player.externalNews && player.externalNews.length > 0 ? (
+                player.externalNews.map((item, idx) => {
+                  const isOpen = openNews[idx] || false;
+
+                  return (
+                    <div key={idx} className="fa-news-item">
+
+                      {/* Collapsible Header */}
+                      <div
+                        className="fa-news-headline collapsible-header"
+                        onClick={() =>
+                          setOpenNews(prev => ({ ...prev, [idx]: !isOpen }))
+                        }
+                      >
+                        {item.headline || "News Update"}
+                        <span className="fa-collapse-icon">{isOpen ? "▲" : "▼"}</span>
+                      </div>
+
+                      {/* Timestamp + Source */}
+                      <div className="fa-news-meta always-visible">
+                        {item.timestamp && (
+                          <span className="fa-news-time">Reported: {item.timestamp}</span>
+                        )}
+                        {item.source && (
+                          <span className="fa-news-source">Source: {item.source}</span>
+                        )}
+                      </div>
+
+                      {/* Collapsible Body */}
+                      {isOpen && (
+                        <div className="fa-news-content">
+                          {item.body && (
+                            <div className="fa-news-body">{item.body}</div>
+                          )}
+
+                          {item.fantasyImpact && (
+                            <div className="fa-news-impact">
+                              <strong>Fantasy Impact:</strong> {item.fantasyImpact}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            <div className="fa-news-none">No recent news available.</div>
-          )}
-        </div>
+                  );
+                })
+              ) : (
+                <div className="fa-news-none">No recent news available.</div>
+              )}
+            </div>
+          </div>
+        )}
 
-        {/* WEEKLY POINTS HEADER */}
-        <h3>Weekly Points</h3>
+        {/* GAME LOG TAB */}
+        {tab === "gamelog" && (
+          <div className="pm-section">
+            <h3>Game Log</h3>
+            <div className="pm-placeholder">Game log data coming soon…</div>
+          </div>
+        )}
 
-        {/* BUTTONS */}
+        {/* STATS TAB */}
+        {tab === "stats" && (
+          <div className="pm-section">
+            <h3>Stats</h3>
+            <div className="pm-placeholder">Season stats coming soon…</div>
+          </div>
+        )}
+
+        {/* ============================== */}
+        {/* ACTION BUTTONS */}
+        {/* ============================== */}
         <div className="modal-actions">
           <button
             className={`modal-btn add-btn ${isLocked ? "locked" : ""}`}
             disabled={isLocked}
-            title={isLocked ? "Locked until F/A opens" : ""}
             onClick={() => !isLocked && onAdd(player.id)}
           >
             Add Player
@@ -122,7 +209,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           <button
             className={`modal-btn waiver-btn ${isLocked ? "locked" : ""}`}
             disabled={isLocked}
-            title={isLocked ? "Locked until F/A opens" : ""}
             onClick={() => !isLocked && onWaiver(player.id)}
           >
             Submit Waiver Claim
@@ -132,6 +218,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             Close
           </button>
         </div>
+
       </div>
     </div>
   );
