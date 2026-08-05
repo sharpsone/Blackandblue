@@ -1,5 +1,7 @@
 // /api/mfl.js
 import fetch from "node-fetch";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(req, res) {
   try {
@@ -35,7 +37,23 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
-    // ACTION: freeAgents (with conference separation)
+    // STATIC LOADERS
+    // -----------------------------
+    const loadByeWeeks = () => {
+      const filePath = path.join(process.cwd(), "public/data/nflByeWeeks.json");
+      return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    };
+
+    const loadSchedule = (week = 1) => {
+      const filePath = path.join(
+        process.cwd(),
+        `public/data/nflScheduleWeek${week}.json`
+      );
+      return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    };
+
+    // -----------------------------
+    // ACTION: freeAgents
     // -----------------------------
     if (action === "freeAgents") {
       const apiKey = process.env.MFL_API_KEY;
@@ -141,7 +159,7 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
-    // ACTION: playerNewsFeed (Sleeper + FantasyPros)
+    // ACTION: playerNewsFeed
     // -----------------------------
     if (action === "playerNewsFeed") {
       const { name } = req.query;
@@ -154,9 +172,6 @@ export default async function handler(req, res) {
       const nowSec = Math.floor(Date.now() / 1000);
       const fourWeeksSec = 28 * 24 * 60 * 60;
 
-      // -----------------------------
-      // Sleeper News
-      // -----------------------------
       let sleeperItem = null;
       try {
         const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
@@ -186,9 +201,6 @@ export default async function handler(req, res) {
         console.log("Sleeper news failed:", err.message);
       }
 
-      // -----------------------------
-      // FantasyPros News (multi-item support)
-      // -----------------------------
       let fpItems = [];
 
       try {
@@ -220,7 +232,6 @@ export default async function handler(req, res) {
               timestamp: timestampMatch ? timestampMatch[1].trim() : null,
             });
 
-            // Filter out items older than 10 weeks
             fpItems = fpItems.filter(item => {
               if (!item.timestamp) return true;
 
@@ -237,15 +248,82 @@ export default async function handler(req, res) {
         console.log("FantasyPros news failed:", err.message);
       }
 
-      // -----------------------------
-      // Return merged news
-      // -----------------------------
       const merged = [...fpItems];
       if (sleeperItem) merged.push(sleeperItem);
 
       return res.status(200).json({
         player: name,
         news: merged
+      });
+    }
+
+    // -----------------------------
+    // ⭐ PATCHED ACTION: playerModal
+    // -----------------------------
+    if (action === "playerModal") {
+      const { playerId, team } = req.query;
+
+      if (!playerId) {
+        return res.status(400).json({ error: "Missing playerId" });
+      }
+
+      const playerTeam = team || "";
+
+      // Load static data
+      const byeWeeks = loadByeWeeks();
+      const schedule = loadSchedule(1);
+
+      // Correct bye week path
+      const byeWeekEntry = byeWeeks.nflByeWeeks.team.find(
+        (t) => t.id === playerTeam
+      );
+      const byeWeek = byeWeekEntry ? byeWeekEntry.bye_week : null;
+
+      // Correct schedule path
+      const weekMatchups = schedule.nflSchedule.matchup || [];
+
+      let matchup = weekMatchups.find(
+        (m) =>
+          m.team[0].id === playerTeam ||
+          m.team[1].id === playerTeam
+      );
+
+      const matchupData = matchup
+        ? {
+            opponent:
+              matchup.team[0].id === playerTeam
+                ? matchup.team[1].id
+                : matchup.team[0].id,
+            kickoff: matchup.kickoff || null,
+            home: matchup.team[0].id === playerTeam,
+            spread:
+              matchup.team[0].spread ||
+              matchup.team[1].spread ||
+              null,
+            status: matchup.status || null
+          }
+        : null;
+
+      // Fetch dynamic MFL data
+      const playerScores = await callMFL(
+        `https://www44.myfantasyleague.com/${year}/export?TYPE=playerScores&L=${leagueId}&PLAYERS=${playerId}&W=AVG&JSON=1`
+      );
+
+      const projectedScores = await callMFL(
+        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&PLAYERS=${playerId}&W=1&JSON=1`
+      );
+
+      return res.status(200).json({
+        id: playerId,
+        team: playerTeam,
+        byeWeek,
+        matchup: matchupData,
+        scores: {
+          avg: playerScores?.playerScores?.playerScore?.score || null
+        },
+        projections: {
+          week1: projectedScores?.projectedScores?.playerScore?.score || null
+        }
       });
     }
 
@@ -274,55 +352,6 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json(data);
-    }
-
-    // --- ACTION: playerModal ---
-    if (action === "playerModal") {
-      const { playerId } = req.query;
-
-      if (!playerId) {
-        return res.status(400).json({ error: "Missing playerId" });
-      }
-
-      // Fetch full player details
-      const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
-      const playersData = await callMFL(playersUrl);
-      const allPlayers = playersData?.players?.player || [];
-      const player = allPlayers.find(p => p.id === playerId);
-
-      if (!player) {
-        return res.status(404).json({ error: "Player not found" });
-      }
-
-      // Fetch player ranks
-      const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
-      const ranksData = await callMFL(ranksUrl);
-      const ranksList = ranksData?.player_ranks?.player || [];
-      const rank = ranksList.find(r => r.id === playerId);
-
-      // Fetch projected scores
-      const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
-      const projData = await callMFL(projUrl);
-      const projList = projData?.projectedScores?.playerScore || [];
-      const proj = projList.find(s => s.id === playerId);
-
-      // Build response
-      const modalData = {
-        id: player.id,
-        name: player.name,
-        position: player.position,
-        team: player.team,
-        age: player.age,
-        height: player.height,
-        weight: player.weight,
-        draftYear: player.draft_year,
-        draftRound: player.draft_round,
-        draftPick: player.draft_pick,
-        rank: Number(rank?.rank) || null,
-        projectedScore: Number(proj?.score) || null,
-      };
-
-      return res.status(200).json({ player: modalData });
     }
 
     return res.status(400).json({ error: "Unknown action", action });
