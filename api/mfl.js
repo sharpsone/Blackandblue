@@ -258,7 +258,7 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
-    // ⭐ PATCHED ACTION: playerModal
+    // ⭐ CORRECTED ACTION: playerModal
     // -----------------------------
     if (action === "playerModal") {
       const { playerId, team } = req.query;
@@ -288,13 +288,27 @@ export default async function handler(req, res) {
           m.team[1].id === playerTeam
       );
 
+      // Convert UNIX kickoff → Pacific Time
+      let kickoffPacific = null;
+      if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
+        const unix = Number(matchup.kickoff);
+        kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
+          timeZone: "America/Los_Angeles",
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+        });
+      }
+
       const matchupData = matchup
         ? {
             opponent:
               matchup.team[0].id === playerTeam
                 ? matchup.team[1].id
                 : matchup.team[0].id,
-            kickoff: matchup.kickoff || null,
+            kickoff: kickoffPacific,
             home: matchup.team[0].id === playerTeam,
             spread:
               matchup.team[0].spread ||
