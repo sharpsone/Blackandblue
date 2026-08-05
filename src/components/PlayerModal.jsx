@@ -55,7 +55,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
               Bye Week: {player.byeWeek || "—"}
             </div>
 
-            <div className="pm-line">Week 1</div>
             <div className="pm-line">Free Agent</div>
           </div>
 
