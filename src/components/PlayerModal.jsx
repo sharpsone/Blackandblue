@@ -135,7 +135,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             <div className="pm-divider"></div>
 
             <div className="pm-status-line">
-              <strong>Status:</strong> {player.status || "Unknown"}
+              <strong>Status:</strong> {player.healthStatus || "Unknown"}
             </div>
 
             <div className="pm-divider"></div>

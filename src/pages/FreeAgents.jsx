@@ -135,6 +135,8 @@ export default function FreeAgents({ leagueInfo }) {
           avg: modalData.scores?.avg || player.avg || 0,
           projected: modalData.projections?.week1 || null,
 
+          healthStatus: player.status,   // from players endpoint
+
           loading: false,
         };
 
