@@ -35,7 +35,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             {/* ⭐ Bye Week */}
             <div className="pm-line">Bye Week: {player.byeWeek || "—"}</div>
 
-            <div className="pm-line">Week 1</div>
             <div className="pm-line">Free Agent</div>
           </div>
 
@@ -70,10 +69,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             <div className="pm-mid-value">{player.projected || "—"}</div>
           </div>
 
-          <div className="pm-mid-box pm-status">
-            <div className="pm-mid-label">Status</div>
-            <div className="pm-mid-value">Healthy</div>
-          </div>
         </div>
 
         <div className="pm-divider"></div>
@@ -111,25 +106,36 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
             {/* ⭐ MATCHUP SECTION */}
             <div className="pm-matchup">
-              <div className="pm-matchup-title">Week 1 Matchup</div>
-
-              <div className="pm-matchup-line">
-                Opponent: {player.matchup?.opponent || "TBD"}
+              <div className="pm-matchup-title">
+                Week {player.week || 1} Matchup
               </div>
 
+              {/* Date + Time */}
               <div className="pm-matchup-line">
-                Game Time: {player.matchup?.kickoff || "TBD"}
+                {player.matchup?.kickoff
+                  ? player.matchup.kickoff
+                  : "Date/Time: TBD"}
               </div>
 
+              {/* v / @ opponent */}
               <div className="pm-matchup-line">
-                Home/Away: {player.matchup
-                  ? player.matchup.home ? "Home" : "Away"
-                  : "TBD"}
+                {player.matchup
+                  ? player.matchup.home
+                    ? `v ${player.matchup.opponent}`
+                    : `@ ${player.matchup.opponent}`
+                  : "Opponent: TBD"}
               </div>
 
+              {/* Spread */}
               <div className="pm-matchup-line">
                 Spread: {player.matchup?.spread || "TBD"}
               </div>
+            </div>
+
+            <div className="pm-divider"></div>
+
+            <div className="pm-status-line">
+              <strong>Status:</strong> {player.status || "Unknown"}
             </div>
 
             <div className="pm-divider"></div>
