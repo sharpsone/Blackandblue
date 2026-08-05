@@ -93,7 +93,13 @@ export default async function handler(req, res) {
             position: p?.position || "UNK",
             pos: p?.position || "UNK",
             team: p?.team || "",
-            status: fa.status || "locked",
+
+            // ⭐ FREE AGENT LOCK STATUS
+            faStatus: fa.status || "locked",
+
+            // ⭐ REAL HEALTH STATUS FROM PLAYERS API
+            healthStatus: p?.status || "Unknown",
+
             rank: Number(r?.rank) || 9999,
             avg: Number(s?.score) || 0,
           };

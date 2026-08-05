@@ -2,7 +2,7 @@
 import "./PlayerCard.css";
 
 export default function PlayerCard({ player, onOpen, onAdd, onWaiver }) {
-  const isLocked = player.status === "locked";
+  const isLocked = player.faStatus === "locked";
 
   return (
     <div

@@ -5,7 +5,7 @@ import "./PlayerModal.css";
 export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
   if (!player || player.loading) return null;
 
-  const isLocked = player.status === "locked";
+  const isLocked = player.faStatus === "locked";
 
   const [openNews, setOpenNews] = useState({});
   const [tab, setTab] = useState("overview");
