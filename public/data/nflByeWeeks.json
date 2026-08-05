@@ -1,0 +1,41 @@
+{
+  "nflByeWeeks": {
+    "team": [
+      { "id": "ARI", "bye_week": "14" },
+      { "id": "ATL", "bye_week": "11" },
+      { "id": "BAL", "bye_week": "13" },
+      { "id": "BUF", "bye_week": "7" },
+      { "id": "CAR", "bye_week": "5" },
+      { "id": "CHI", "bye_week": "10" },
+      { "id": "CIN", "bye_week": "6" },
+      { "id": "CLE", "bye_week": "11" },
+      { "id": "DAL", "bye_week": "14" },
+      { "id": "DEN", "bye_week": "10" },
+      { "id": "DET", "bye_week": "6" },
+      { "id": "GBP", "bye_week": "11" },
+      { "id": "HOU", "bye_week": "8" },
+      { "id": "IND", "bye_week": "13" },
+      { "id": "JAC", "bye_week": "7" },
+      { "id": "KCC", "bye_week": "5" },
+      { "id": "LAC", "bye_week": "7" },
+      { "id": "LAR", "bye_week": "11" },
+      { "id": "LVN", "bye_week": "13" },
+      { "id": "MIA", "bye_week": "6" },
+      { "id": "MIN", "bye_week": "6" },
+      { "id": "NEP", "bye_week": "11" },
+      { "id": "NOS", "bye_week": "8" },
+      { "id": "NYG", "bye_week": "8" },
+      { "id": "NYJ", "bye_week": "13" },
+      { "id": "PHI", "bye_week": "10" },
+      { "id": "PIT", "bye_week": "9" },
+      { "id": "SEA", "bye_week": "11" },
+      { "id": "SFO", "bye_week": "8" },
+      { "id": "TBB", "bye_week": "10" },
+      { "id": "TEN", "bye_week": "9" },
+      { "id": "WAS", "bye_week": "7" }
+    ],
+    "year": "2026",
+    "version": "1.0",
+    "encoding": "utf-8"
+  }
+}

@@ -93,48 +93,64 @@ export default function FreeAgents({ leagueInfo }) {
     setFiltered(list);
   }, [players, search, position, sortBy]);
 
-  // -----------------------------
-  // PLAYER MODAL (stats + news)
-  // -----------------------------
-  const openPlayer = async (player) => {
-    console.log("[openPlayer] clicked player:", player);
+    // -----------------------------
+    // PLAYER MODAL (stats + news + schedule + bye week + projections)
+    // -----------------------------
+    const openPlayer = async (player) => {
+      console.log("[openPlayer] clicked player:", player);
 
-    setSelectedPlayer({ loading: true });
+      setSelectedPlayer({ loading: true });
 
-    try {
-      // Fetch stats
-      const statsRes = await fetch(
-        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-      const stats = await statsRes.json();
-      console.log("[openPlayer] fetched stats:", stats);
+      try {
+        // 1. Fetch unified modal data (bye week, schedule, avg, projected)
+        const modalRes = await fetch(
+          `/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+        );
+        const modalData = await modalRes.json();
+        console.log("[openPlayer] unified modalData:", modalData);
 
-      // Fetch external news (FantasyPros + Sleeper)
-      const newsRes = await fetch(
-        `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
-      );
-      const newsData = await newsRes.json();
-      console.log("[openPlayer] fetched external news:", newsData);
+        // 2. Fetch stats
+        const statsRes = await fetch(
+          `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+        );
+        const stats = await statsRes.json();
+        console.log("[openPlayer] fetched stats:", stats);
 
-      setSelectedPlayer({
-        ...player,
-        ...stats,
-        externalNews: newsData.news || [],
-        loading: false,
-      });
+        // 3. Fetch external news (FantasyPros + Sleeper)
+        const newsRes = await fetch(
+          `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+        );
+        const newsData = await newsRes.json();
+        console.log("[openPlayer] fetched external news:", newsData);
 
-    } catch (err) {
-      console.error("[openPlayer] Failed:", err);
+        // 4. Merge everything into one object
+        const merged = {
+          ...player,
+          ...stats,
+          externalNews: newsData.news || [],
 
-      setSelectedPlayer({
-        ...player,
-        stats: [],
-        news: null,
-        newsSource: null,
-        loading: false,
-      });
-    }
-  };
+          // Unified backend fields
+          byeWeek: modalData.byeWeek || null,
+          matchup: modalData.matchup || null,
+          avg: modalData.scores?.avg || player.avg || 0,
+          projected: modalData.projections?.week1 || null,
+
+          loading: false,
+        };
+
+        setSelectedPlayer(merged);
+
+      } catch (err) {
+        console.error("[openPlayer] Failed:", err);
+
+        setSelectedPlayer({
+          ...player,
+          stats: [],
+          externalNews: [],
+          loading: false,
+        });
+      }
+    };
 
   const closePlayer = () => setSelectedPlayer(null);
 

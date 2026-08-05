@@ -276,6 +276,55 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // --- ACTION: playerModal ---
+    if (action === "playerModal") {
+      const { playerId } = req.query;
+
+      if (!playerId) {
+        return res.status(400).json({ error: "Missing playerId" });
+      }
+
+      // Fetch full player details
+      const playersUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
+      const playersData = await callMFL(playersUrl);
+      const allPlayers = playersData?.players?.player || [];
+      const player = allPlayers.find(p => p.id === playerId);
+
+      if (!player) {
+        return res.status(404).json({ error: "Player not found" });
+      }
+
+      // Fetch player ranks
+      const ranksUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=&SOURCE=&JSON=1`;
+      const ranksData = await callMFL(ranksUrl);
+      const ranksList = ranksData?.player_ranks?.player || [];
+      const rank = ranksList.find(r => r.id === playerId);
+
+      // Fetch projected scores
+      const projUrl = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
+      const projData = await callMFL(projUrl);
+      const projList = projData?.projectedScores?.playerScore || [];
+      const proj = projList.find(s => s.id === playerId);
+
+      // Build response
+      const modalData = {
+        id: player.id,
+        name: player.name,
+        position: player.position,
+        team: player.team,
+        age: player.age,
+        height: player.height,
+        weight: player.weight,
+        draftYear: player.draft_year,
+        draftRound: player.draft_round,
+        draftPick: player.draft_pick,
+        rank: Number(rank?.rank) || null,
+        projectedScore: Number(proj?.score) || null,
+      };
+
+      return res.status(200).json({ player: modalData });
+    }
+
     return res.status(400).json({ error: "Unknown action", action });
 
   } catch (err) {
