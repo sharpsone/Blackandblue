@@ -133,7 +133,7 @@ export default function FreeAgents({ leagueInfo }) {
           byeWeek: modalData.byeWeek || null,
           matchup: modalData.matchup || null,
           avg: modalData.scores?.avg || player.avg || 0,
-          projected: modalData.projections?.week1 || null,
+          projected: modalData.projections?.current || null,
 
           // ⭐ NEW HEALTH FIELDS
           healthStatus: modalData.healthStatus,
@@ -142,7 +142,7 @@ export default function FreeAgents({ leagueInfo }) {
           
           // ⭐ NEW
           rosteredPercent: modalData.rosteredPercent,
-          
+
           loading: false,
         };
 

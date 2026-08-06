@@ -372,9 +372,13 @@ export default async function handler(req, res) {
         `https://www44.myfantasyleague.com/${year}/export?TYPE=playerScores&L=${leagueId}&PLAYERS=${playerId}&W=AVG&JSON=1`
       );
 
+      // Fetch projected scores for current week
       const projectedScores = await callMFL(
-        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&PLAYERS=${playerId}&W=1&JSON=1`
+        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
       );
+      // Extract projected score
+      const projectedScore =
+        projectedScores?.projectedScores?.playerScore?.score || null;
 
       return res.status(200).json({
         id: playerId,
@@ -385,8 +389,9 @@ export default async function handler(req, res) {
           avg: playerScores?.playerScores?.playerScore?.score || null
         },
         projections: {
-          week1: projectedScores?.projectedScores?.playerScore?.score || null
-        },
+          current: projectedScore
+        }
+
         // ⭐ REAL HEALTH STATUS FROM INJURIES API
         healthStatus,
         injuryDetail,
