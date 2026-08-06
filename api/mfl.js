@@ -374,9 +374,9 @@ export default async function handler(req, res) {
 
       // Fetch projected scores for current week
       const projectedScores = await callMFL(
-        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
+        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
       );
-      
+
       // Extract projected score
       const ps = projectedScores?.projectedScores?.playerScore;
 
