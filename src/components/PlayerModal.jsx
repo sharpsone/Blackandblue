@@ -13,6 +13,14 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
   const headshotUrl = `/api/headshot?id=${player.id}`;
   const fallbackUrl = "/silhouettes/player.png";
 
+  const getHealthColor = (status) => {
+    if (!status) return "green";
+    const s = status.toLowerCase();
+    if (s.includes("out") || s.includes("doubt")) return "red";
+    if (s.includes("question")) return "yellow";
+    return "green";
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal player-modal">
@@ -23,17 +31,18 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
-        {/* ============================== */}
         {/* TOP SECTION */}
-        {/* ============================== */}
         <div className="pm-top">
           <div className="pm-info">
             <h2 className="pm-name">{player.name}</h2>
 
-            <div className="pm-line">{player.pos} — {player.team}</div>
+            <div className="pm-line">
+              {player.pos} — {player.team}
+            </div>
 
-            {/* ⭐ Bye Week */}
-            <div className="pm-line">Bye Week: {player.byeWeek || "—"}</div>
+            <div className="pm-line">
+              Bye Week: {player.byeWeek || "—"}
+            </div>
 
             <div className="pm-line">Free Agent</div>
           </div>
@@ -49,9 +58,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
         <div className="pm-divider"></div>
 
-        {/* ============================== */}
         {/* MID SECTION */}
-        {/* ============================== */}
         <div className="pm-mid">
           <div className="pm-mid-box">
             <div className="pm-mid-label">Fantasy Points</div>
@@ -63,19 +70,15 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             <div className="pm-mid-value">{player.posRank}</div>
           </div>
 
-          {/* ⭐ Projected Points */}
           <div className="pm-mid-box">
             <div className="pm-mid-label">Projected</div>
             <div className="pm-mid-value">{player.projected || "—"}</div>
           </div>
-
         </div>
 
         <div className="pm-divider"></div>
 
-        {/* ============================== */}
         {/* TABS */}
-        {/* ============================== */}
         <div className="pm-tabs">
           <button
             className={`pm-tab ${tab === "overview" ? "active" : ""}`}
@@ -97,57 +100,46 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </button>
         </div>
 
-        {/* ============================== */}
         {/* TAB CONTENT */}
-        {/* ============================== */}
-
         {tab === "overview" && (
           <div className="pm-tab-content">
 
-        {/* ⭐ MATCHUP SECTION */}
-        <div className="pm-matchup">
+            {/* MATCHUP SECTION */}
+            <div className="pm-matchup">
+              <div className="pm-matchup-title">
+                Week {player.week || 1} Matchup
+                <span
+                  className={`pm-health-pill pm-health-${getHealthColor(
+                    player.healthStatus
+                  )}`}
+                  style={{ marginLeft: "10px" }}
+                >
+                  {player.healthStatus}
+                </span>
+              </div>
 
-          {/* Title + Health Pill */}
-          <div className="pm-matchup-title">
-            Week {player.week || 1} Matchup
+              <div className="pm-matchup-line">
+                {player.matchup?.kickoff || "Date/Time: TBD"}
+              </div>
 
-            <span
-              className={`pm-health-pill pm-health-${getHealthColor(
-                player.healthStatus
-              )}`}
-              style={{ marginLeft: "10px" }}
-            >
-              {player.healthStatus}
-            </span>
-          </div>
+              <div className="pm-matchup-line">
+                {player.matchup
+                  ? player.matchup.home
+                    ? `v ${player.matchup.opponent}`
+                    : `@ ${player.matchup.opponent}`
+                  : "Opponent: TBD"}
+              </div>
 
-          {/* Date + Time */}
-          <div className="pm-matchup-line">
-            {player.matchup?.kickoff || "Date/Time: TBD"}
-          </div>
+              <div className="pm-matchup-line">
+                Spread: {player.matchup?.spread || "TBD"}
+              </div>
 
-          {/* v / @ opponent */}
-          <div className="pm-matchup-line">
-            {player.matchup
-              ? player.matchup.home
-                ? `v ${player.matchup.opponent}`
-                : `@ ${player.matchup.opponent}`
-              : "Opponent: TBD"}
-          </div>
-
-          {/* Spread */}
-          <div className="pm-matchup-line">
-            Spread: {player.matchup?.spread || "TBD"}
-          </div>
-
-          {/* Injury detail */}
-          {player.injuryDetail && (
-            <div className="pm-matchup-line injury-detail">
-              {player.injuryDetail}
+              {player.injuryDetail && (
+                <div className="pm-matchup-line injury-detail">
+                  {player.injuryDetail}
+                </div>
+              )}
             </div>
-          )}
-
-        </div>
 
             <div className="pm-divider"></div>
 
@@ -160,23 +152,28 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
                   return (
                     <div key={idx} className="fa-news-item">
-
                       <div
                         className="fa-news-headline collapsible-header"
                         onClick={() =>
-                          setOpenNews(prev => ({ ...prev, [idx]: !isOpen }))
+                          setOpenNews((prev) => ({ ...prev, [idx]: !isOpen }))
                         }
                       >
                         {item.headline || "News Update"}
-                        <span className="fa-collapse-icon">{isOpen ? "▲" : "▼"}</span>
+                        <span className="fa-collapse-icon">
+                          {isOpen ? "▲" : "▼"}
+                        </span>
                       </div>
 
                       <div className="fa-news-meta always-visible">
                         {item.timestamp && (
-                          <span className="fa-news-time">Reported: {item.timestamp}</span>
+                          <span className="fa-news-time">
+                            Reported: {item.timestamp}
+                          </span>
                         )}
                         {item.source && (
-                          <span className="fa-news-source">Source: {item.source}</span>
+                          <span className="fa-news-source">
+                            Source: {item.source}
+                          </span>
                         )}
                       </div>
 
@@ -188,7 +185,8 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
                           {item.fantasyImpact && (
                             <div className="fa-news-impact">
-                              <strong>Fantasy Impact:</strong> {item.fantasyImpact}
+                              <strong>Fantasy Impact:</strong>{" "}
+                              {item.fantasyImpact}
                             </div>
                           )}
                         </div>
@@ -200,7 +198,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                 <div className="fa-news-none">No recent news available.</div>
               )}
             </div>
-
           </div>
         )}
 
@@ -218,9 +215,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
-        {/* ============================== */}
         {/* ACTION BUTTONS */}
-        {/* ============================== */}
         <div className="modal-actions">
           <button
             className={`modal-btn add-btn ${isLocked ? "locked" : ""}`}
