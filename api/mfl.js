@@ -389,8 +389,8 @@ export default async function handler(req, res) {
           avg: playerScores?.playerScores?.playerScore?.score || null
         },
         projections: {
-          current: projectedScore,
-        }
+          current: projectedScore
+        },
 
         // ⭐ REAL HEALTH STATUS FROM INJURIES API
         healthStatus,
