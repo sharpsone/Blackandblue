@@ -376,9 +376,22 @@ export default async function handler(req, res) {
       const projectedScores = await callMFL(
         `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
       );
+      
       // Extract projected score
-      const projectedScore =
-        projectedScores?.projectedScores?.playerScore?.score || null;
+      const ps = projectedScores?.projectedScores?.playerScore;
+
+      let projectedScore = null;
+
+      // If single player → object
+      if (ps && typeof ps === "object" && !Array.isArray(ps)) {
+        projectedScore = ps.score || null;
+      }
+
+      // If multiple players → array
+      if (Array.isArray(ps)) {
+        const entry = ps.find(p => p.id === playerId);
+        projectedScore = entry?.score || null;
+      }
 
       return res.status(200).json({
         id: playerId,
