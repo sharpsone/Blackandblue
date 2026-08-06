@@ -306,6 +306,21 @@ export default async function handler(req, res) {
           m.team[1].id === playerTeam
       );
 
+      // Fetch TopOwns (most owned players)
+      const topOwns = await callMFL(
+        `https://api.myfantasyleague.com/${year}/export?TYPE=topOwns&COUNT=1000&JSON=1`
+      );
+
+      // Find this player's ownership entry
+      const ownedEntry = topOwns?.topOwns?.player?.find(
+        (p) => p.id === playerId
+      );
+
+      // Extract percent
+      const rosteredPercent = ownedEntry?.percent
+        ? Number(ownedEntry.percent)
+        : null;
+
       // Convert UNIX kickoff → Pacific Time
       let kickoffPacific = null;
       if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
@@ -376,6 +391,9 @@ export default async function handler(req, res) {
         healthStatus,
         injuryDetail,
         injuryNotes
+
+        // ⭐ NEW: Rostered %
+        rosteredPercent
       });
     }
 

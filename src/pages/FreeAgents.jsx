@@ -140,6 +140,9 @@ export default function FreeAgents({ leagueInfo }) {
           injuryDetail: modalData.injuryDetail,
           injuryNotes: modalData.injuryNotes,
           
+          // ⭐ NEW
+          rosteredPercent: modalData.rosteredPercent,
+          
           loading: false,
         };
 

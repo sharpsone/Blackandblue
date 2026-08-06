@@ -70,10 +70,14 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             <div className="pm-mid-value">{player.posRank}</div>
           </div>
 
+          {/* ⭐ Rostered Status */}
           <div className="pm-mid-box">
-            <div className="pm-mid-label">Projected</div>
-            <div className="pm-mid-value">{player.projected || "—"}</div>
+            <div className="pm-mid-label">Rostered</div>
+            <div className="pm-mid-value">
+              {player.rosteredPercent ? `${player.rosteredPercent}%` : "—"}
+            </div>
           </div>
+
         </div>
 
         <div className="pm-divider"></div>
@@ -132,6 +136,11 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
               <div className="pm-matchup-line">
                 Spread: {player.matchup?.spread || "TBD"}
+              </div>
+
+              {/* Projected Points */}
+              <div className="pm-matchup-line">
+                Projected Points: {player.projected || "—"}
               </div>
 
               {player.injuryDetail && (
