@@ -123,13 +123,19 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
               </div>
 
               <div className="pm-matchup-line">
-                {player.matchup?.kickoff || "Date/Time: TBD"},
+                {(player.matchup?.kickoff || "Date/Time: TBD")}
+
+                {" | "}
+
                 {player.matchup
                   ? player.matchup.home
                     ? `v ${player.matchup.opponent}`
                     : `@ ${player.matchup.opponent}`
-                  : "Opponent: TBD"},
-                Spread: {player.matchup?.spread || "TBD"}
+                  : "Opponent: TBD"}
+
+                {" | "}
+
+                {`Spread: ${player.matchup?.spread || "TBD"}`}
               </div>
 
               {/* Projected Points */}
