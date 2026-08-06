@@ -390,7 +390,7 @@ export default async function handler(req, res) {
         // ⭐ REAL HEALTH STATUS FROM INJURIES API
         healthStatus,
         injuryDetail,
-        injuryNotes
+        injuryNotes,
 
         // ⭐ NEW: Rostered %
         rosteredPercent
