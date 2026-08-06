@@ -107,7 +107,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         {/* ⭐ MATCHUP SECTION */}
         <div className="pm-matchup">
 
-          {/* Title + Health Pill in SAME ROW */}
+          {/* Title + Health Pill */}
           <div className="pm-matchup-title">
             Week {player.week || 1} Matchup
 
@@ -140,7 +140,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             Spread: {player.matchup?.spread || "TBD"}
           </div>
 
-          {/* Injury detail (optional) */}
+          {/* Injury detail */}
           {player.injuryDetail && (
             <div className="pm-matchup-line injury-detail">
               {player.injuryDetail}
