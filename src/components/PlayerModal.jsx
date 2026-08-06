@@ -104,45 +104,50 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         {tab === "overview" && (
           <div className="pm-tab-content">
 
-            {/* ⭐ MATCHUP SECTION */}
-            <div className="pm-matchup">
-              <div className="pm-matchup-title">
-                Week {player.week || 1} Matchup
-              </div>
+        {/* ⭐ MATCHUP SECTION */}
+        <div className="pm-matchup">
 
-              {/* Date + Time */}
-              <div className="pm-matchup-line">
-                {player.matchup?.kickoff
-                  ? player.matchup.kickoff
-                  : "Date/Time: TBD"}
-              </div>
+          {/* Title + Health Pill in SAME ROW */}
+          <div className="pm-matchup-title">
+            Week {player.week || 1} Matchup
 
-              {/* v / @ opponent */}
-              <div className="pm-matchup-line">
-                {player.matchup
-                  ? player.matchup.home
-                    ? `v ${player.matchup.opponent}`
-                    : `@ ${player.matchup.opponent}`
-                  : "Opponent: TBD"}
-              </div>
+            <span
+              className={`pm-health-pill pm-health-${getHealthColor(
+                player.healthStatus
+              )}`}
+              style={{ marginLeft: "10px" }}
+            >
+              {player.healthStatus}
+            </span>
+          </div>
 
-              {/* Spread */}
-              <div className="pm-matchup-line">
-                Spread: {player.matchup?.spread || "TBD"}
-              </div>
+          {/* Date + Time */}
+          <div className="pm-matchup-line">
+            {player.matchup?.kickoff || "Date/Time: TBD"}
+          </div>
+
+          {/* v / @ opponent */}
+          <div className="pm-matchup-line">
+            {player.matchup
+              ? player.matchup.home
+                ? `v ${player.matchup.opponent}`
+                : `@ ${player.matchup.opponent}`
+              : "Opponent: TBD"}
+          </div>
+
+          {/* Spread */}
+          <div className="pm-matchup-line">
+            Spread: {player.matchup?.spread || "TBD"}
+          </div>
+
+          {/* Injury detail (optional) */}
+          {player.injuryDetail && (
+            <div className="pm-matchup-line injury-detail">
+              {player.injuryDetail}
             </div>
+          )}
 
-            <div className="pm-divider"></div>
-
-            <div className="pm-status-line">
-              <strong>Status:</strong> {player.healthStatus}
-                {player.injuryDetail && (
-                  <span className="pm-injury-detail"> — {player.injuryDetail}</span>
-                )}
-                {player.injuryNotes && (
-                  <div className="pm-injury-notes">{player.injuryNotes}</div>
-                )}
-            </div>
+        </div>
 
             <div className="pm-divider"></div>
 

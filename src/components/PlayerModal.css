@@ -312,3 +312,26 @@
   color: #777 !important;
   cursor: not-allowed;
 }
+
+.pm-health-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  margin-left: 10px;
+}
+
+.pm-health-red {
+  background-color: #c62828;
+}
+
+.pm-health-yellow {
+  background-color: #f9a825;
+  color: #000;
+}
+
+.pm-health-green {
+  background-color: #2e7d32;
+}

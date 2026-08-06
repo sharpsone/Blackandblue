@@ -87,6 +87,18 @@ export default async function handler(req, res) {
           const r = ranksList.find(x => x.id === fa.id);
           const s = projList.find(x => x.id === fa.id);
 
+          const getHealthColor = (status) => {
+            if (!status) return "green";
+
+            const s = status.toLowerCase();
+
+            if (s.includes("out") || s.includes("doubt")) return "red";
+            if (s.includes("question")) return "yellow";
+
+            return "green"; // healthy or not listed
+          };
+
+
           return {
             id: fa.id,
             name: p?.name || "Unknown",
