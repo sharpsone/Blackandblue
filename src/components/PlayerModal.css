@@ -335,3 +335,9 @@
 .pm-health-green {
   background-color: #2e7d32;
 }
+
+.pm-matchup-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
