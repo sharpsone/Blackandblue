@@ -135,7 +135,13 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             <div className="pm-divider"></div>
 
             <div className="pm-status-line">
-              <strong>Status:</strong> {player.healthStatus || "Unknown"}
+              <strong>Status:</strong> {player.healthStatus}
+                {player.injuryDetail && (
+                  <span className="pm-injury-detail"> — {player.injuryDetail}</span>
+                )}
+                {player.injuryNotes && (
+                  <div className="pm-injury-notes">{player.injuryNotes}</div>
+                )}
             </div>
 
             <div className="pm-divider"></div>

@@ -135,11 +135,10 @@ export default function FreeAgents({ leagueInfo }) {
           avg: modalData.scores?.avg || player.avg || 0,
           projected: modalData.projections?.week1 || null,
 
-          // ⭐ REAL HEALTH STATUS
-          healthStatus: player.healthStatus,
-
-          // ⭐ FREE AGENT LOCK STATUS
-          faStatus: player.faStatus,
+          // ⭐ NEW HEALTH FIELDS
+          healthStatus: modalData.healthStatus,
+          injuryDetail: modalData.injuryDetail,
+          injuryNotes: modalData.injuryNotes,
           
           loading: false,
         };

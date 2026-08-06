@@ -308,6 +308,22 @@ export default async function handler(req, res) {
         });
       }
 
+      // Fetch injuries list
+      const injuriesData = await callMFL(
+        `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`
+      );
+
+      // Find this player's injury entry
+      const injuryEntry = injuriesData?.injuries?.injury?.find(
+        (inj) => inj.id === playerId
+      );
+
+      // Extract health status
+      const healthStatus = injuryEntry?.status || "Healthy";
+      const injuryDetail = injuryEntry?.injury || null;
+      const injuryNotes = injuryEntry?.details || null;
+
+
       const matchupData = matchup
         ? {
             opponent:
@@ -343,7 +359,11 @@ export default async function handler(req, res) {
         },
         projections: {
           week1: projectedScores?.projectedScores?.playerScore?.score || null
-        }
+        },
+        // ⭐ REAL HEALTH STATUS FROM INJURIES API
+        healthStatus,
+        injuryDetail,
+        injuryNotes
       });
     }
 
