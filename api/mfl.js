@@ -376,7 +376,7 @@ export default async function handler(req, res) {
       const projectedScores = await callMFL(
         `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
       );
-
+//
       // Extract projected score
       const ps = projectedScores?.projectedScores?.playerScore;
 
