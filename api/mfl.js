@@ -383,7 +383,12 @@ if (action === "playerModal") {
 
   console.log("STATS HTML LENGTH:", statsHtml.length);
 
-  const tableMatch = statsHtml.match(/<table class="report"[\s\S]*?<\/table>/i);
+  // Try multiple possible table patterns
+  let tableMatch =
+    statsHtml.match(/<table[^>]*id="player_stats"[\s\S]*?<\/table>/i) ||
+    statsHtml.match(/<table[^>]*class="report"[\s\S]*?<\/table>/i) ||
+    statsHtml.match(/<table[^>]*class="statistics"[\s\S]*?<\/table>/i) ||
+    statsHtml.match(/<table[^>]*>([\s\S]*?)<\/table>/i); // fallback
 
   let stats = null;
 
