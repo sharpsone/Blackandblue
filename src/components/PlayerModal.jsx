@@ -220,7 +220,44 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
         {tab === "stats" && (
           <div className="pm-tab-content">
             <h3>Stats</h3>
-            <div className="pm-placeholder">Season stats coming soon…</div>
+
+            {/* No stats available */}
+            {!player.stats && (
+              <div className="pm-placeholder">Season stats coming soon…</div>
+            )}
+
+            {/* Stats table */}
+            {player.stats && (
+              <table className="pm-stats-table">
+                <thead>
+                  <tr>
+                    {player.stats.columns.map((col, idx) => (
+                      <th key={idx}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {/* Previous season */}
+                  {player.stats.previous && (
+                    <tr>
+                      {player.stats.previous.map((val, idx) => (
+                        <td key={idx}>{val}</td>
+                      ))}
+                    </tr>
+                  )}
+
+                  {/* Projected season */}
+                  {player.stats.projected && (
+                    <tr>
+                      {player.stats.projected.map((val, idx) => (
+                        <td key={idx}>{val}</td>
+                      ))}
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 

@@ -341,3 +341,32 @@
   justify-content: space-between;
   align-items: center;
 }
+
+.pm-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: #111;
+  color: #eee;
+  font-size: 14px;
+}
+
+.pm-stats-table th,
+.pm-stats-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #333;
+  text-align: center;
+}
+
+.pm-stats-table th {
+  background: #222;
+  font-weight: 600;
+}
+
+.pm-stats-table tr:nth-child(2) td {
+  background: rgba(0, 255, 0, 0.05); /* previous year */
+}
+
+.pm-stats-table tr:nth-child(3) td {
+  background: rgba(0, 150, 255, 0.05); /* projected year */
+}

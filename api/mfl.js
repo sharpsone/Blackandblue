@@ -395,6 +395,48 @@ export default async function handler(req, res) {
         projectedScore = entry?.score || null;
       }
 
+      // -----------------------------
+      // ⭐ Stats Table Parsing (HTML Scrape)
+      // -----------------------------
+      const statsHtml = await fetch(
+        `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`
+      ).then(r => r.text());
+
+      // Find the stats table
+      const tableMatch = statsHtml.match(/<table class="report"[\s\S]*?<\/table>/i);
+
+      let stats = null;
+
+      if (tableMatch) {
+        const tableHtml = tableMatch[0];
+
+        // Extract column headers
+        const headerMatches = [...tableHtml.matchAll(/<th[^>]*>(.*?)<\/th>/g)];
+        const columns = headerMatches.map(h => h[1].trim());
+
+        // Extract rows
+        const rowMatches = [...tableHtml.matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
+
+        function parseRow(tr) {
+          return [...tr.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(c => c[1].trim());
+        }
+
+        const parsedRows = rowMatches.map(r => parseRow(r[1]));
+
+        // Determine current + previous year
+        const currentYear = Number(year);
+        const previousYear = currentYear - 1;
+
+        const projectedRow = parsedRows.find(r => r[0].includes(String(currentYear)));
+        const previousRow = parsedRows.find(r => r[0].includes(String(previousYear)));
+
+        stats = {
+          columns,
+          projected: projectedRow,
+          previous: previousRow
+        };
+      }
+
       return res.status(200).json({
         id: playerId,
         team: playerTeam,
@@ -407,13 +449,14 @@ export default async function handler(req, res) {
           current: projectedScore
         },
 
-        // ⭐ REAL HEALTH STATUS FROM INJURIES API
         healthStatus,
         injuryDetail,
         injuryNotes,
 
-        // ⭐ NEW: Rostered %
-        rosteredPercent
+        rosteredPercent,
+
+        // ⭐ NEW: Stats (previous + projected + column names)
+        stats
       });
     }
 
