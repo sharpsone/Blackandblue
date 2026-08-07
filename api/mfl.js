@@ -435,6 +435,7 @@ export default async function handler(req, res) {
           projected: projectedRow,
           previous: previousRow
         };
+          console.log("BACKEND STATS OBJECT:", stats);
       }
 
       return res.status(200).json({
