@@ -377,9 +377,9 @@ if (action === "playerModal") {
   // -----------------------------
   console.log("STATS SCRAPE START");
 
-  const statsHtml = await fetch(
-    `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`
-  ).then(r => r.text());
+const statsHtml = await fetch(
+  `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&APIKEY=${apiKey}&P=${playerId}`
+).then(r => r.text());
 
   console.log("STATS HTML LENGTH:", statsHtml.length);
 
