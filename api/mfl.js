@@ -372,13 +372,14 @@ if (action === "playerModal") {
     projectedScore = entry?.score || null;
   }
 
- // -----------------------------
+// -----------------------------
 // ⭐ Stats Table (JSON API instead of HTML scrape)
 // -----------------------------
 console.log("STATS FETCH START");
 
+// Correct API host (NOT www44)
 const statsData = await callMFL(
-  `https://www44.myfantasyleague.com/${year}/export?TYPE=playerStats&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
+  `https://api.myfantasyleague.com/${year}/export?TYPE=playerStats&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
 );
 
 // MFL returns stats under playerStats.player
