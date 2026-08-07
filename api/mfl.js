@@ -372,66 +372,42 @@ if (action === "playerModal") {
     projectedScore = entry?.score || null;
   }
 
-  // -----------------------------
-  // ⭐ Stats Table Parsing
-  // -----------------------------
-  console.log("STATS SCRAPE START");
+ // -----------------------------
+// ⭐ Stats Table (JSON API instead of HTML scrape)
+// -----------------------------
+console.log("STATS FETCH START");
 
-const statsHtml = await fetch(
-  `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`,
-  {
-    headers: {
-      Cookie: `MFL_USER_ID=${req.cookies.MFL_USER_ID}; MFL_SESSION=${req.cookies.MFL_SESSION}`
-    }
-  }
-).then(r => r.text());
+const statsData = await callMFL(
+  `https://www44.myfantasyleague.com/${year}/export?TYPE=playerStats&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
+);
 
-  console.log("STATS HTML LENGTH:", statsHtml.length);
+// MFL returns stats under playerStats.player
+const statsEntry = statsData?.playerStats?.player;
 
-  // Try multiple possible table patterns
-  let tableMatch =
-    statsHtml.match(/<table[^>]*id="player_stats"[\s\S]*?<\/table>/i) ||
-    statsHtml.match(/<table[^>]*class="report"[\s\S]*?<\/table>/i) ||
-    statsHtml.match(/<table[^>]*class="statistics"[\s\S]*?<\/table>/i) ||
-    statsHtml.match(/<table[^>]*>([\s\S]*?)<\/table>/i); // fallback
+if (!statsEntry) {
+  console.log("NO STATS ENTRY FOUND IN playerStats API");
+} else {
+  console.log("RAW STATS ENTRY:", statsEntry);
+}
 
-  let stats = null;
+// Normalize stats into a clean object for frontend
+let stats = null;
 
-  if (!tableMatch) {
-    console.log("NO TABLE MATCH FOUND");
-  } else {
-    const tableHtml = tableMatch[0];
+if (statsEntry) {
+  stats = {
+    gamesPlayed: statsEntry.gp || null,
+    passYds: statsEntry.pass_yds || null,
+    passTds: statsEntry.pass_td || null,
+    rushYds: statsEntry.rush_yds || null,
+    rushTds: statsEntry.rush_td || null,
+    recYds: statsEntry.rec_yds || null,
+    recTds: statsEntry.rec_td || null,
+    fumbles: statsEntry.fum || null,
+    fantasyPoints: statsEntry.fp || null
+  };
 
-    const headerMatches = [...tableHtml.matchAll(/<th[^>]*>(.*?)<\/th>/g)];
-    const columns = headerMatches.map(h => h[1].trim());
-    console.log("COLUMNS FOUND:", columns);
-
-    const rowMatches = [...tableHtml.matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
-
-    function parseRow(tr) {
-      return [...tr.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(c => c[1].trim());
-    }
-
-    const parsedRows = rowMatches.map(r => parseRow(r[1]));
-    console.log("PARSED ROW COUNT:", parsedRows.length);
-
-    const currentYear = Number(year);
-    const previousYear = currentYear - 1;
-
-    const projectedRow = parsedRows.find(r => r[0]?.includes(String(currentYear)));
-    const previousRow = parsedRows.find(r => r[0]?.includes(String(previousYear)));
-
-    console.log("PROJECTED ROW:", projectedRow);
-    console.log("PREVIOUS ROW:", previousRow);
-
-    stats = {
-      columns,
-      projected: projectedRow,
-      previous: previousRow
-    };
-
-    console.log("BACKEND STATS OBJECT:", stats);
-  }
+  console.log("BACKEND STATS OBJECT:", stats);
+}
 
   return res.status(200).json({
     id: playerId,
