@@ -378,7 +378,12 @@ if (action === "playerModal") {
   console.log("STATS SCRAPE START");
 
 const statsHtml = await fetch(
-  `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&APIKEY=${apiKey}&P=${playerId}`
+  `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`,
+  {
+    headers: {
+      Cookie: `MFL_USER_ID=${req.cookies.MFL_USER_ID}; MFL_SESSION=${req.cookies.MFL_SESSION}`
+    }
+  }
 ).then(r => r.text());
 
   console.log("STATS HTML LENGTH:", statsHtml.length);
