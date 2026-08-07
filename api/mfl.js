@@ -448,15 +448,11 @@ export default async function handler(req, res) {
         projections: {
           current: projectedScore
         },
-
         healthStatus,
         injuryDetail,
         injuryNotes,
-
         rosteredPercent,
-
-        // ⭐ NEW: Stats (previous + projected + column names)
-        stats
+        stats   // ⭐ NEW: send stats to frontend
       });
     }
 
