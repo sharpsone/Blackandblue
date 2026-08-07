@@ -277,202 +277,171 @@ export default async function handler(req, res) {
       });
     }
 
-    // -----------------------------
-    // ⭐ CORRECTED ACTION: playerModal
-    // -----------------------------
-    if (action === "playerModal") {
-      console.log("PLAYERMODAL HIT");
+ // -----------------------------
+// ⭐ CORRECTED ACTION: playerModal
+// -----------------------------
+if (action === "playerModal") {
+  console.log("PLAYERMODAL HIT");
 
-      const { playerId, team } = req.query;
+  const { playerId, team } = req.query;
 
-      if (!playerId) {
-        return res.status(400).json({ error: "Missing playerId" });
+  if (!playerId) {
+    return res.status(400).json({ error: "Missing playerId" });
+  }
+
+  const playerTeam = team || "";
+
+  // Load static data
+  const byeWeeks = loadByeWeeks();
+  const schedule = loadSchedule(1);
+
+  const byeWeekEntry = byeWeeks.nflByeWeeks.team.find(t => t.id === playerTeam);
+  const byeWeek = byeWeekEntry ? byeWeekEntry.bye_week : null;
+
+  const weekMatchups = schedule.nflSchedule.matchup || [];
+
+  let matchup = weekMatchups.find(
+    m => m.team[0].id === playerTeam || m.team[1].id === playerTeam
+  );
+
+  // TopOwns
+  const topOwns = await callMFL(
+    `https://api.myfantasyleague.com/${year}/export?TYPE=topOwns&COUNT=1000&JSON=1`
+  );
+
+  const ownedEntry = topOwns?.topOwns?.player?.find(p => p.id === playerId);
+  const rosteredPercent = ownedEntry?.percent ? Number(ownedEntry.percent) : null;
+
+  // Kickoff time
+  let kickoffPacific = null;
+  if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
+    const unix = Number(matchup.kickoff);
+    kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
+      timeZone: "America/Los_Angeles",
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    });
+  }
+
+  // Injuries
+  const injuriesData = await callMFL(
+    `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`
+  );
+
+  const injuryEntry = injuriesData?.injuries?.injury?.find(
+    inj => inj.id === playerId
+  );
+
+  const healthStatus = injuryEntry?.status || "Healthy";
+  const injuryDetail = injuryEntry?.injury || null;
+  const injuryNotes = injuryEntry?.details || null;
+
+  const matchupData = matchup
+    ? {
+        opponent:
+          matchup.team[0].id === playerTeam
+            ? matchup.team[1].id
+            : matchup.team[0].id,
+        kickoff: kickoffPacific,
+        home: matchup.team[0].id === playerTeam,
+        spread: matchup.team[0].spread || matchup.team[1].spread || null,
+        status: matchup.status || null
       }
+    : null;
 
-      const playerTeam = team || "";
+  // Player scores
+  const playerScores = await callMFL(
+    `https://www44.myfantasyleague.com/${year}/export?TYPE=playerScores&L=${leagueId}&PLAYERS=${playerId}&W=AVG&JSON=1`
+  );
 
-      // Load static data
-      const byeWeeks = loadByeWeeks();
-      const schedule = loadSchedule(1);
+  // Projected scores
+  const projectedScores = await callMFL(
+    `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
+  );
 
-      // Correct bye week path
-      const byeWeekEntry = byeWeeks.nflByeWeeks.team.find(
-        (t) => t.id === playerTeam
-      );
-      const byeWeek = byeWeekEntry ? byeWeekEntry.bye_week : null;
+  const ps = projectedScores?.projectedScores?.playerScore;
+  let projectedScore = null;
 
-      // Correct schedule path
-      const weekMatchups = schedule.nflSchedule.matchup || [];
+  if (ps && typeof ps === "object" && !Array.isArray(ps)) {
+    projectedScore = ps.score || null;
+  } else if (Array.isArray(ps)) {
+    const entry = ps.find(p => p.id === playerId);
+    projectedScore = entry?.score || null;
+  }
 
-      let matchup = weekMatchups.find(
-        (m) =>
-          m.team[0].id === playerTeam ||
-          m.team[1].id === playerTeam
-      );
+  // -----------------------------
+  // ⭐ Stats Table Parsing
+  // -----------------------------
+  console.log("STATS SCRAPE START");
 
-      // Fetch TopOwns (most owned players)
-      const topOwns = await callMFL(
-        `https://api.myfantasyleague.com/${year}/export?TYPE=topOwns&COUNT=1000&JSON=1`
-      );
+  const statsHtml = await fetch(
+    `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`
+  ).then(r => r.text());
 
-      // Find this player's ownership entry
-      const ownedEntry = topOwns?.topOwns?.player?.find(
-        (p) => p.id === playerId
-      );
+  console.log("STATS HTML LENGTH:", statsHtml.length);
 
-      // Extract percent
-      const rosteredPercent = ownedEntry?.percent
-        ? Number(ownedEntry.percent)
-        : null;
+  const tableMatch = statsHtml.match(/<table class="report"[\s\S]*?<\/table>/i);
 
-      // Convert UNIX kickoff → Pacific Time
-      let kickoffPacific = null;
-      if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
-        const unix = Number(matchup.kickoff);
-        kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
-          timeZone: "America/Los_Angeles",
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-        });
-      }
+  let stats = null;
 
-      // Fetch injuries list
-      const injuriesData = await callMFL(
-        `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`
-      );
+  if (!tableMatch) {
+    console.log("NO TABLE MATCH FOUND");
+  } else {
+    const tableHtml = tableMatch[0];
 
-      // Find this player's injury entry
-      const injuryEntry = injuriesData?.injuries?.injury?.find(
-        (inj) => inj.id === playerId
-      );
+    const headerMatches = [...tableHtml.matchAll(/<th[^>]*>(.*?)<\/th>/g)];
+    const columns = headerMatches.map(h => h[1].trim());
+    console.log("COLUMNS FOUND:", columns);
 
-      // Extract health status
-      const healthStatus = injuryEntry?.status || "Healthy";
-      const injuryDetail = injuryEntry?.injury || null;
-      const injuryNotes = injuryEntry?.details || null;
+    const rowMatches = [...tableHtml.matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
 
-      const matchupData = matchup
-        ? {
-            opponent:
-              matchup.team[0].id === playerTeam
-                ? matchup.team[1].id
-                : matchup.team[0].id,
-            kickoff: kickoffPacific,
-            home: matchup.team[0].id === playerTeam,
-            spread:
-              matchup.team[0].spread ||
-              matchup.team[1].spread ||
-              null,
-            status: matchup.status || null
-          }
-        : null;
-
-      // Fetch dynamic MFL data
-      const playerScores = await callMFL(
-        `https://www44.myfantasyleague.com/${year}/export?TYPE=playerScores&L=${leagueId}&PLAYERS=${playerId}&W=AVG&JSON=1`
-      );
-
-      // Fetch projected scores for current week
-      const projectedScores = await callMFL(
-        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
-      );
-
-      // Extract projected score
-      const ps = projectedScores?.projectedScores?.playerScore;
-
-      let projectedScore = null;
-
-      // If single player → object
-      if (ps && typeof ps === "object" && !Array.isArray(ps)) {
-        projectedScore = ps.score || null;
-      }
-
-      // If multiple players → array
-      if (Array.isArray(ps)) {
-        const entry = ps.find(p => p.id === playerId);
-        projectedScore = entry?.score || null;
-      }
-
-      // -----------------------------
-      // ⭐ Stats Table Parsing (HTML Scrape)
-      // -----------------------------
-      console.log("STATS SCRAPE START");
-
-      const statsHtml = await fetch(
-        `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`
-      ).then(r => r.text());
-
-      console.log("STATS HTML LENGTH:", statsHtml.length);
-
-      // Find the stats table
-      const tableMatch = statsHtml.match(/<table class="report"[\s\S]*?<\/table>/i);
-
-      if (!tableMatch) {
-        console.log("NO TABLE MATCH FOUND");
-      }
-
-      let stats = null;
-
-      if (tableMatch) {
-        const tableHtml = tableMatch[0];
-
-        // Extract column headers
-        const headerMatches = [...tableHtml.matchAll(/<th[^>]*>(.*?)<\/th>/g)];
-        const columns = headerMatches.map(h => h[1].trim());
-
-        console.log("COLUMNS FOUND:", columns);
-
-        // Extract rows
-        const rowMatches = [...tableHtml.matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
-
-        function parseRow(tr) {
-          return [...tr.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(c => c[1].trim());
-        }
-
-        const parsedRows = rowMatches.map(r => parseRow(r[1]));
-
-        console.log("PARSED ROW COUNT:", parsedRows.length);
-
-        // Determine current + previous year
-        const currentYear = Number(year);
-        const previousYear = currentYear - 1;
-
-        const projectedRow = parsedRows.find(r => r[0].includes(String(currentYear)));
-        const previousRow = parsedRows.find(r => r[0].includes(String(previousYear)));
-
-        console.log("PROJECTED ROW:", projectedRow);
-        console.log("PREVIOUS ROW:", previousRow);
-
-        stats = {
-          columns,
-          projected: projectedRow,
-          previous: previousRow
-        };
-
-        console.log("BACKEND STATS OBJECT:", stats);
-      }
-
-      return res.status(200).json({
-        id: playerId,
-        team: playerTeam,
-        byeWeek,
-        matchup: matchupData,
-        scores: {
-          avg: playerScores?.playerScores?.playerScore?.score || null
-        },
-        projections: {
-          current: projectedScore
-        },
-        healthStatus,
-        injuryDetail,
-        injuryNotes,
-        rosteredPercent,
-        stats   // ⭐ NEW: send stats to frontend
-      });
+    function parseRow(tr) {
+      return [...tr.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(c => c[1].trim());
     }
+
+    const parsedRows = rowMatches.map(r => parseRow(r[1]));
+    console.log("PARSED ROW COUNT:", parsedRows.length);
+
+    const currentYear = Number(year);
+    const previousYear = currentYear - 1;
+
+    const projectedRow = parsedRows.find(r => r[0]?.includes(String(currentYear)));
+    const previousRow = parsedRows.find(r => r[0]?.includes(String(previousYear)));
+
+    console.log("PROJECTED ROW:", projectedRow);
+    console.log("PREVIOUS ROW:", previousRow);
+
+    stats = {
+      columns,
+      projected: projectedRow,
+      previous: previousRow
+    };
+
+    console.log("BACKEND STATS OBJECT:", stats);
+  }
+
+  return res.status(200).json({
+    id: playerId,
+    team: playerTeam,
+    byeWeek,
+    matchup: matchupData,
+    scores: {
+      avg: playerScores?.playerScores?.playerScore?.score || null
+    },
+    projections: {
+      current: projectedScore
+    },
+    healthStatus,
+    injuryDetail,
+    injuryNotes,
+    rosteredPercent,
+    stats
+  });
+}
+
 
     // --- ACTION: submitLineup ---
     if (action === "submitLineup") {
