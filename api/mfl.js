@@ -281,6 +281,8 @@ export default async function handler(req, res) {
     // ⭐ CORRECTED ACTION: playerModal
     // -----------------------------
     if (action === "playerModal") {
+      console.log("PLAYERMODAL HIT");
+
       const { playerId, team } = req.query;
 
       if (!playerId) {
@@ -352,7 +354,6 @@ export default async function handler(req, res) {
       const injuryDetail = injuryEntry?.injury || null;
       const injuryNotes = injuryEntry?.details || null;
 
-
       const matchupData = matchup
         ? {
             opponent:
@@ -378,7 +379,7 @@ export default async function handler(req, res) {
       const projectedScores = await callMFL(
         `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
       );
-//
+
       // Extract projected score
       const ps = projectedScores?.projectedScores?.playerScore;
 
@@ -398,12 +399,20 @@ export default async function handler(req, res) {
       // -----------------------------
       // ⭐ Stats Table Parsing (HTML Scrape)
       // -----------------------------
+      console.log("STATS SCRAPE START");
+
       const statsHtml = await fetch(
         `https://www44.myfantasyleague.com/${year}/player?L=${leagueId}&P=${playerId}`
       ).then(r => r.text());
 
+      console.log("STATS HTML LENGTH:", statsHtml.length);
+
       // Find the stats table
       const tableMatch = statsHtml.match(/<table class="report"[\s\S]*?<\/table>/i);
+
+      if (!tableMatch) {
+        console.log("NO TABLE MATCH FOUND");
+      }
 
       let stats = null;
 
@@ -414,6 +423,8 @@ export default async function handler(req, res) {
         const headerMatches = [...tableHtml.matchAll(/<th[^>]*>(.*?)<\/th>/g)];
         const columns = headerMatches.map(h => h[1].trim());
 
+        console.log("COLUMNS FOUND:", columns);
+
         // Extract rows
         const rowMatches = [...tableHtml.matchAll(/<tr>([\s\S]*?)<\/tr>/g)];
 
@@ -423,6 +434,8 @@ export default async function handler(req, res) {
 
         const parsedRows = rowMatches.map(r => parseRow(r[1]));
 
+        console.log("PARSED ROW COUNT:", parsedRows.length);
+
         // Determine current + previous year
         const currentYear = Number(year);
         const previousYear = currentYear - 1;
@@ -430,12 +443,16 @@ export default async function handler(req, res) {
         const projectedRow = parsedRows.find(r => r[0].includes(String(currentYear)));
         const previousRow = parsedRows.find(r => r[0].includes(String(previousYear)));
 
+        console.log("PROJECTED ROW:", projectedRow);
+        console.log("PREVIOUS ROW:", previousRow);
+
         stats = {
           columns,
           projected: projectedRow,
           previous: previousRow
         };
-          console.log("BACKEND STATS OBJECT:", stats);
+
+        console.log("BACKEND STATS OBJECT:", stats);
       }
 
       return res.status(200).json({
