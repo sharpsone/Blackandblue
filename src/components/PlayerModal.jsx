@@ -221,11 +221,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           <div className="pm-tab-content">
             <h3>Stats</h3>
 
-            {/* No stats available */}
-            {!player.stats && (
-              <div className="pm-placeholder">Season stats coming soon…</div>
-            )}
-
             {/* Stats table */}
             {player.stats && (
               <table className="pm-stats-table">
