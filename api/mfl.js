@@ -297,6 +297,11 @@ export default async function handler(req, res) {
       const normalizedMfl = mflName.toLowerCase().replace(/[^a-z0-9]/g, "");
       console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
 
+      // ⭐ API KEY LOGGING
+      console.log("🔐 BBS API KEY PRESENT:", !!process.env.BBS_API_KEY);
+      console.log("🔐 BBS API KEY LENGTH:", process.env.BBS_API_KEY?.length || 0);
+      console.log("🔐 BBS API KEY VALUE (first 10 chars):", process.env.BBS_API_KEY?.slice(0, 10));
+
       // -----------------------------
       // ⭐ Load static schedule + bye week
       // -----------------------------
