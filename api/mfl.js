@@ -296,7 +296,7 @@ export default async function handler(req, res) {
 
       const normalizedMfl = mflName.toLowerCase().replace(/[^a-z0-9]/g, "");
       console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
-      
+
       // -----------------------------
       // ⭐ Load static schedule + bye week
       // -----------------------------
@@ -381,11 +381,17 @@ export default async function handler(req, res) {
       }
 
       // -----------------------------
-      // ⭐ BigBalls Player ID Lookup
+      // ⭐ BigBalls Player ID Lookup (with fallback)
       // -----------------------------
       console.log("BBS PLAYER LOOKUP START");
 
-      const gamesUrl = `https://api.bigballsdata.com/v1/nfl/games?season=${year}`;
+      console.log("🔍 MFL NAME RECEIVED:", mflName);
+      console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
+
+      let bbsSeason = year; // start with 2026
+
+      // 1. Try primary season first
+      const gamesUrl = `https://api.bigballsdata.com/v1/nfl/games?season=${bbsSeason}`;
 
       const gamesResp = await fetch(gamesUrl, {
         headers: {
@@ -406,28 +412,53 @@ export default async function handler(req, res) {
       }
 
       console.log("TOTAL BBS PLAYERS FOUND:", bbsPlayers.length);
+
+      // 2. If no players found, fallback to 2025
+      if (bbsPlayers.length === 0) {
+        console.log(`⚠️ No BigBalls players found for season ${bbsSeason}. Falling back to 2025.`);
+
+        bbsSeason = 2025;
+
+        const fallbackResp = await fetch(
+          `https://api.bigballsdata.com/v1/nfl/games?season=2025`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.BBS_API_KEY}`
+            }
+          }
+        );
+
+        const fallbackJson = await fallbackResp.json();
+
+        if (fallbackJson?.data) {
+          bbsPlayers = fallbackJson.data.flatMap(g => g.players || []);
+        }
+
+        console.log("TOTAL BBS PLAYERS FOUND AFTER FALLBACK:", bbsPlayers.length);
+      }
+
+      // 3. Log sample players
       console.log("🔍 SAMPLE BBS PLAYERS (first 20):");
       bbsPlayers.slice(0, 20).forEach(p => {
         console.log(`  ${p.player_id} :: ${p.first_name} ${p.last_name}`);
       });
 
+      // 4. Perform name match
       const matched = bbsPlayers.find(p => {
         const bbName = `${p.first_name}${p.last_name}`
           .toLowerCase()
           .replace(/[^a-z0-9]/g, "");
 
-           console.log(`🔍 Comparing: ${normalizedMfl} <-> ${bbName}`);
+        console.log(`🔍 Comparing: ${normalizedMfl} <-> ${bbName}`);
 
         return bbName === normalizedMfl;
       });
 
-      if (!matched) {
-        console.log("NO MATCH FOUND FOR PLAYER:", mflName);
-      } else {
-        console.log("MATCHED BBS PLAYER:", matched);
-      }
+      console.log("🔍 MATCHED PLAYER:", matched);
 
       const bbsId = matched?.player_id;
+      console.log("🔍 USING BBS ID:", bbsId);
+
 
       // -----------------------------
       // ⭐ BigBalls Stats
