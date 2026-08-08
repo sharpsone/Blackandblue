@@ -292,10 +292,11 @@ export default async function handler(req, res) {
       const playerTeam = team || "";
       const mflName = name;
       console.log("🔍 MFL NAME RECEIVED:", mflName);
-      console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
+ 
 
       const normalizedMfl = mflName.toLowerCase().replace(/[^a-z0-9]/g, "");
-
+      console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
+      
       // -----------------------------
       // ⭐ Load static schedule + bye week
       // -----------------------------
