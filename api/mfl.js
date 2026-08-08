@@ -372,43 +372,39 @@ if (action === "playerModal") {
     projectedScore = entry?.score || null;
   }
 
-// -----------------------------
-// ⭐ Stats Table (JSON API instead of HTML scrape)
-// -----------------------------
-console.log("STATS FETCH START");
+    // -----------------------------
+    // ⭐ BigBalls NFL Stats
+    // -----------------------------
+    console.log("BBS STATS FETCH START");
 
-// Correct API host (NOT www44)
-const statsData = await callMFL(
-  `https://api.myfantasyleague.com/${year}/export?TYPE=playerStats&L=${leagueId}&PLAYERS=${playerId}&JSON=1`
-);
+    const bbsUrl = `https://api.bigballsdata.com/v1/nfl/players/${playerId}/stats?season=${year}`;
 
-// MFL returns stats under playerStats.player
-const statsEntry = statsData?.playerStats?.player;
+    const bbsResp = await fetch(bbsUrl, {
+      headers: {
+        Authorization: `Bearer ${process.env.BBS_API_KEY}`
+      }
+    });
 
-if (!statsEntry) {
-  console.log("NO STATS ENTRY FOUND IN playerStats API");
-} else {
-  console.log("RAW STATS ENTRY:", statsEntry);
-}
+    const bbsJson = await bbsResp.json();
 
-// Normalize stats into a clean object for frontend
-let stats = null;
+    console.log("BBS RAW RESPONSE:", bbsJson);
 
-if (statsEntry) {
-  stats = {
-    gamesPlayed: statsEntry.gp || null,
-    passYds: statsEntry.pass_yds || null,
-    passTds: statsEntry.pass_td || null,
-    rushYds: statsEntry.rush_yds || null,
-    rushTds: statsEntry.rush_td || null,
-    recYds: statsEntry.rec_yds || null,
-    recTds: statsEntry.rec_td || null,
-    fumbles: statsEntry.fum || null,
-    fantasyPoints: statsEntry.fp || null
-  };
+    let stats = null;
 
-  console.log("BACKEND STATS OBJECT:", stats);
-}
+    if (bbsJson?.data) {
+      const d = bbsJson.data;
+
+      stats = {
+        season: d.season,
+        passing: d.passing || {},
+        rushing: d.rushing || {},
+        receiving: d.receiving || {}
+      };
+
+      console.log("BACKEND STATS OBJECT:", stats);
+    } else {
+      console.log("NO BBS STATS FOUND");
+    }
 
   return res.status(200).json({
     id: playerId,

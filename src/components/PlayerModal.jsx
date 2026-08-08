@@ -221,40 +221,75 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           <div className="pm-tab-content">
             <h3>Stats</h3>
 
-            {/* Stats table */}
             {player.stats && (
               <table className="pm-stats-table">
-                <thead>
-                  <tr>
-                    {player.stats.columns.map((col, idx) => (
-                      <th key={idx}>{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-
                 <tbody>
-                  {/* Previous season */}
-                  {player.stats.previous && (
-                    <tr>
-                      {player.stats.previous.map((val, idx) => (
-                        <td key={idx}>{val}</td>
-                      ))}
-                    </tr>
-                  )}
 
-                  {/* Projected season */}
-                  {player.stats.projected && (
-                    <tr>
-                      {player.stats.projected.map((val, idx) => (
-                        <td key={idx}>{val}</td>
-                      ))}
-                    </tr>
-                  )}
+                  {/* Passing */}
+                  <tr>
+                    <th colSpan="2" className="pm-section-header">Passing</th>
+                  </tr>
+                  <tr>
+                    <td>Attempts</td>
+                    <td>{player.stats.passing?.att ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Completions</td>
+                    <td>{player.stats.passing?.cmp ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Yards</td>
+                    <td>{player.stats.passing?.yds ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Touchdowns</td>
+                    <td>{player.stats.passing?.td ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Interceptions</td>
+                    <td>{player.stats.passing?.int ?? "-"}</td>
+                  </tr>
+
+                  {/* Rushing */}
+                  <tr>
+                    <th colSpan="2" className="pm-section-header">Rushing</th>
+                  </tr>
+                  <tr>
+                    <td>Attempts</td>
+                    <td>{player.stats.rushing?.att ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Yards</td>
+                    <td>{player.stats.rushing?.yds ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Touchdowns</td>
+                    <td>{player.stats.rushing?.td ?? "-"}</td>
+                  </tr>
+
+                  {/* Receiving */}
+                  <tr>
+                    <th colSpan="2" className="pm-section-header">Receiving</th>
+                  </tr>
+                  <tr>
+                    <td>Receptions</td>
+                    <td>{player.stats.receiving?.rec ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Yards</td>
+                    <td>{player.stats.receiving?.yds ?? "-"}</td>
+                  </tr>
+                  <tr>
+                    <td>Touchdowns</td>
+                    <td>{player.stats.receiving?.td ?? "-"}</td>
+                  </tr>
+
                 </tbody>
               </table>
             )}
           </div>
         )}
+
 
         {/* ACTION BUTTONS */}
         <div className="modal-actions">
