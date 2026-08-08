@@ -104,8 +104,9 @@ export default function FreeAgents({ leagueInfo }) {
       try {
         // 1. Fetch unified modal data (bye week, schedule, avg, projected)
         const modalRes = await fetch(
-          `/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
+          `/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&name=${encodeURIComponent(player.name)}&leagueId=${leagueInfo.leagueId}&year=${leagueInfo.year}`
         );
+
         const modalData = await modalRes.json();
         console.log("[openPlayer] unified modalData:", modalData);
 
