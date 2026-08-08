@@ -291,7 +291,8 @@ export default async function handler(req, res) {
 
       const playerTeam = team || "";
       const mflName = name;
-      console.log("MFL PLAYER NAME (from frontend):", mflName);
+      console.log("🔍 MFL NAME RECEIVED:", mflName);
+      console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
 
       const normalizedMfl = mflName.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -404,11 +405,18 @@ export default async function handler(req, res) {
       }
 
       console.log("TOTAL BBS PLAYERS FOUND:", bbsPlayers.length);
+      console.log("🔍 SAMPLE BBS PLAYERS (first 20):");
+      bbsPlayers.slice(0, 20).forEach(p => {
+        console.log(`  ${p.player_id} :: ${p.first_name} ${p.last_name}`);
+      });
 
       const matched = bbsPlayers.find(p => {
         const bbName = `${p.first_name}${p.last_name}`
           .toLowerCase()
           .replace(/[^a-z0-9]/g, "");
+
+           console.log(`🔍 Comparing: ${normalizedMfl} <-> ${bbName}`);
+
         return bbName === normalizedMfl;
       });
 
@@ -427,6 +435,10 @@ export default async function handler(req, res) {
 
       if (bbsId) {
         const statsUrl = `https://api.bigballsdata.com/v1/nfl/players/${bbsId}/stats?season=${year}`;
+
+      // ⭐ ADD THIS LOGGING HERE
+      console.log("🔍 USING BBS ID:", bbsId);
+      console.log("🔍 STATS URL:", statsUrl);
 
         const statsResp = await fetch(statsUrl, {
           headers: {
