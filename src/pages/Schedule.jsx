@@ -16,19 +16,6 @@ export default function Schedule({ leagueInfo }) {
   async function loadSchedule() {
     try {
       // 1. Load franchise names
-      const franchiseRes = await fetch(
-        `/api/mfl?action=franchises&leagueId=${leagueId}&year=${year}`
-      );
-      const franchiseData = await franchiseRes.json();
-
-      const franchiseMap = {};
-      franchiseData.franchises.forEach(f => {
-        franchiseMap[f.id] = f.name;
-      });
-
-      setFranchises(franchiseMap);
-
-      // 2. Load schedule
       console.log("📅 Fetching schedule...");
       const schedRes = await fetch(
         `/api/mfl?action=schedule&leagueId=${leagueId}&year=${year}`
