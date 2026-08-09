@@ -342,58 +342,34 @@
   align-items: center;
 }
 
+/* Base table */
 .pm-stats-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 12px;
-  background: #111;
-  color: #eee;
+  background: #0f0f0f;
+  color: white;
   font-size: 14px;
 }
 
-.pm-stats-table th,
-.pm-stats-table td {
-  padding: 6px 8px;
-  border-bottom: 1px solid #333;
-  text-align: center;
-}
-
-.pm-stats-table th {
-  background: #222;
-  font-weight: 600;
-}
-
-.pm-stats-table tr:nth-child(2) td {
-  background: rgba(0, 255, 0, 0.05); /* previous year */
-}
-
-.pm-stats-table tr:nth-child(3) td {
-  background: rgba(0, 150, 255, 0.05); /* projected year */
-}
-
-.pm-stats-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #0f0f0f;
-  color: white;
-}
-
+/* Header */
 .pm-stats-table th {
   background: #1e2a38;
   color: white;
   padding: 8px;
   text-align: left;
-  font-size: 14px;
+  font-weight: 600;
 }
 
+/* Cells */
 .pm-stats-table td {
   padding: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
-  font-size: 14px;
   color: #d0d0d0;
+  text-align: center;
 }
 
-/* Rank colors override */
+/* Rank colors — MUST override td color */
 .pm-stats-table td.pm-rank-green {
   color: #4caf50 !important;
   font-weight: bold;
@@ -408,4 +384,3 @@
   color: #f44336 !important;
   font-weight: bold;
 }
-
