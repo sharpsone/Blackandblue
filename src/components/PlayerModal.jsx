@@ -239,7 +239,13 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                     <tr key={stat.name}>
                       <td>{stat.label}</td>
                       <td>{stat.displayValue}</td>
-                      <td>{stat.rankDisplay || "-"}</td>
+                      <td className={
+                        stat.rank <= 5 ? "pm-rank-green" :
+                        stat.rank <= 10 ? "pm-rank-yellow" :
+                        "pm-rank-red"
+                      }>
+                        {stat.rankDisplay || "-"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
