@@ -184,6 +184,14 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // --- ACTION: schedule ---
+    if (action === "schedule") {
+      const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=schedule&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
+      const data = await callMFL(url);
+      return res.status(200).json(data);
+    }
+
+
     // --- ACTION: weekly ---
     if (action === "weekly") {
       const { week } = req.query;
