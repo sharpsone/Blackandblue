@@ -126,26 +126,29 @@ export default function FreeAgents({ leagueInfo }) {
 
         // 4. Merge everything into one object
         const merged = {
-          ...player,
-          ...stats,
-          externalNews: newsData.news || [],
+        ...player,
+        ...stats,
+        externalNews: newsData.news || [],
 
-          // Unified backend fields
-          byeWeek: modalData.byeWeek || null,
-          matchup: modalData.matchup || null,
-          avg: modalData.scores?.avg || player.avg || 0,
-          projected: modalData.projections?.current || null,
+        // Unified backend fields
+        byeWeek: modalData.byeWeek || null,
+        matchup: modalData.matchup || null,
+        avg: modalData.scores?.avg || player.avg || 0,
+        projected: modalData.projections?.current || null,
 
-          // ⭐ NEW HEALTH FIELDS
-          healthStatus: modalData.healthStatus,
-          injuryDetail: modalData.injuryDetail,
-          injuryNotes: modalData.injuryNotes,
-          
-          // ⭐ NEW
-          rosteredPercent: modalData.rosteredPercent,
+        // ⭐ NEW HEALTH FIELDS
+        healthStatus: modalData.healthStatus,
+        injuryDetail: modalData.injuryDetail,
+        injuryNotes: modalData.injuryNotes,
 
-          loading: false,
-        };
+        // ⭐ NEW
+        rosteredPercent: modalData.rosteredPercent,
+
+        // ⭐ ⭐ ⭐ THE FIX
+        espnStats: modalData.espnStats,
+
+        loading: false,
+      };
 
         setSelectedPlayer(merged);
 
