@@ -29,10 +29,17 @@ export default function Schedule({ leagueInfo }) {
       setFranchises(franchiseMap);
 
       // 2. Load schedule
+      console.log("📅 Fetching schedule...");
       const schedRes = await fetch(
         `/api/mfl?action=schedule&leagueId=${leagueId}&year=${year}`
       );
       const schedData = await schedRes.json();
+      console.log("📅 Schedule response:", schedData);
+
+      if (!schedData?.schedule?.weeklySchedule) {
+        console.log("❌ weeklySchedule missing in frontend");
+        return;
+      }
 
       const weeks = schedData.schedule.weeklySchedule.map(weekObj => {
         const week = parseInt(weekObj.week, 10);
@@ -46,12 +53,12 @@ export default function Schedule({ leagueInfo }) {
           return {
             home: {
               id: home.id,
-              name: franchiseMap[home.id] || home.id,
+              name: franchises[home.id] || home.id,
               spread: Number(home.spread)
             },
             away: {
               id: away.id,
-              name: franchiseMap[away.id] || away.id,
+              name: franchises[away.id] || away.id,
               spread: Number(away.spread)
             }
           };
@@ -61,6 +68,7 @@ export default function Schedule({ leagueInfo }) {
       });
 
       setSchedule(weeks);
+
     } catch (err) {
       console.error("SCHEDULE ERROR:", err);
     }
@@ -94,7 +102,4 @@ export default function Schedule({ leagueInfo }) {
             ))}
           </div>
         </div>
-      ))}
-    </div>
-  );
-}
+      ))
