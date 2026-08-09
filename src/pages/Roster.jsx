@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { getRoster, getPlayers } from "../utils/api";
+import PlayerModal from "../components/PlayerModal";
 import "../utils/animations.css";
 import "../pages/roster.css";
 
 export default function Roster({ leagueInfo }) {
-  // ⭐ Unpack leagueInfo passed from App.jsx
   const leagueId = leagueInfo?.leagueId;
   const myFranchiseId = leagueInfo?.franchiseId;
   const year = leagueInfo?.year || 2026;
 
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ⭐ NEW — modal state
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   useEffect(() => {
     if (!myFranchiseId) return;
@@ -38,24 +41,66 @@ export default function Roster({ leagueInfo }) {
     setLoading(false);
   }
 
-  // Grouping
-  const offense = players.filter(p =>
-    ["QB", "RB", "WR", "TE", "PK"].includes(p.position)
-  );
+  // ⭐ NEW — identical modal loader from FreeAgents.jsx
+  const openPlayer = async (player) => {
+    console.log("[Roster openPlayer] clicked player:", player);
 
-  const defense = players.filter(p =>
-    ["DL", "DE", "DT", "LB", "CB", "S", "DB"].includes(p.position)
-  );
+    setSelectedPlayer({ loading: true });
 
-  const bench = players.filter(p =>
-    ["R", "RES", "TAXI", "BENCH"].includes(p.status)
-  );
+    try {
+      // 1. Unified modal data
+      const modalRes = await fetch(
+        `/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`
+      );
+      const modalData = await modalRes.json();
 
-  const ir = players.filter(p => p.status === "IR");
+      // 2. ESPN stats
+      const statsRes = await fetch(
+        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueId}&year=${year}`
+      );
+      const stats = await statsRes.json();
 
+      // 3. External news
+      const newsRes = await fetch(
+        `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`
+      );
+      const newsData = await newsRes.json();
+
+      // 4. Merge everything
+      const merged = {
+        ...player,
+        ...stats,
+        externalNews: newsData.news || [],
+        byeWeek: modalData.byeWeek || null,
+        matchup: modalData.matchup || null,
+        avg: modalData.scores?.avg || player.avg || 0,
+        projected: modalData.projections?.current || null,
+        healthStatus: modalData.healthStatus,
+        injuryDetail: modalData.injuryDetail,
+        injuryNotes: modalData.injuryNotes,
+        rosteredPercent: modalData.rosteredPercent,
+        espnStats: modalData.espnStats,
+        loading: false,
+      };
+
+      setSelectedPlayer(merged);
+
+    } catch (err) {
+      console.error("[Roster openPlayer] Failed:", err);
+
+      setSelectedPlayer({
+        ...player,
+        stats: [],
+        externalNews: [],
+        loading: false,
+      });
+    }
+  };
+
+  // ⭐ NEW — click handler added
   function renderPlayer(p) {
     return (
-      <div className="player-card">
+      <div className="player-card" onClick={() => openPlayer(p)}>
         <img
           src={`/api/headshot?id=${p.id}`}
           className="player-photo"
@@ -77,6 +122,21 @@ export default function Roster({ leagueInfo }) {
   if (loading) return <p>Loading roster...</p>;
   if (!players.length) return <p>No roster data found.</p>;
 
+  // Grouping
+  const offense = players.filter(p =>
+    ["QB", "RB", "WR", "TE", "PK"].includes(p.position)
+  );
+
+  const defense = players.filter(p =>
+    ["DL", "DE", "DT", "LB", "CB", "S", "DB"].includes(p.position)
+  );
+
+  const bench = players.filter(p =>
+    ["R", "RES", "TAXI", "BENCH"].includes(p.status)
+  );
+
+  const ir = players.filter(p => p.status === "IR");
+
   return (
     <div className="roster-container">
       <h1 className="roster-title">My Roster</h1>
@@ -92,6 +152,14 @@ export default function Roster({ leagueInfo }) {
 
       <div className="section-title">Injured Reserve</div>
       <div className="player-section">{ir.map(renderPlayer)}</div>
+
+      {/* ⭐ NEW — modal */}
+      <PlayerModal
+        player={selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        onAdd={() => {}}
+        onWaiver={() => {}}
+      />
     </div>
   );
 }
