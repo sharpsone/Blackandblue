@@ -221,7 +221,6 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           <div className="pm-tab-content">
             <h3>Stats</h3>
 
-            {/* ESPN stats exist? */}
             {player.espnStats?.stats && player.espnStats.stats.length > 0 ? (
               <table className="pm-stats-table">
                 <thead>
