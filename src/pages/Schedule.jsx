@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import "../pages/schedule.css";
 
 export default function Schedule({ leagueInfo }) {
+
+  const leagueId = leagueInfo?.leagueId;
+  const year = leagueInfo?.year || 2026;
+
   console.log("🔥 Schedule.jsx mounted");
   console.log("🔥 leagueInfo:", leagueInfo);
   console.log("🔥 leagueId:", leagueId);
   console.log("🔥 year:", year);
-
-  const leagueId = leagueInfo?.leagueId;
-  const year = leagueInfo?.year || 2026;
 
   const [schedule, setSchedule] = useState([]);
   const [franchises, setFranchises] = useState({});
