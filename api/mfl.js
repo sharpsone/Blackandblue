@@ -25,6 +25,8 @@ export default async function handler(req, res) {
 
     async function callMFL(url) {
       console.log("CALLING MFL:", url);
+      console.log("🔎 Fetching MFL URL...");
+
       const resp = await fetch(url);
       const text = await resp.text();
 
@@ -187,10 +189,27 @@ export default async function handler(req, res) {
     // --- ACTION: schedule ---
     if (action === "schedule") {
       const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=schedule&L=${leagueId}&APIKEY=${apiKey}&JSON=1`;
-      const data = await callMFL(url);
-      return res.status(200).json(data);
-    }
 
+      console.log("📅 SCHEDULE ACTION HIT");
+      console.log("📅 URL:", url);
+
+      try {
+        const data = await callMFL(url);
+
+        console.log("📅 RAW SCHEDULE RESPONSE:", JSON.stringify(data).slice(0, 500));
+
+        if (!data?.schedule?.weeklySchedule) {
+          console.log("❌ weeklySchedule missing in response");
+        } else {
+          console.log("✅ weeklySchedule found:", data.schedule.weeklySchedule.length, "weeks");
+        }
+
+        return res.status(200).json(data);
+      } catch (err) {
+        console.log("❌ SCHEDULE ERROR:", err.message);
+        return res.status(500).json({ error: "Schedule failed", detail: err.message });
+      }
+    }
 
     // --- ACTION: weekly ---
     if (action === "weekly") {
