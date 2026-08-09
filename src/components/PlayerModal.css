@@ -350,6 +350,7 @@
   background: #0f0f0f;
   color: white;
   font-size: 14px;
+  table-layout: fixed; /* ⭐ keeps columns aligned */
 }
 
 /* Header */
@@ -357,8 +358,27 @@
   background: #1e2a38;
   color: white;
   padding: 8px;
-  text-align: left;
   font-weight: 600;
+  text-align: left; /* ⭐ aligns with stat labels */
+}
+
+/* Column widths */
+.pm-stats-table th:nth-child(1),
+.pm-stats-table td:nth-child(1) {
+  width: 50%; /* Stat label column */
+  text-align: left;
+}
+
+.pm-stats-table th:nth-child(2),
+.pm-stats-table td:nth-child(2) {
+  width: 25%; /* Value column */
+  text-align: right;
+}
+
+.pm-stats-table th:nth-child(3),
+.pm-stats-table td:nth-child(3) {
+  width: 25%; /* Rank column */
+  text-align: right;
 }
 
 /* Cells */
@@ -366,10 +386,12 @@
   padding: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
   color: #d0d0d0;
-  text-align: center;
+  overflow: hidden;       /* ⭐ prevents long labels from breaking layout */
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Rank colors — MUST override td color */
+/* Rank colors override */
 .pm-stats-table td.pm-rank-green {
   color: #4caf50 !important;
   font-weight: bold;
