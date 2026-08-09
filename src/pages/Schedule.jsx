@@ -15,7 +15,6 @@ export default function Schedule({ leagueInfo }) {
 
   async function loadSchedule() {
     try {
-      // 1. Load franchise names
       console.log("📅 Fetching schedule...");
       const schedRes = await fetch(
         `/api/mfl?action=schedule&leagueId=${leagueId}&year=${year}`
@@ -89,4 +88,7 @@ export default function Schedule({ leagueInfo }) {
             ))}
           </div>
         </div>
-      ))
+      ))}
+    </div>
+  );
+}
