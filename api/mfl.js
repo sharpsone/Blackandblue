@@ -39,6 +39,26 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
+    // ⭐ MFL → ESPN ID MAP
+    // -----------------------------
+    async function buildMflToEspnMap(year) {
+      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=players&DETAILS=1&JSON=1`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+
+      const players = json?.players?.player || [];
+      const map = {};
+
+      for (const p of players) {
+        if (p.id && p.espn_id) {
+          map[p.id] = p.espn_id;
+        }
+      }
+
+      return map;
+    }
+
+    // -----------------------------
     // STATIC LOADERS
     // -----------------------------
     const loadByeWeeks = () => {
@@ -385,123 +405,68 @@ export default async function handler(req, res) {
         projectedScore = entry?.score || null;
       }
 
+      
       // -----------------------------
-      // ⭐ BigBalls Player ID Lookup (with fallback)
+      // ⭐ ESPN Stats (Season Totals)
       // -----------------------------
-      console.log("BBS PLAYER LOOKUP START");
+      import fetch from "node-fetch";   // already at top of file
 
-      console.log("🔍 MFL NAME RECEIVED:", mflName);
-      console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
+      async function getEspnStats(espnId) {
+        const url = `https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${espnId}`;
 
-      let bbsSeason = year; // start with 2026
-
-      // 1. Try primary season first
-      const gamesUrl = `https://api.bigballsdata.com/v1/nfl/games?season=${bbsSeason}`;
-
-      const gamesResp = await fetch(gamesUrl, {
-        headers: {
-          Authorization: `Bearer ${process.env.BBS_API_KEY}`
-        }
-      });
-
-      const gamesJson = await gamesResp.json();
-
-      let bbsPlayers = [];
-
-      if (gamesJson?.data) {
-        for (const game of gamesJson.data) {
-          if (game.players) {
-            bbsPlayers.push(...game.players);
-          }
-        }
-      }
-
-      console.log("TOTAL BBS PLAYERS FOUND:", bbsPlayers.length);
-
-      // 2. If no players found, fallback to 2025
-      if (bbsPlayers.length === 0) {
-        console.log(`⚠️ No BigBalls players found for season ${bbsSeason}. Falling back to 2025.`);
-
-        bbsSeason = 2025;
-
-        const fallbackResp = await fetch(
-          `https://api.bigballsdata.com/v1/nfl/games?season=2025`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.BBS_API_KEY}`
-            }
-          }
-        );
-
-        const fallbackJson = await fallbackResp.json();
-
-        if (fallbackJson?.data) {
-          bbsPlayers = fallbackJson.data.flatMap(g => g.players || []);
-        }
-
-        console.log("TOTAL BBS PLAYERS FOUND AFTER FALLBACK:", bbsPlayers.length);
-      }
-
-      // 3. Log sample players
-      console.log("🔍 SAMPLE BBS PLAYERS (first 20):");
-      bbsPlayers.slice(0, 20).forEach(p => {
-        console.log(`  ${p.player_id} :: ${p.first_name} ${p.last_name}`);
-      });
-
-      // 4. Perform name match
-      const matched = bbsPlayers.find(p => {
-        const bbName = `${p.first_name}${p.last_name}`
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "");
-
-        console.log(`🔍 Comparing: ${normalizedMfl} <-> ${bbName}`);
-
-        return bbName === normalizedMfl;
-      });
-
-      console.log("🔍 MATCHED PLAYER:", matched);
-
-      const bbsId = matched?.player_id;
-      console.log("🔍 USING BBS ID:", bbsId);
-
-
-      // -----------------------------
-      // ⭐ BigBalls Stats
-      // -----------------------------
-      let stats = null;
-
-      if (bbsId) {
-        const statsUrl = `https://api.bigballsdata.com/v1/nfl/players/${bbsId}/stats?season=${year}`;
-
-      // ⭐ ADD THIS LOGGING HERE
-      console.log("🔍 USING BBS ID:", bbsId);
-      console.log("🔍 STATS URL:", statsUrl);
-
-        const statsResp = await fetch(statsUrl, {
-          headers: {
-            Authorization: `Bearer ${process.env.BBS_API_KEY}`
-          }
+        const response = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0" }
         });
 
-        const statsJson = await statsResp.json();
-
-        if (statsJson?.data) {
-          const d = statsJson.data;
-
-          stats = {
-            season: d.season,
-            passing: d.passing || {},
-            rushing: d.rushing || {},
-            receiving: d.receiving || {}
-          };
-
-          console.log("BACKEND STATS OBJECT:", stats);
-        } else {
-          console.log("NO BBS STATS FOUND");
+        if (!response.ok) {
+          console.log("ESPN ERROR:", response.status);
+          return null;
         }
-      } else {
-        console.log("Skipping stats fetch — no BigBalls ID");
+
+        const data = await response.json();
+        const summary = data?.athlete?.statsSummary;
+
+        if (!summary) return null;
+
+        const displayName = summary.displayName || "";
+        const yearMatch = displayName.match(/\d{4}/);
+        const seasonYear = yearMatch ? Number(yearMatch[0]) : null;
+
+        const seasonType = displayName.includes("preseason")
+          ? "preseason"
+          : displayName.includes("regular")
+          ? "regular"
+          : displayName.includes("postseason")
+          ? "postseason"
+          : "unknown";
+
+        const stats = (summary.statistics || []).map(s => ({
+          name: s.name,
+          label: s.displayName,
+          value: s.value,
+          displayValue: s.displayValue,
+          rank: s.rank,
+          rankDisplay: s.rankDisplayValue
+        }));
+
+        return {
+          seasonYear,
+          seasonType,
+          stats
+        };
       }
+
+      // ⭐ ESPN ID mapping (map MFL → ESPN later)
+      const mflToEspn = await buildMflToEspnMap(year);
+      const espnId = mflToEspn[playerId] || null;
+      console.log("🔍 ESPN ID:", espnId);
+
+
+      let espnStats = null;
+      if (espnId) {
+        espnStats = await getEspnStats(espnId);
+      }
+
 
       // -----------------------------
       // ⭐ Return unified modal object
@@ -518,7 +483,7 @@ export default async function handler(req, res) {
         injuryDetail,
         injuryNotes,
         rosteredPercent,
-        stats
+        espnStats
       });
     }
 
