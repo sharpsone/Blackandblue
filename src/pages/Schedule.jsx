@@ -1,3 +1,8 @@
+console.log("🔥 Schedule.jsx mounted");
+console.log("🔥 leagueInfo:", leagueInfo);
+console.log("🔥 leagueId:", leagueId);
+console.log("🔥 year:", year);
+
 import { useEffect, useState } from "react";
 import "../pages/schedule.css";
 
