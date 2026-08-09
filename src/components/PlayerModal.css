@@ -393,17 +393,19 @@
   color: #d0d0d0;
 }
 
-.pm-rank-green {
-  color: #4caf50;
+/* Rank colors override */
+.pm-stats-table td.pm-rank-green {
+  color: #4caf50 !important;
   font-weight: bold;
 }
 
-.pm-rank-yellow {
-  color: #ffeb3b;
+.pm-stats-table td.pm-rank-yellow {
+  color: #ffeb3b !important;
   font-weight: bold;
 }
 
-.pm-rank-red {
-  color: #f44336;
+.pm-stats-table td.pm-rank-red {
+  color: #f44336 !important;
   font-weight: bold;
 }
+
