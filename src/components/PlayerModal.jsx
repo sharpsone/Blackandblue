@@ -258,21 +258,37 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
         {/* ACTION BUTTONS */}
         <div className="modal-actions">
-          <button
-            className={`modal-btn add-btn ${isLocked ? "locked" : ""}`}
-            disabled={isLocked}
-            onClick={() => !isLocked && onAdd(player.id)}
-          >
-            Add Player
-          </button>
+          {!fromRoster && (
+            <>
+              <button
+                className={`modal-btn add-btn ${isLocked ? "locked" : ""}`}
+                disabled={isLocked}
+                onClick={() => !isLocked && onAdd(player.id)}
+              >
+                Add Player
+              </button>
 
-          <button
-            className={`modal-btn waiver-btn ${isLocked ? "locked" : ""}`}
-            disabled={isLocked}
-            onClick={() => !isLocked && onWaiver(player.id)}
-          >
-            Submit Waiver Claim
-          </button>
+              <button
+                className={`modal-btn waiver-btn ${isLocked ? "locked" : ""}`}
+                disabled={isLocked}
+                onClick={() => !isLocked && onWaiver(player.id)}
+              >
+                Submit Waiver Claim
+              </button>
+            </>
+          )}
+
+          {fromRoster && (
+            <>
+              <button className="modal-btn drop-btn">
+                Drop Player
+              </button>
+
+              <button className="modal-btn ir-btn">
+                Move to IR
+              </button>
+            </>
+          )}
 
           <button className="modal-btn close-btn" onClick={onClose}>
             Close

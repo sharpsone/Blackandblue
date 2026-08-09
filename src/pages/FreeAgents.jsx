@@ -222,6 +222,7 @@ export default function FreeAgents({ leagueInfo }) {
 
       <PlayerModal
         player={selectedPlayer}
+        fromRoster={false}
         onClose={closePlayer}
         onAdd={handleAdd}
         onWaiver={handleWaiver}

@@ -30,7 +30,25 @@ export default function Roster({ leagueInfo }) {
 
       const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id);
-        return { ...rp, ...full };
+        return {
+          ...rp,
+          ...full,
+          pos: full?.position || rp?.position,   // ⭐ normalize position
+        };
+      });
+
+      // ⭐ NEW — compute position rank (same logic as FreeAgents)
+      const grouped = {};
+      merged.forEach(p => {
+        if (!grouped[p.pos]) grouped[p.pos] = [];
+        grouped[p.pos].push(p);
+      });
+
+      Object.values(grouped).forEach(group => {
+        group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
+        group.forEach((p, i) => {
+          p.posRank = i + 1;
+        });
       });
 
       setPlayers(merged);
@@ -156,6 +174,7 @@ export default function Roster({ leagueInfo }) {
       {/* ⭐ NEW — modal */}
       <PlayerModal
         player={selectedPlayer}
+        fromRoster={true}
         onClose={() => setSelectedPlayer(null)}
         onAdd={() => {}}
         onWaiver={() => {}}
