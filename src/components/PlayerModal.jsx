@@ -221,75 +221,32 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           <div className="pm-tab-content">
             <h3>Stats</h3>
 
-            {player.stats && (
+            {/* ESPN stats exist? */}
+            {player.espnStats?.stats && player.espnStats.stats.length > 0 ? (
               <table className="pm-stats-table">
+                <thead>
+                  <tr>
+                    <th>Stat</th>
+                    <th>Value</th>
+                    <th>Rank</th>
+                  </tr>
+                </thead>
+
                 <tbody>
-
-                  {/* Passing */}
-                  <tr>
-                    <th colSpan="2" className="pm-section-header">Passing</th>
-                  </tr>
-                  <tr>
-                    <td>Attempts</td>
-                    <td>{player.stats.passing?.att ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Completions</td>
-                    <td>{player.stats.passing?.cmp ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Yards</td>
-                    <td>{player.stats.passing?.yds ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Touchdowns</td>
-                    <td>{player.stats.passing?.td ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Interceptions</td>
-                    <td>{player.stats.passing?.int ?? "-"}</td>
-                  </tr>
-
-                  {/* Rushing */}
-                  <tr>
-                    <th colSpan="2" className="pm-section-header">Rushing</th>
-                  </tr>
-                  <tr>
-                    <td>Attempts</td>
-                    <td>{player.stats.rushing?.att ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Yards</td>
-                    <td>{player.stats.rushing?.yds ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Touchdowns</td>
-                    <td>{player.stats.rushing?.td ?? "-"}</td>
-                  </tr>
-
-                  {/* Receiving */}
-                  <tr>
-                    <th colSpan="2" className="pm-section-header">Receiving</th>
-                  </tr>
-                  <tr>
-                    <td>Receptions</td>
-                    <td>{player.stats.receiving?.rec ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Yards</td>
-                    <td>{player.stats.receiving?.yds ?? "-"}</td>
-                  </tr>
-                  <tr>
-                    <td>Touchdowns</td>
-                    <td>{player.stats.receiving?.td ?? "-"}</td>
-                  </tr>
-
+                  {player.espnStats.stats.map(stat => (
+                    <tr key={stat.name}>
+                      <td>{stat.label}</td>
+                      <td>{stat.displayValue}</td>
+                      <td>{stat.rankDisplay || "-"}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
+            ) : (
+              <p>No stats available.</p>
             )}
           </div>
         )}
-
 
         {/* ACTION BUTTONS */}
         <div className="modal-actions">
