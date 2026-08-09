@@ -168,12 +168,15 @@
 /* ============================== */
 
 .pm-matchup-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 6px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
+}
+
+.pm-matchup-title span.pm-health-pill {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .pm-matchup-line {
