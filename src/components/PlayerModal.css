@@ -370,3 +370,40 @@
 .pm-stats-table tr:nth-child(3) td {
   background: rgba(0, 150, 255, 0.05); /* projected year */
 }
+
+.pm-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #0f0f0f;
+  color: white;
+}
+
+.pm-stats-table th {
+  background: #1e2a38;
+  color: white;
+  padding: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.pm-stats-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 14px;
+  color: #d0d0d0;
+}
+
+.pm-rank-green {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.pm-rank-yellow {
+  color: #ffeb3b;
+  font-weight: bold;
+}
+
+.pm-rank-red {
+  color: #f44336;
+  font-weight: bold;
+}
