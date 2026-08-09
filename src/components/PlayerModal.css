@@ -1,5 +1,5 @@
 /* ============================== */
-/* OVERLAY + MODAL CONTAINER */
+/* OVERLAY */
 /* ============================== */
 
 .modal-overlay {
@@ -11,6 +11,10 @@
   justify-content: center;
   z-index: 9999;
 }
+
+/* ============================== */
+/* MODAL CONTAINER */
+/* ============================== */
 
 .player-modal {
   background: #101019;
@@ -30,7 +34,7 @@
 }
 
 /* ============================== */
-/* TOP LOCK BANNER */
+/* LOCK BANNER */
 /* ============================== */
 
 .top-lock {
@@ -60,7 +64,6 @@
   flex-direction: column;
   gap: 4px;
   text-align: left;
-  justify-content: center;
 }
 
 .pm-photo img {
@@ -69,7 +72,12 @@
   border-radius: 12px;
   object-fit: cover;
   border: 2px solid #2b2b3f;
-  margin-top: 4px;
+}
+
+.pm-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .pm-line {
@@ -114,10 +122,6 @@
   color: #fff;
 }
 
-.pm-status .pm-mid-value {
-  color: #4caf50;
-}
-
 /* ============================== */
 /* TABS */
 /* ============================== */
@@ -146,16 +150,21 @@
 }
 
 /* ============================== */
-/* TAB CONTENT WRAPPER */
+/* TAB CONTENT */
 /* ============================== */
 
 .pm-tab-content {
-  animation: fadeIn 0.25s ease-in-out;
-  text-align: left; /* prevents inherited centering */
+  animation: slideIn 0.25s ease-out;
+  text-align: left;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================== */
-/* MATCHUP SECTION */
+/* MATCHUP */
 /* ============================== */
 
 .pm-matchup-title {
@@ -163,22 +172,41 @@
   font-weight: 700;
   color: #fff;
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
 }
 
 .pm-matchup-line {
   font-size: 14px;
   color: #c7c7d9;
+  margin-bottom: 4px;
 }
 
-/* Placeholder text */
-.pm-placeholder {
-  font-size: 14px;
-  color: #b5b5c9;
-  padding: 10px 0;
+.injury-detail {
+  color: #ff9f9f;
+  font-size: 13px;
 }
 
 /* ============================== */
-/* NEWS SECTION */
+/* HEALTH PILL */
+/* ============================== */
+
+.pm-health-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  margin-left: 10px;
+}
+
+.pm-health-red { background-color: #c62828; }
+.pm-health-yellow { background-color: #f9a825; color: #000; }
+.pm-health-green { background-color: #2e7d32; }
+
+/* ============================== */
+/* NEWS */
 /* ============================== */
 
 .fa-section-title {
@@ -186,6 +214,12 @@
   font-weight: 700;
   color: #fff;
   margin-bottom: 8px;
+}
+
+.fa-news-box {
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .fa-news-item {
@@ -208,7 +242,7 @@
   opacity: 0.7;
 }
 
-.always-visible {
+.fa-news-meta {
   margin-top: 4px;
   font-size: 12px;
   color: #b5b5c9;
@@ -233,17 +267,7 @@
   color: #b5b5c9;
 }
 
-.fa-news-box {
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: 6px;
-  position: relative;
-}
-
-/* ============================== */
-/* FORCE LEFT ALIGNMENT */
-/* ============================== */
-
+/* Force left alignment */
 .fa-news-box,
 .fa-news-item,
 .fa-news-body,
@@ -254,22 +278,67 @@
 }
 
 /* ============================== */
-/* TAB TRANSITION: SLIDE-IN */
+/* STATS TABLE */
 /* ============================== */
 
-.pm-tab-content {
-  animation: slideIn 0.25s ease-out;
+.pm-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: #0f0f0f;
+  color: white;
+  font-size: 14px;
+  table-layout: fixed;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.pm-stats-table th {
+  background: #1e2a38;
+  color: white;
+  padding: 8px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.pm-stats-table th:nth-child(1),
+.pm-stats-table td:nth-child(1) {
+  width: 50%;
+  text-align: left;
+}
+
+.pm-stats-table th:nth-child(2),
+.pm-stats-table td:nth-child(2) {
+  width: 25%;
+  text-align: right;
+}
+
+.pm-stats-table th:nth-child(3),
+.pm-stats-table td:nth-child(3) {
+  width: 25%;
+  text-align: right;
+}
+
+.pm-stats-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  color: #d0d0d0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-stats-table td.pm-rank-green {
+  color: #4caf50 !important;
+  font-weight: bold;
+}
+
+.pm-stats-table td.pm-rank-yellow {
+  color: #ffeb3b !important;
+  font-weight: bold;
+}
+
+.pm-stats-table td.pm-rank-red {
+  color: #f44336 !important;
+  font-weight: bold;
 }
 
 /* ============================== */
@@ -292,20 +361,15 @@
   border: none;
 }
 
-.add-btn {
-  background: #4caf50;
-  color: #fff;
-}
+/* FreeAgents buttons */
+.add-btn { background: #4caf50; color: #fff; }
+.waiver-btn { background: #2196f3; color: #fff; }
 
-.waiver-btn {
-  background: #2196f3;
-  color: #fff;
-}
+/* Roster buttons */
+.drop-btn { background: #d9534f; color: #fff; }
+.ir-btn { background: #9c27b0; color: #fff; }
 
-.close-btn {
-  background: #555;
-  color: #fff;
-}
+.close-btn { background: #555; color: #fff; }
 
 .modal-btn.locked {
   background: #333 !important;
@@ -313,96 +377,3 @@
   cursor: not-allowed;
 }
 
-.pm-health-pill {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #fff;
-  margin-left: 10px;
-}
-
-.pm-health-red {
-  background-color: #c62828;
-}
-
-.pm-health-yellow {
-  background-color: #f9a825;
-  color: #000;
-}
-
-.pm-health-green {
-  background-color: #2e7d32;
-}
-
-.pm-matchup-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Base table */
-.pm-stats-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-  background: #0f0f0f;
-  color: white;
-  font-size: 14px;
-  table-layout: fixed; /* ⭐ keeps columns aligned */
-}
-
-/* Header */
-.pm-stats-table th {
-  background: #1e2a38;
-  color: white;
-  padding: 8px;
-  font-weight: 600;
-  text-align: left; /* ⭐ aligns with stat labels */
-}
-
-/* Column widths */
-.pm-stats-table th:nth-child(1),
-.pm-stats-table td:nth-child(1) {
-  width: 50%; /* Stat label column */
-  text-align: left;
-}
-
-.pm-stats-table th:nth-child(2),
-.pm-stats-table td:nth-child(2) {
-  width: 25%; /* Value column */
-  text-align: right;
-}
-
-.pm-stats-table th:nth-child(3),
-.pm-stats-table td:nth-child(3) {
-  width: 25%; /* Rank column */
-  text-align: right;
-}
-
-/* Cells */
-.pm-stats-table td {
-  padding: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  color: #d0d0d0;
-  overflow: hidden;       /* ⭐ prevents long labels from breaking layout */
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Rank colors override */
-.pm-stats-table td.pm-rank-green {
-  color: #4caf50 !important;
-  font-weight: bold;
-}
-
-.pm-stats-table td.pm-rank-yellow {
-  color: #ffeb3b !important;
-  font-weight: bold;
-}
-
-.pm-stats-table td.pm-rank-red {
-  color: #f44336 !important;
-  font-weight: bold;
-}

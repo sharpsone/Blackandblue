@@ -1,8 +1,14 @@
-// src/components/PlayerModal.jsx
 import { useState } from "react";
 import "./PlayerModal.css";
 
-export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
+export default function PlayerModal({
+  player,
+  onClose,
+  onAdd,
+  onWaiver,
+  fromRoster = false,   // ⭐ NEW FLAG
+}) {
+  // Prevent crash if player missing
   if (!player || player.loading) return null;
 
   const isLocked = player.faStatus === "locked";
@@ -21,30 +27,49 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
     return "green";
   };
 
+  // ⭐ SAFE NORMALIZED FIELDS
+  const pos = player.pos || player.position || "—";
+  const team = player.team || "—";
+  const byeWeek = player.byeWeek || "—";
+  const posRank = player.posRank || "—";
+  const avg = player.avg ?? "—";
+  const projected = player.projected ?? "—";
+  const health = player.healthStatus || "Healthy";
+  const rosteredPercent = player.rosteredPercent || "—";
+
+  const matchup = player.matchup || null;
+  const news = player.externalNews || [];
+  const espnStats = player.espnStats || null;
+
   return (
     <div className="modal-overlay">
       <div className="modal player-modal">
 
-        {isLocked && (
+        {/* FREE AGENT LOCK BANNER */}
+        {!fromRoster && isLocked && (
           <div className="modal-lock-banner top-lock">
             🔒 Locked until Free Agency opens
           </div>
         )}
 
+        {/* ============================== */}
         {/* TOP SECTION */}
+        {/* ============================== */}
         <div className="pm-top">
           <div className="pm-info">
             <h2 className="pm-name">{player.name}</h2>
 
             <div className="pm-line">
-              {player.pos} — {player.team}
+              {pos} — {team}
             </div>
 
             <div className="pm-line">
-              Bye Week: {player.byeWeek || "—"}
+              Bye Week: {byeWeek}
             </div>
 
-            <div className="pm-line">Free Agent</div>
+            <div className="pm-line">
+              {fromRoster ? "Roster Player" : "Free Agent"}
+            </div>
           </div>
 
           <div className="pm-photo">
@@ -58,31 +83,33 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
         <div className="pm-divider"></div>
 
+        {/* ============================== */}
         {/* MID SECTION */}
+        {/* ============================== */}
         <div className="pm-mid">
           <div className="pm-mid-box">
             <div className="pm-mid-label">Fantasy Points</div>
-            <div className="pm-mid-value">{player.avg || 0}</div>
+            <div className="pm-mid-value">{avg}</div>
           </div>
 
           <div className="pm-mid-box">
             <div className="pm-mid-label">Position Rank</div>
-            <div className="pm-mid-value">{player.posRank}</div>
+            <div className="pm-mid-value">{posRank}</div>
           </div>
 
-          {/* ⭐ Rostered Status */}
           <div className="pm-mid-box">
             <div className="pm-mid-label">Rostered</div>
             <div className="pm-mid-value">
-              {player.rosteredPercent ? `${player.rosteredPercent}%` : "—"}
+              {rosteredPercent !== "—" ? `${rosteredPercent}%` : "—"}
             </div>
           </div>
-
         </div>
 
         <div className="pm-divider"></div>
 
+        {/* ============================== */}
         {/* TABS */}
+        {/* ============================== */}
         <div className="pm-tabs">
           <button
             className={`pm-tab ${tab === "overview" ? "active" : ""}`}
@@ -104,43 +131,41 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </button>
         </div>
 
+        {/* ============================== */}
         {/* TAB CONTENT */}
+        {/* ============================== */}
+
+        {/* OVERVIEW TAB */}
         {tab === "overview" && (
           <div className="pm-tab-content">
 
-            {/* MATCHUP SECTION */}
+            {/* MATCHUP */}
             <div className="pm-matchup">
               <div className="pm-matchup-title">
                 Week {player.week || 1} Matchup
                 <span
                   className={`pm-health-pill pm-health-${getHealthColor(
-                    player.healthStatus
+                    health
                   )}`}
                   style={{ marginLeft: "10px" }}
                 >
-                  {player.healthStatus}
+                  {health}
                 </span>
               </div>
 
               <div className="pm-matchup-line">
-                {(player.matchup?.kickoff || "Date/Time: TBD")}
-
-                {" | "}
-
-                {player.matchup
-                  ? player.matchup.home
-                    ? `v ${player.matchup.opponent}`
-                    : `@ ${player.matchup.opponent}`
+                {matchup?.kickoff || "Date/Time: TBD"} {" | "}
+                {matchup
+                  ? matchup.home
+                    ? `v ${matchup.opponent}`
+                    : `@ ${matchup.opponent}`
                   : "Opponent: TBD"}
-
                 {" | "}
-
-                {`Spread: ${player.matchup?.spread || "TBD"}`}
+                {`Spread: ${matchup?.spread ?? "TBD"}`}
               </div>
 
-              {/* Projected Points */}
               <div className="pm-matchup-line">
-                Projected Points: {player.projected || "—"}
+                Projected Points: {projected}
               </div>
 
               {player.injuryDetail && (
@@ -152,11 +177,12 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
 
             <div className="pm-divider"></div>
 
+            {/* NEWS */}
             <h3 className="fa-section-title">Recent News</h3>
 
             <div className="fa-news-box">
-              {player.externalNews && player.externalNews.length > 0 ? (
-                player.externalNews.map((item, idx) => {
+              {news.length > 0 ? (
+                news.map((item, idx) => {
                   const isOpen = openNews[idx] || false;
 
                   return (
@@ -210,6 +236,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
+        {/* GAME LOG */}
         {tab === "gamelog" && (
           <div className="pm-tab-content">
             <h3>Game Log</h3>
@@ -217,14 +244,16 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
+        {/* STATS */}
         {tab === "stats" && (
           <div className="pm-tab-content">
             <h3>
-              {player.espnStats?.seasonYear
-                ? `${player.espnStats.seasonYear} ${player.espnStats.seasonType} Stats`
+              {espnStats?.seasonYear
+                ? `${espnStats.seasonYear} ${espnStats.seasonType} Stats`
                 : "Stats"}
             </h3>
-            {player.espnStats?.stats && player.espnStats.stats.length > 0 ? (
+
+            {espnStats?.stats?.length > 0 ? (
               <table className="pm-stats-table">
                 <thead>
                   <tr>
@@ -235,15 +264,19 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
                 </thead>
 
                 <tbody>
-                  {player.espnStats.stats.map(stat => (
+                  {espnStats.stats.map((stat) => (
                     <tr key={stat.name}>
                       <td>{stat.label}</td>
                       <td>{stat.displayValue}</td>
-                      <td className={
-                        stat.rank <= 5 ? "pm-rank-green" :
-                        stat.rank <= 10 ? "pm-rank-yellow" :
-                        "pm-rank-red"
-                      }>
+                      <td
+                        className={
+                          stat.rank <= 5
+                            ? "pm-rank-green"
+                            : stat.rank <= 10
+                            ? "pm-rank-yellow"
+                            : "pm-rank-red"
+                        }
+                      >
                         {stat.rankDisplay || "-"}
                       </td>
                     </tr>
@@ -256,8 +289,12 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
           </div>
         )}
 
+        {/* ============================== */}
         {/* ACTION BUTTONS */}
+        {/* ============================== */}
         <div className="modal-actions">
+
+          {/* FreeAgents buttons */}
           {!fromRoster && (
             <>
               <button
@@ -278,6 +315,7 @@ export default function PlayerModal({ player, onClose, onAdd, onWaiver }) {
             </>
           )}
 
+          {/* Roster buttons */}
           {fromRoster && (
             <>
               <button className="modal-btn drop-btn">
