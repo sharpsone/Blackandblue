@@ -297,196 +297,148 @@ export default async function handler(req, res) {
       });
     }
 
-    // -----------------------------
-    // ⭐ CLEAN BIGBALLS PLAYERMODAL
-    // -----------------------------
-    if (action === "playerModal") {
-      console.log("PLAYERMODAL HIT");
-
-      const { playerId, team, name } = req.query;
-
-      if (!playerId || !name) {
-        return res.status(400).json({ error: "Missing playerId or name" });
-      }
-
-      const playerTeam = team || "";
-      const mflName = name;
-      console.log("🔍 MFL NAME RECEIVED:", mflName);
- 
-
-      const normalizedMfl = mflName.toLowerCase().replace(/[^a-z0-9]/g, "");
-      console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
-
-      // ⭐ API KEY LOGGING
-      console.log("🔐 BBS API KEY PRESENT:", !!process.env.BBS_API_KEY);
-      console.log("🔐 BBS API KEY LENGTH:", process.env.BBS_API_KEY?.length || 0);
-      console.log("🔐 BBS API KEY VALUE (first 10 chars):", process.env.BBS_API_KEY?.slice(0, 10));
-
       // -----------------------------
-      // ⭐ Load static schedule + bye week
+      // ⭐ CLEAN PLAYERMODAL (ESPN + MFL ONLY)
       // -----------------------------
-      const byeWeeks = loadByeWeeks();
-      const schedule = loadSchedule(1);
+      if (action === "playerModal") {
+        console.log("PLAYERMODAL HIT");
 
-      const byeWeekEntry = byeWeeks.nflByeWeeks.team.find(t => t.id === playerTeam);
-      const byeWeek = byeWeekEntry ? byeWeekEntry.bye_week : null;
+        const { playerId, team, name } = req.query;
 
-      const weekMatchups = schedule.nflSchedule.matchup || [];
-
-      let matchup = weekMatchups.find(
-        m => m.team[0].id === playerTeam || m.team[1].id === playerTeam
-      );
-
-      let kickoffPacific = null;
-      if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
-        const unix = Number(matchup.kickoff);
-        kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
-          timeZone: "America/Los_Angeles",
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-        });
-      }
-
-      const matchupData = matchup
-        ? {
-            opponent:
-              matchup.team[0].id === playerTeam
-                ? matchup.team[1].id
-                : matchup.team[0].id,
-            kickoff: kickoffPacific,
-            home: matchup.team[0].id === playerTeam,
-            spread: matchup.team[0].spread || matchup.team[1].spread || null,
-            status: matchup.status || null
-          }
-        : null;
-
-      // -----------------------------
-      // ⭐ MFL Injuries (still useful)
-      // -----------------------------
-      const injuriesData = await callMFL(
-        `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`
-      );
-
-      const injuryEntry = injuriesData?.injuries?.injury?.find(
-        inj => inj.id === playerId
-      );
-
-      const healthStatus = injuryEntry?.status || "Healthy";
-      const injuryDetail = injuryEntry?.injury || null;
-      const injuryNotes = injuryEntry?.details || null;
-
-      // -----------------------------
-      // ⭐ MFL Ownership %
-      // -----------------------------
-      const topOwns = await callMFL(
-        `https://api.myfantasyleague.com/${year}/export?TYPE=topOwns&COUNT=1000&JSON=1`
-      );
-
-      const ownedEntry = topOwns?.topOwns?.player?.find(p => p.id === playerId);
-      const rosteredPercent = ownedEntry?.percent ? Number(ownedEntry.percent) : null;
-
-      // -----------------------------
-      // ⭐ MFL Projected Score
-      // -----------------------------
-      const projectedScores = await callMFL(
-        `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
-      );
-
-      const ps = projectedScores?.projectedScores?.playerScore;
-      let projectedScore = null;
-
-      if (ps && typeof ps === "object" && !Array.isArray(ps)) {
-        projectedScore = ps.score || null;
-      } else if (Array.isArray(ps)) {
-        const entry = ps.find(p => p.id === playerId);
-        projectedScore = entry?.score || null;
-      }
-
-      
-      // -----------------------------
-      // ⭐ ESPN Stats (Season Totals)
-      // -----------------------------
-      import fetch from "node-fetch";   // already at top of file
-
-      async function getEspnStats(espnId) {
-        const url = `https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${espnId}`;
-
-        const response = await fetch(url, {
-          headers: { "User-Agent": "Mozilla/5.0" }
-        });
-
-        if (!response.ok) {
-          console.log("ESPN ERROR:", response.status);
-          return null;
+        if (!playerId || !name) {
+          return res.status(400).json({ error: "Missing playerId or name" });
         }
 
-        const data = await response.json();
-        const summary = data?.athlete?.statsSummary;
+        const playerTeam = team || "";
+        const mflName = name;
 
-        if (!summary) return null;
+        console.log("🔍 MFL NAME RECEIVED:", mflName);
 
-        const displayName = summary.displayName || "";
-        const yearMatch = displayName.match(/\d{4}/);
-        const seasonYear = yearMatch ? Number(yearMatch[0]) : null;
+        // Normalize name for comparisons
+        const normalizedMfl = mflName.toLowerCase().replace(/[^a-z0-9]/g, "");
+        console.log("🔍 NORMALIZED MFL NAME:", normalizedMfl);
 
-        const seasonType = displayName.includes("preseason")
-          ? "preseason"
-          : displayName.includes("regular")
-          ? "regular"
-          : displayName.includes("postseason")
-          ? "postseason"
-          : "unknown";
+        // -----------------------------
+        // ⭐ Load static schedule + bye week
+        // -----------------------------
+        const byeWeeks = loadByeWeeks();
+        const schedule = loadSchedule(1);
 
-        const stats = (summary.statistics || []).map(s => ({
-          name: s.name,
-          label: s.displayName,
-          value: s.value,
-          displayValue: s.displayValue,
-          rank: s.rank,
-          rankDisplay: s.rankDisplayValue
-        }));
+        const byeWeekEntry = byeWeeks.nflByeWeeks.team.find(t => t.id === playerTeam);
+        const byeWeek = byeWeekEntry ? byeWeekEntry.bye_week : null;
 
-        return {
-          seasonYear,
-          seasonType,
-          stats
-        };
+        const weekMatchups = schedule.nflSchedule.matchup || [];
+
+        let matchup = weekMatchups.find(
+          m => m.team[0].id === playerTeam || m.team[1].id === playerTeam
+        );
+
+        let kickoffPacific = null;
+        if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
+          const unix = Number(matchup.kickoff);
+          kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
+            timeZone: "America/Los_Angeles",
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+          });
+        }
+
+        const matchupData = matchup
+          ? {
+              opponent:
+                matchup.team[0].id === playerTeam
+                  ? matchup.team[1].id
+                  : matchup.team[0].id,
+              kickoff: kickoffPacific,
+              home: matchup.team[0].id === playerTeam,
+              spread: matchup.team[0].spread || matchup.team[1].spread || null,
+              status: matchup.status || null
+            }
+          : null;
+
+        // -----------------------------
+        // ⭐ MFL Injuries
+        // -----------------------------
+        const injuriesData = await callMFL(
+          `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`
+        );
+
+        const injuryEntry = injuriesData?.injuries?.injury?.find(
+          inj => inj.id === playerId
+        );
+
+        const healthStatus = injuryEntry?.status || "Healthy";
+        const injuryDetail = injuryEntry?.injury || null;
+        const injuryNotes = injuryEntry?.details || null;
+
+        // -----------------------------
+        // ⭐ MFL Ownership %
+        // -----------------------------
+        const topOwns = await callMFL(
+          `https://api.myfantasyleague.com/${year}/export?TYPE=topOwns&COUNT=1000&JSON=1`
+        );
+
+        const ownedEntry = topOwns?.topOwns?.player?.find(p => p.id === playerId);
+        const rosteredPercent = ownedEntry?.percent ? Number(ownedEntry.percent) : null;
+
+        // -----------------------------
+        // ⭐ MFL Projected Score
+        // -----------------------------
+        const projectedScores = await callMFL(
+          `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&PLAYERS=${playerId}&JSON=1`
+        );
+
+        const ps = projectedScores?.projectedScores?.playerScore;
+        let projectedScore = null;
+
+        if (ps && typeof ps === "object" && !Array.isArray(ps)) {
+          projectedScore = ps.score || null;
+        } else if (Array.isArray(ps)) {
+          const entry = ps.find(p => p.id === playerId);
+          projectedScore = entry?.score || null;
+        }
+
+        // -----------------------------
+        // ⭐ ESPN ID Mapping (MFL → ESPN)
+        // -----------------------------
+        const mflToEspn = await buildMflToEspnMap(year);
+        const espnId = mflToEspn[playerId] || null;
+
+        console.log("🔍 ESPN ID:", espnId);
+
+        // -----------------------------
+        // ⭐ ESPN Stats Fetch
+        // -----------------------------
+        let espnStats = null;
+
+        if (espnId) {
+          espnStats = await getEspnStats(espnId);
+          console.log("🔍 ESPN STATS:", espnStats);
+        } else {
+          console.log("⚠️ No ESPN ID found for this player.");
+        }
+
+        // -----------------------------
+        // ⭐ Return unified modal object
+        // -----------------------------
+        return res.status(200).json({
+          id: playerId,
+          team: playerTeam,
+          byeWeek,
+          matchup: matchupData,
+          projections: {
+            current: projectedScore
+          },
+          healthStatus,
+          injuryDetail,
+          injuryNotes,
+          rosteredPercent,
+          espnStats
+        });
       }
-
-      // ⭐ ESPN ID mapping (map MFL → ESPN later)
-      const mflToEspn = await buildMflToEspnMap(year);
-      const espnId = mflToEspn[playerId] || null;
-      console.log("🔍 ESPN ID:", espnId);
-
-
-      let espnStats = null;
-      if (espnId) {
-        espnStats = await getEspnStats(espnId);
-      }
-
-
-      // -----------------------------
-      // ⭐ Return unified modal object
-      // -----------------------------
-      return res.status(200).json({
-        id: playerId,
-        team: playerTeam,
-        byeWeek,
-        matchup: matchupData,
-        projections: {
-          current: projectedScore
-        },
-        healthStatus,
-        injuryDetail,
-        injuryNotes,
-        rosteredPercent,
-        espnStats
-      });
-    }
-
 
     // --- ACTION: submitLineup ---
     if (action === "submitLineup") {
