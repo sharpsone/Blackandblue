@@ -16,6 +16,7 @@ export default function Schedule({ leagueInfo }) {
   console.log("🔥 year:", year);
 
   useEffect(() => {
+    console.log("🔥 useEffect running");
     loadSchedule();
   }, []);
 
