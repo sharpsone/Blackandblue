@@ -226,6 +226,21 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // --- ACTION: Transactions ---
+    if (action === "transactions") {
+      try {
+        const url = `https://${host}/${year}/export?TYPE=transactions&L=${leagueId}&JSON=1`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        return res.status(200).json(data);
+      } catch (err) {
+        console.error("TRANSACTIONS ERROR:", err);
+        return res.status(500).json({ error: "Failed to load transactions" });
+      }
+    }
+
     // -----------------------------
     // ACTION: playerNewsFeed
     // -----------------------------
