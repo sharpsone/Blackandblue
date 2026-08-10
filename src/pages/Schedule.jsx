@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import "../pages/schedule.css";
 
 export default function Schedule({ leagueInfo }) {
-
   const leagueId = leagueInfo?.leagueId;
   const year = leagueInfo?.year || 2026;
 
@@ -29,14 +28,18 @@ export default function Schedule({ leagueInfo }) {
       const schedData = await schedRes.json();
       console.log("📅 Schedule response:", schedData);
 
-      if (!schedData?.schedule?.weeklySchedule?.week) {
+      // Validate shape
+      const weekly = schedData?.schedule?.weeklySchedule;
+      if (!weekly || !weekly.week) {
         console.log("❌ weeklySchedule.week missing in frontend");
         return;
       }
 
-      const rawWeeks = schedData.schedule.weeklySchedule.week;
+      // Normalize: week can be an object OR an array
+      const rawWeeks = weekly.week;
+      const weekArray = Array.isArray(rawWeeks) ? rawWeeks : [rawWeeks];
 
-      const weeks = rawWeeks.map(weekObj => {
+      const weeks = weekArray.map(weekObj => {
         const week = parseInt(weekObj.week, 10);
 
         const matchups = weekObj.matchup.map(m => {
@@ -63,7 +66,6 @@ export default function Schedule({ leagueInfo }) {
       });
 
       setSchedule(weeks);
-
 
     } catch (err) {
       console.error("SCHEDULE ERROR:", err);
