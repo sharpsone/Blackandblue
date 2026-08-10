@@ -1,240 +1,326 @@
-import { useEffect, useState } from "react";
-import { getRoster, getPlayers } from "../utils/api";
-import PlayerModal from "../components/PlayerModal";
-import "../pages/team.css";
+import React, { useState, useEffect, useCallback } from "react";
+import "./Team.css";
 
-export default function Team({ leagueInfo }) {
-  const leagueId = leagueInfo?.leagueId;
-  const myFranchiseId = leagueInfo?.franchiseId;
-  const year = leagueInfo?.year || 2026;
+// ─── Column layout (shared between sticky header and roster rows) ─────────────
+// Slot | Player | Opp | Proj | Actual | Status
+// Using explicit widths so header and body columns stay perfectly aligned.
+const COL_SLOT    = "60px";
+const COL_PLAYER  = "1fr";
+const COL_OPP     = "100px";
+const COL_PROJ    = "72px";
+const COL_ACTUAL  = "72px";
+const COL_STATUS  = "64px";
 
-  const [players, setPlayers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
+const GRID_COLS = `${COL_SLOT} ${COL_PLAYER} ${COL_OPP} ${COL_PROJ} ${COL_ACTUAL} ${COL_STATUS}`;
 
-  useEffect(() => {
-    if (!myFranchiseId) return;
-    loadRoster();
-  }, [myFranchiseId]);
-
-  async function loadRoster() {
-    try {
-      const rosterData = await getRoster(leagueId, myFranchiseId, year);
-      const rosterPlayers = rosterData?.roster?.players || [];
-
-      const playerData = await getPlayers(year);
-      const allPlayers = playerData?.players || [];
-
-      const merged = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id);
-
-        return {
-          ...rp,
-          ...full,
-          pos: full?.position || rp?.position,
-          projected: full?.projected ?? null,
-          headshot: `/api/headshot?id=${rp.id}`,
-        };
-      });
-
-      // Compute position rank
-      const grouped = {};
-      merged.forEach(p => {
-        if (!grouped[p.pos]) grouped[p.pos] = [];
-        grouped[p.pos].push(p);
-      });
-
-      Object.values(grouped).forEach(group => {
-        group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
-        group.forEach((p, i) => {
-          p.posRank = i + 1;
-        });
-      });
-
-      setPlayers(merged);
-    } catch (err) {
-      console.error("TEAM LOAD ERROR:", err);
-    }
-
-    setLoading(false);
-  }
-
-  const openPlayer = async (player) => {
-    setSelectedPlayer({ loading: true });
-
-    try {
-      const modalRes = await fetch(
-        `/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`
-      );
-      const modalData = await modalRes.json();
-
-      const statsRes = await fetch(
-        `/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueId}&year=${year}`
-      );
-      const stats = await statsRes.json();
-
-      const newsRes = await fetch(
-        `/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`
-      );
-      const newsData = await newsRes.json();
-
-      const merged = {
-        ...player,
-        ...stats,
-        externalNews: newsData.news || [],
-        byeWeek: modalData.byeWeek || null,
-        matchup: modalData.matchup || null,
-        avg: modalData.scores?.avg || player.avg || 0,
-        projected: modalData.projections?.current || null,
-        healthStatus: modalData.healthStatus,
-        injuryDetail: modalData.injuryDetail,
-        injuryNotes: modalData.injuryNotes,
-        rosteredPercent: modalData.rosteredPercent,
-        espnStats: modalData.espnStats,
-        loading: false,
-      };
-
-      setSelectedPlayer(merged);
-
-    } catch (err) {
-      console.error("[Team openPlayer] Failed:", err);
-
-      setSelectedPlayer({
-        ...player,
-        stats: [],
-        externalNews: [],
-        loading: false,
-      });
-    }
-  };
-
-  if (loading) return <p>Loading team...</p>;
-  if (!players.length) return <p>No roster data found.</p>;
-
-  // --- SLOT DEFINITIONS (Yahoo style + your league rules) ---
-  const offenseSlots = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
-  const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "DB/S", "DB/S"];
-
-  // --- CONSUME-AS-YOU-ASSIGN LOGIC ---
-  function assignSlots(slots, candidates) {
-    const used = new Set();
-    return slots.map(slot => {
-      const match = candidates.find(p => {
-        if (used.has(p.id)) return false;
-
-        if (slot === "DT/DL") return ["DT", "DL", "DE"].includes(p.pos);
-        if (slot === "DB/S") return ["CB", "DB", "S"].includes(p.pos);
-        if (slot === "W/R/T") return ["WR", "RB", "TE"].includes(p.pos);
-
-        return p.pos === slot;
-      });
-
-      if (match) {
-        used.add(match.id);
-        return { ...match, slot };
-      }
-
-      return { empty: true, slot };
-    });
-  }
-
-  const startersOffense = assignSlots(offenseSlots, players);
-  const startersDefense = assignSlots(defenseSlots, players);
-
-  const bench = players.filter(p =>
-    ["R", "RES", "TAXI", "BENCH"].includes(p.status)
+// ─── Helper: look up opponent abbreviation from schedule data ─────────────────
+function getOpponentDisplay(playerData, weekSchedule) {
+  if (!playerData || !weekSchedule) return "BYE";
+  const teamAbbr = playerData.proTeamId
+    ? weekSchedule.teamMap?.[playerData.proTeamId]
+    : null;
+  if (!teamAbbr) return "BYE";
+  const game = weekSchedule.games?.find(
+    (g) => g.home === teamAbbr || g.away === teamAbbr
   );
+  if (!game) return "BYE";
+  const isHome = game.home === teamAbbr;
+  const opp = isHome ? game.away : game.home;
+  return isHome ? `vs ${opp}` : `@ ${opp}`;
+}
 
-  const ir = players.filter(p => p.status === "IR");
+// ─── Helper: derive projected points from API payload ────────────────────────
+function extractProjected(playerEntry) {
+  return (
+    playerEntry?.playerPoolEntry?.appliedStatTotal ??
+    playerEntry?.projectedPoints ??
+    playerEntry?.playerPoolEntry?.player?.stats?.find?.(
+      (s) => s.statSourceId === 1
+    )?.appliedTotal ??
+    null
+  );
+}
 
-  function renderPlayer(p) {
-    const isEmpty = p.empty;
+// ─── Helper: derive actual points ────────────────────────────────────────────
+function extractActual(playerEntry) {
+  return (
+    playerEntry?.playerPoolEntry?.appliedStatTotal ??
+    playerEntry?.actualPoints ??
+    playerEntry?.playerPoolEntry?.player?.stats?.find?.(
+      (s) => s.statSourceId === 0
+    )?.appliedTotal ??
+    null
+  );
+}
 
-    return (
-      <div className="team-row" onClick={() => !isEmpty && openPlayer(p)}>
-        
-        {/* Column 1 — POS */}
-        <div className="team-slot">{p.slot}</div>
+// ─── loadRoster: transforms raw API roster into display-ready array ───────────
+function loadRoster(rawRoster, weekSchedule) {
+  if (!Array.isArray(rawRoster)) return [];
 
-        {/* Column 2 — Player */}
-        <div className="team-player">
-          <img
-            src={isEmpty ? "/silhouettes/player.png" : p.headshot}
-            className="team-photo"
-            alt={p.name}
-            onError={(e) => (e.target.src = "/silhouettes/player.png")}
-          />
+  return rawRoster.map((entry) => {
+    const player = entry?.playerPoolEntry?.player ?? {};
+    const fullName = player.fullName ?? "Unknown";
+    const injuryStatus = player.injuryStatus ?? null;
 
-          <div className="team-info">
-            <div className="team-name">{isEmpty ? "Empty" : p.name}</div>
+    // ── Projected & actual points assignment ──────────────────────────────
+    const projectedPoints = extractProjected(entry);
+    const actualPoints    = extractActual(entry);
 
-            {!isEmpty && (
-              <div className="team-meta">
-                <span className="meta-team">{p.team}</span>
-                <span className="meta-pos">{p.pos}</span>
-                {p.matchup && (
-                  <span className="meta-matchup">{p.matchup}</span>
-                )}
-                {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
-                {p.healthStatus && (
-                  <span className={`meta-status status-${p.healthStatus}`}>
-                    {p.healthStatus}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+    // ── Matchup / opponent display ────────────────────────────────────────
+    const opponentDisplay = getOpponentDisplay(player, weekSchedule);
 
-        {/* Column 3 — Rank */}
-        <div className="team-rank">{isEmpty ? "" : `#${p.posRank}`}</div>
+    return {
+      slotId:          entry.lineupSlotId,
+      playerId:        player.id ?? null,
+      name:            fullName,
+      proTeamId:       player.proTeamId ?? null,
+      position:        player.defaultPositionId ?? null,
+      injuryStatus,
+      projectedPoints,
+      actualPoints,
+      opponentDisplay,
+    };
+  });
+}
 
-        {/* Column 4 — Projected Points */}
-        <div className="team-proj">
-          {isEmpty ? "" : (p.projected ?? p.avg ?? "--")}
-        </div>
+// ─── Slot ID → label map (ESPN slot IDs) ─────────────────────────────────────
+const SLOT_LABELS = {
+  0:  "QB",
+  2:  "RB",
+  4:  "WR",
+  6:  "TE",
+  16: "DST",
+  17: "K",
+  20: "BE",
+  21: "IR",
+  23: "FLEX",
+};
 
-      </div>
-    );
-  }
+function slotLabel(slotId) {
+  return SLOT_LABELS[slotId] ?? `S${slotId}`;
+}
+
+// ─── Injury status badge ──────────────────────────────────────────────────────
+function InjuryBadge({ status }) {
+  if (!status || status === "ACTIVE") return null;
+  const map = {
+    QUESTIONABLE: { label: "Q",   cls: "badge--q"   },
+    DOUBTFUL:     { label: "D",   cls: "badge--d"   },
+    OUT:          { label: "O",   cls: "badge--out"  },
+    IR:           { label: "IR",  cls: "badge--ir"   },
+    SUSPENSION:   { label: "SUS", cls: "badge--sus"  },
+  };
+  const { label, cls } = map[status] ?? { label: status, cls: "badge--q" };
+  return <span className={`injury-badge ${cls}`}>{label}</span>;
+}
+
+// ─── Points display ───────────────────────────────────────────────────────────
+function Pts({ value }) {
+  if (value === null || value === undefined)
+    return <span className="pts pts--empty">–</span>;
+  return <span className="pts">{Number(value).toFixed(1)}</span>;
+}
+
+// ─── Single roster row ────────────────────────────────────────────────────────
+function RosterRow({ player, gridCols }) {
+  const isBench = player.slotId === 20;
+  const isIR    = player.slotId === 21;
+  return (
+    <div
+      className={[
+        "team-row",
+        isBench ? "team-row--bench" : "",
+        isIR    ? "team-row--ir"    : "",
+      ].filter(Boolean).join(" ")}
+      style={{ gridTemplateColumns: gridCols }}
+    >
+      <span className="col-slot">{slotLabel(player.slotId)}</span>
+
+      <span className="col-player">
+        <span className="player-name">{player.name}</span>
+        <InjuryBadge status={player.injuryStatus} />
+      </span>
+
+      <span className="col-opp">{player.opponentDisplay}</span>
+
+      <span className="col-proj">
+        <Pts value={player.projectedPoints} />
+      </span>
+
+      <span className="col-actual">
+        <Pts value={player.actualPoints} />
+      </span>
+
+      <span className="col-status">
+        <InjuryBadge status={player.injuryStatus} />
+      </span>
+    </div>
+  );
+}
+
+// ─── Sticky column header ─────────────────────────────────────────────────────
+function RosterHeader({ gridCols }) {
+  return (
+    <div className="team-header" style={{ gridTemplateColumns: gridCols }}>
+      <span className="col-slot">SLOT</span>
+      <span className="col-player">PLAYER</span>
+      <span className="col-opp">OPP</span>
+      <span className="col-proj">PROJ</span>
+      <span className="col-actual">PTS</span>
+      <span className="col-status">STATUS</span>
+    </div>
+  );
+}
+
+// ─── Section divider ──────────────────────────────────────────────────────────
+function SectionLabel({ label }) {
+  return <div className="section-label">{label}</div>;
+}
+
+// ─── Main Team component ──────────────────────────────────────────────────────
+export default function Team({
+  leagueId,
+  teamId,
+  seasonId,
+  scoringPeriodId,
+  fetchRoster,    // async (leagueId, teamId, seasonId, scoringPeriodId) => rawRoster[]
+  fetchSchedule,  // async (leagueId, seasonId, scoringPeriodId) => weekSchedule
+  teamMeta,       // { teamName, ownerName, logoUrl, record }
+}) {
+  const [roster, setRoster]           = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
+  const [matchupInfo, setMatchupInfo] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [rawRoster, weekSchedule] = await Promise.all([
+        fetchRoster(leagueId, teamId, seasonId, scoringPeriodId),
+        fetchSchedule(leagueId, seasonId, scoringPeriodId),
+      ]);
+
+      // projected points + opponentDisplay assigned inside loadRoster
+      const processed = loadRoster(rawRoster, weekSchedule);
+      setRoster(processed);
+
+      // ── Matchup display ───────────────────────────────────────────────
+      const matchup = weekSchedule?.matchups?.find(
+        (m) => m.homeTeamId === teamId || m.awayTeamId === teamId
+      );
+      if (matchup) {
+        const isHome  = matchup.homeTeamId === teamId;
+        const oppId   = isHome ? matchup.awayTeamId : matchup.homeTeamId;
+        const oppMeta = weekSchedule?.teamMetas?.[oppId] ?? {};
+        setMatchupInfo({
+          isHome,
+          oppName:           oppMeta.teamName  ?? `Team ${oppId}`,
+          oppOwner:          oppMeta.ownerName ?? "",
+          oppProjectedScore: isHome
+            ? matchup.awayProjectedScore
+            : matchup.homeProjectedScore,
+        });
+      }
+    } catch (err) {
+      setError(err.message ?? "Failed to load roster.");
+    } finally {
+      setLoading(false);
+    }
+  }, [leagueId, teamId, seasonId, scoringPeriodId, fetchRoster, fetchSchedule]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const starters = roster.filter((p) => p.slotId !== 20 && p.slotId !== 21);
+  const bench    = roster.filter((p) => p.slotId === 20);
+  const ir       = roster.filter((p) => p.slotId === 21);
+
+  const totalProjected = starters.reduce((s, p) => s + (p.projectedPoints ?? 0), 0);
+  const totalActual    = starters.reduce((s, p) => s + (p.actualPoints    ?? 0), 0);
+
+  if (loading) return <div className="team-loading">Loading roster…</div>;
+  if (error)   return <div className="team-error">Error: {error}</div>;
 
   return (
     <div className="team-container">
-      <h1 className="team-title">My Team</h1>
-      <div className="team-header">
-        <div className="col-pos">POS</div>
-        <div className="col-player">Player</div>
-        <div className="col-rank">Rank</div>
-        <div className="col-proj">Proj</div>
+
+      {/* Team card */}
+      <div className="team-card">
+        {teamMeta?.logoUrl && (
+          <img className="team-logo" src={teamMeta.logoUrl}
+               alt={`${teamMeta.teamName} logo`} />
+        )}
+        <div className="team-info">
+          <h2 className="team-name">{teamMeta?.teamName ?? `Team ${teamId}`}</h2>
+          {teamMeta?.ownerName && <span className="team-owner">{teamMeta.ownerName}</span>}
+          {teamMeta?.record    && <span className="team-record">{teamMeta.record}</span>}
+        </div>
       </div>
 
-      <div className="team-section">
-        <div className="section-label offense-label">Offense</div>
-        {startersOffense.map(renderPlayer)}
-      </div>
+      {/* Matchup banner */}
+      {matchupInfo && (
+        <div className="matchup-banner">
+          <div className="matchup-side matchup-side--mine">
+            <span className="matchup-team">{teamMeta?.teamName ?? "My Team"}</span>
+            <span className="matchup-proj">Proj: <strong>{totalProjected.toFixed(1)}</strong></span>
+            <span className="matchup-actual">Pts: <strong>{totalActual.toFixed(1)}</strong></span>
+          </div>
+          <div className="matchup-vs">{matchupInfo.isHome ? "vs" : "@"}</div>
+          <div className="matchup-side matchup-side--opp">
+            <span className="matchup-team">{matchupInfo.oppName}</span>
+            {matchupInfo.oppOwner && <span className="matchup-owner">{matchupInfo.oppOwner}</span>}
+            {matchupInfo.oppProjectedScore != null && (
+              <span className="matchup-proj">
+                Proj: <strong>{Number(matchupInfo.oppProjectedScore).toFixed(1)}</strong>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
-      <div className="team-section">
-        <div className="section-label defense-label">Defense</div>
-        {startersDefense.map(renderPlayer)}
-      </div>
+      {/* Roster table */}
+      <div className="roster-table">
 
-      <div className="team-section">
-        <div className="section-label bench-label">Bench</div>
-        {bench.map(renderPlayer)}
-      </div>
+        {/* Sticky header — gridTemplateColumns matches every team-row */}
+        <RosterHeader gridCols={GRID_COLS} />
 
-      <div className="team-section">
-        <div className="section-label ir-label">Injured Reserve</div>
-        {ir.map(renderPlayer)}
-      </div>
+        <SectionLabel label="Starters" />
+        {starters.map((player, i) => (
+          <RosterRow key={`starter-${player.playerId ?? i}`}
+                     player={player} gridCols={GRID_COLS} />
+        ))}
 
-      <PlayerModal
-        player={selectedPlayer}
-        fromRoster={true}
-        onClose={() => setSelectedPlayer(null)}
-        onAdd={() => {}}
-        onWaiver={() => {}}
-      />
+        {/* Totals row */}
+        <div className="team-row team-row--totals"
+             style={{ gridTemplateColumns: GRID_COLS }}>
+          <span className="col-slot" />
+          <span className="col-player totals-label">TOTAL</span>
+          <span className="col-opp" />
+          <span className="col-proj"><Pts value={totalProjected} /></span>
+          <span className="col-actual"><Pts value={totalActual} /></span>
+          <span className="col-status" />
+        </div>
+
+        {bench.length > 0 && (
+          <>
+            <SectionLabel label="Bench" />
+            {bench.map((player, i) => (
+              <RosterRow key={`bench-${player.playerId ?? i}`}
+                         player={player} gridCols={GRID_COLS} />
+            ))}
+          </>
+        )}
+
+        {ir.length > 0 && (
+          <>
+            <SectionLabel label="Injured Reserve" />
+            {ir.map((player, i) => (
+              <RosterRow key={`ir-${player.playerId ?? i}`}
+                         player={player} gridCols={GRID_COLS} />
+            ))}
+          </>
+        )}
+      </div>
     </div>
   );
 }
