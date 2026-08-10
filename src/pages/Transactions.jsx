@@ -95,6 +95,7 @@ export default function Transactions({ leagueInfo }) {
           type: t.type || "Unknown",
           franchise: t.franchise || "",
           timestamp: Number(t.timestamp) * 1000,
+          by_commish: t.by_commish === "1",
           players
         };
       });
@@ -181,7 +182,7 @@ export default function Transactions({ leagueInfo }) {
               {t.type}
             </span>
 
-            {t.by_commish === "1" && (
+            {t.by_commish && (
               <span className="commish-badge">C</span>
             )}
 

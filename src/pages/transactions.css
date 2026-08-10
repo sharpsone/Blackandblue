@@ -125,9 +125,8 @@
 }
 
 .player-row {
-  display: grid;
-  grid-template-columns: 1fr 60px 60px;
-  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
   padding: 6px 0;
   border-bottom: 1px solid #1f2f4a;
 }
@@ -141,15 +140,9 @@
   color: #ffffff;
 }
 
-.player-pos {
-  text-align: center;
-  color: #7bb6ff;
-  font-weight: 600;
-}
-
 .player-team {
-  text-align: right;
   color: #bcd0ea;
+  font-weight: 500;
 }
 
 .pos-badge {
