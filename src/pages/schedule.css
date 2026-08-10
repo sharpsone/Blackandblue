@@ -44,51 +44,75 @@
   color: #c8d9f0;
 }
 
-/* --- Matchup Cards (shorter + tighter) --- */
+/* --- Matchup Cards (tight + separated + professional) --- */
 .matchup-card {
-  background: #152238;
-  padding: 10px 14px;        /* ↓ reduced padding */
+  background: linear-gradient(135deg, #16233a 0%, #0f1a2b 100%);
+  padding: 8px 14px;            /* ↓ tighter padding */
   border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;                  /* ↓ tighter spacing */
+  display: grid;
+  grid-template-columns: 6px auto; /* left accent bar + content */
+  gap: 0;
+  min-height: unset;
+  border: 1px solid #1f2f4a;    /* subtle outline for separation */
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  border-left: 3px solid #4da3ff;   /* ↓ thinner accent */
-  min-height: unset;         /* ensure no forced height */
 }
 
 .matchup-card:hover {
-  transform: translateY(-2px);      /* ↓ smaller hover lift */
-  box-shadow: 0 0 10px rgba(0, 120, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(0, 120, 255, 0.25);
 }
 
-/* --- Team Row (tighter grid) --- */
+/* --- Left Accent Bar --- */
+.matchup-card::before {
+  content: "";
+  background: #4da3ff;
+  border-radius: 4px 0 0 4px;
+}
+
+/* --- Content Column --- */
+.matchup-content {
+  display: flex;
+  flex-direction: column;
+  padding-left: 12px;          /* spacing from accent bar */
+  gap: 4px;                    /* ↓ tighter spacing */
+}
+
+/* --- Team Row (perfect alignment) --- */
 .team-row {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  font-size: 0.95rem;        /* ↓ slightly smaller text */
+  font-size: 0.95rem;
   font-weight: 600;
-  line-height: 1.2;          /* ↓ tighter vertical spacing */
+  line-height: 1.1;            /* ↓ tighter vertical spacing */
 }
 
 .team-name {
   color: #ffffff;
-  white-space: nowrap;       /* prevents wrapping */
+  white-space: nowrap;
+}
+
+.team-name:first-child {
+  text-align: left;
+}
+
+.team-name:last-child {
+  text-align: right;
 }
 
 .vs {
   color: #7bb6ff;
   font-weight: 700;
-  padding: 0 6px;            /* ↓ tighter spacing */
+  padding: 0 6px;
 }
 
 /* --- Spread Row (minimal footprint) --- */
 .spread-row {
-  font-size: 0.8rem;         /* ↓ smaller text */
+  font-size: 0.8rem;
   color: #bcd0ea;
   text-align: center;
-  padding-top: 2px;          /* ↓ tighter spacing */
+  padding-top: 2px;
   border-top: 1px solid #1f2f4a;
-  margin-top: 2px;           /* ↓ less gap */
+  margin-top: 2px;
 }
+
