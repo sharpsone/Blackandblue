@@ -175,3 +175,13 @@
 .pos-S  { background: #455a64; }   /* Slate */
 .pos-PK { background: #f9a825; }   /* Yahoo uses same as K */
 .pos-UNK { background: #757575; }  /* Gray */
+
+.commish-badge {
+  background: #d50000;
+  color: #fff;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-right: 10px;
+  font-size: 0.75rem;
+}
