@@ -87,6 +87,12 @@
   border-radius: 6px;
 }
 
+.meta-matchup {
+  color: #9bb3d1;
+  font-weight: 600;
+}
+
+
 .meta-bye {
   color: #ffcc66;
 }

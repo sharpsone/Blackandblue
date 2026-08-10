@@ -32,6 +32,7 @@ export default function Team({ leagueInfo }) {
           ...rp,
           ...full,
           pos: full?.position || rp?.position,
+          projected: full?.projected ?? null,
           headshot: `/api/headshot?id=${rp.id}`,
         };
       });
@@ -171,6 +172,9 @@ export default function Team({ leagueInfo }) {
               <div className="team-meta">
                 <span className="meta-team">{p.team}</span>
                 <span className="meta-pos">{p.pos}</span>
+                {p.matchup && (
+                  <span className="meta-matchup">{p.matchup}</span>
+                )}
                 {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
                 {p.healthStatus && (
                   <span className={`meta-status status-${p.healthStatus}`}>
