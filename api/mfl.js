@@ -3,6 +3,11 @@ import fetch from "node-fetch";
 import fs from "fs";
 import path from "path";
 
+// ⭐ ADD THIS
+function detectMflHost(year) {
+  return `www44.myfantasyleague.com`;
+}
+
 export default async function handler(req, res) {
   try {
     const { action } = req.query;
