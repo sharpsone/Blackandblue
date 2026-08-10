@@ -7,3 +7,12 @@ body {
   padding: 0;
   background-color: #000;
 }
+
+/* App.css */
+:root {
+  --nav-h: 65px;
+}
+
+.page-wrapper {
+  padding-top: var(--nav-h);
+}
