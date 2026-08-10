@@ -1,125 +1,511 @@
-.team-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-  color: #e6e6e6;
-  font-family: 'Inter', sans-serif;
+/**
+ * Team.css  —  Fantasy Football Team View Styles
+ *
+ * System:
+ *  • CSS custom properties for theming (colors, spacing, typography)
+ *  • 4-column grid layout: POS | Player | Rank | Proj
+ *  • Sticky header row
+ *  • Compact Yahoo-style player tiles with zero dead space
+ *  • Color-coded section labels with left-border accent
+ *  • Rank badge 4-tier color system
+ *  • Status badge system (Q / D / O / IR / SUSP / BYE)
+ *  • Team abbreviation badge fallback
+ *  • Responsive mobile layout (≤ 480 px collapses gracefully)
+ */
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+  /* Section accent colors */
+  --color-offense:        #2563eb;
+  --color-defense:        #16a34a;
+  --color-bench:          #9333ea;
+  --color-ir:             #dc2626;
+
+  /* Rank tier colors */
+  --rank-elite-bg:        #16a34a;
+  --rank-elite-text:      #ffffff;
+  --rank-good-bg:         #2563eb;
+  --rank-good-text:       #ffffff;
+  --rank-avg-bg:          #d97706;
+  --rank-avg-text:        #ffffff;
+  --rank-low-bg:          #6b7280;
+  --rank-low-text:        #ffffff;
+
+  /* Status badge colors */
+  --status-q-bg:          #f59e0b;
+  --status-q-text:        #1a1a1a;
+  --status-d-bg:          #dc2626;
+  --status-d-text:        #ffffff;
+  --status-o-bg:          #dc2626;
+  --status-o-text:        #ffffff;
+  --status-ir-bg:         #991b1b;
+  --status-ir-text:       #ffffff;
+  --status-susp-bg:       #374151;
+  --status-susp-text:     #ffffff;
+  --status-bye-bg:        #475569;
+  --status-bye-text:      #ffffff;
+  --status-other-bg:      #6b7280;
+  --status-other-text:    #ffffff;
+
+  /* Surface */
+  --tile-bg:              #1e2433;
+  --tile-bg-hover:        #262d40;
+  --tile-bg-empty:        #181e2c;
+  --tile-border:          #2a3147;
+  --header-bg:            #131826;
+  --section-label-bg:     #181e2c;
+
+  /* Typography */
+  --text-primary:         #e8ecf4;
+  --text-secondary:       #8b95aa;
+  --text-muted:           #5c667a;
+  --text-name:            #f0f4ff;
+  --font-family:          'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Spacing */
+  --tile-height:          44px;
+  --tile-gap:             1px;
+  --tile-px:              10px;
+  --section-gap:          2px;
+
+  /* Column widths */
+  --col-pos:              42px;
+  --col-rank:             52px;
+  --col-proj:             56px;
+  --col-player:           1fr;
+
+  /* Headshot */
+  --headshot-size:        34px;
+  --abbrev-badge-size:    34px;
+
+  /* Misc */
+  --border-radius-tile:   4px;
+  --border-radius-badge:  3px;
+  --sticky-top:           0px;  /* override to match your app header height */
+  --tile-transition:      background 0.12s ease;
 }
 
-.team-title {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 25px;
-  color: #4da3ff;
-  font-weight: 700;
+/* ─── Wrapper ───────────────────────────────────────────────────────────────── */
+
+.team-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-family: var(--font-family);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: transparent;
+  overflow-x: hidden;
 }
 
-.team-section {
-  margin-bottom: 30px;
-}
+/* ─── Sticky Header Row ─────────────────────────────────────────────────────── */
 
-.team-section h2 {
-  font-size: 1.3rem;
-  margin-bottom: 12px;
-  color: #9bb3d1;
-}
-
-/* --- Player Row --- */
-.team-row {
+.team-header {
+  position: sticky;
+  top: var(--sticky-top);
+  z-index: 20;
   display: grid;
-  grid-template-columns: 60px 1fr 50px;
+  grid-template-columns:
+    var(--col-pos)
+    var(--col-player)
+    var(--col-rank)
+    var(--col-proj);
   align-items: center;
-  background: #0f1a2b;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid #1f2f4a;
-  margin-bottom: 10px;
-  gap: 10px;
-  cursor: pointer;
+  height: 30px;
+  background: var(--header-bg);
+  border-bottom: 2px solid var(--tile-border);
+  padding: 0 var(--tile-px);
+  gap: 0;
+  user-select: none;
 }
 
-/* Slot label (QB, RB, WR, etc.) */
-.team-slot {
+.team-header > span {
+  font-size: 10px;
   font-weight: 700;
-  color: #4da3ff;
-  font-size: 0.9rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Player tile */
-.team-player {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.header-pos    { text-align: center; }
+.header-player { text-align: left; padding-left: 6px; }
+.header-rank   { text-align: center; }
 
-.team-photo {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-
-.team-info {
-  flex: 1;
-}
-
-.team-name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.team-meta {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  font-size: 0.8rem;
-  color: #bcd0ea;
-}
-
-.meta-pos {
-  font-weight: 700;
-  color: #4da3ff;
-}
-
-.meta-rank {
-  background: #1f2f4a;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-.meta-bye {
-  color: #ffcc66;
-}
-
-.meta-status {
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-weight: 700;
-}
-
-.status-Q { background: #ffcc00; color: #000; }
-.status-D { background: #ff6600; color: #000; }
-.status-O { background: #ff0000; color: #fff; }
-.status-IR { background: #990000; color: #fff; }
-
-/* Team abbreviation badge */
-.team-abbr {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #9bb3d1;
+.header-proj {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+  padding-right: 2px;
 }
+
+.header-proj-total {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
+/* ─── Section Label ─────────────────────────────────────────────────────────── */
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 var(--tile-px);
+  background: var(--section-label-bg);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--section-color, var(--text-secondary));
+  border-left: 3px solid var(--section-color, transparent);
+  margin-top: var(--section-gap);
+  line-height: 1;
+  user-select: none;
+}
+
+/* Subtle divider line extending right of label text */
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--section-color, var(--tile-border)) 30%, transparent);
+  margin-left: 6px;
+}
+
+/* ─── Roster Section Container ──────────────────────────────────────────────── */
+
+.roster-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tile-gap);
+}
+
+/* ─── Player Tile (4-column grid) ───────────────────────────────────────────── */
+
+.player-tile {
+  display: grid;
+  grid-template-columns:
+    var(--col-pos)
+    var(--col-player)
+    var(--col-rank)
+    var(--col-proj);
+  align-items: center;
+  height: var(--tile-height);
+  min-height: var(--tile-height);
+  max-height: var(--tile-height);
+  background: var(--tile-bg);
+  border-bottom: 1px solid var(--tile-border);
+  padding: 0 var(--tile-px);
+  cursor: pointer;
+  transition: var(--tile-transition);
+  gap: 0;
+  overflow: hidden;
+}
+
+.player-tile:hover,
+.player-tile:focus-visible {
+  background: var(--tile-bg-hover);
+  outline: none;
+}
+
+.player-tile:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-offense);
+}
+
+.player-tile:active {
+  background: #2d354f;
+}
+
+/* Empty slot variant */
+.player-tile--empty {
+  cursor: default;
+  background: var(--tile-bg-empty);
+  opacity: 0.6;
+}
+
+.player-tile--empty:hover {
+  background: var(--tile-bg-empty);
+}
+
+.empty-slot-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding-left: 8px;
+}
+
+/* ── Column: POS ── */
+
+.tile-pos-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Column: Player ── */
+
+.tile-player-col {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 4px;
+  overflow: hidden;
+}
+
+.tile-headshot-wrap {
+  flex: 0 0 var(--headshot-size);
+  width: var(--headshot-size);
+  height: var(--headshot-size);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2a3147;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.player-headshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.team-abbrev-badge {
+  width: var(--abbrev-badge-size);
+  height: var(--abbrev-badge-size);
+  border-radius: 50%;
+  background: #3b4561;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tile-player-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tile-player-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-name);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.tile-player-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.tile-team-abbrev {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.tile-pos-small {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tile-team-abbrev + .tile-pos-small::before {
+  content: '·';
+  margin-right: 4px;
+  color: var(--text-muted);
+}
+
+.tile-bye {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #232a3e;
+  border-radius: 2px;
+  padding: 1px 4px;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+/* ── Column: Rank ── */
+
+.tile-rank-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Column: Proj ── */
+
+.tile-proj-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 2px;
+}
+
+.proj-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Rank Badge ────────────────────────────────────────────────────────────── */
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--border-radius-badge);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.rank-none  { background: transparent; color: var(--text-muted); font-size: 12px; }
+.rank-elite { background: var(--rank-elite-bg); color: var(--rank-elite-text); }
+.rank-good  { background: var(--rank-good-bg);  color: var(--rank-good-text);  }
+.rank-avg   { background: var(--rank-avg-bg);   color: var(--rank-avg-text);   }
+.rank-low   { background: var(--rank-low-bg);   color: var(--rank-low-text);   }
+
+/* ─── Status Badges ─────────────────────────────────────────────────────────── */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.status-q    { background: var(--status-q-bg);    color: var(--status-q-text);    }
+.status-d    { background: var(--status-d-bg);    color: var(--status-d-text);    }
+.status-o    { background: var(--status-o-bg);    color: var(--status-o-text);    }
+.status-ir   { background: var(--status-ir-bg);   color: var(--status-ir-text);   }
+.status-susp { background: var(--status-susp-bg); color: var(--status-susp-text); }
+.status-bye  { background: var(--status-bye-bg);  color: var(--status-bye-text);  }
+.status-other{ background: var(--status-other-bg);color: var(--status-other-text);}
+
+/* ─── Section-specific Tile Accents ─────────────────────────────────────────── */
+
+.roster-section--offense .player-tile { border-left: 2px solid transparent; }
+.roster-section--defense .player-tile { border-left: 2px solid transparent; }
+.roster-section--bench .player-tile   { border-left: 2px solid transparent; opacity: 0.9; }
+.roster-section--ir .player-tile      { border-left: 2px solid var(--color-ir); opacity: 0.75; }
+
+/* ─── Responsive — Tablet (≤ 600 px) ───────────────────────────────────────── */
 
 @media (max-width: 600px) {
-  .team-row {
-    grid-template-columns: 50px 1fr;
-    grid-template-rows: auto auto;
+  :root {
+    --col-pos:           36px;
+    --col-rank:          44px;
+    --col-proj:          48px;
+    --tile-height:       42px;
+    --tile-px:           8px;
+    --headshot-size:     30px;
+    --abbrev-badge-size: 30px;
   }
 
-  .team-abbr {
-    grid-column: 2;
-    text-align: left;
+  .tile-player-name { font-size: 12px; }
+  .tile-bye         { display: none; }
+}
+
+/* ─── Responsive — Mobile (≤ 400 px) ───────────────────────────────────────── */
+
+@media (max-width: 400px) {
+  :root {
+    --col-pos:           32px;
+    --col-rank:          40px;
+    --col-proj:          44px;
+    --tile-height:       40px;
+    --tile-px:           6px;
+    --headshot-size:     28px;
+    --abbrev-badge-size: 28px;
   }
+
+  .team-header > span,
+  .tile-pos-label     { font-size: 9px; }
+  .tile-player-name   { font-size: 11px; }
+  .tile-team-abbrev,
+  .tile-pos-small     { display: none; }
+  .status-badge       { font-size: 8px; height: 12px; padding: 0 3px; }
+  .rank-badge         { min-width: 22px; height: 16px; font-size: 9px; }
+  .proj-value         { font-size: 11px; }
+  .section-label      { font-size: 9px; height: 20px; }
+}
+
+/* ─── Scrollbar (Webkit) ────────────────────────────────────────────────────── */
+
+.team-view::-webkit-scrollbar       { width: 4px; }
+.team-view::-webkit-scrollbar-track { background: transparent; }
+.team-view::-webkit-scrollbar-thumb { background: #2a3147; border-radius: 2px; }
+
+/* ─── Reduced Motion ────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .player-tile { transition: none; }
+}
+
+/* ─── High Contrast / Forced Colors ────────────────────────────────────────── */
+
+@media (forced-colors: active) {
+  .rank-badge,
+  .status-badge { forced-color-adjust: none; }
 }
 
