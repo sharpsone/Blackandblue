@@ -1,4 +1,4 @@
-/* --- Overall Layout --- */
+/* --- Schedule Container --- */
 .schedule-container {
   max-width: 900px;
   margin: 0 auto;
@@ -16,103 +16,68 @@
 }
 
 /* --- Week Section --- */
-.schedule-week {
-  margin-bottom: 32px;
-  padding: 20px;
-  background: #0f1a2b;
-  border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0, 80, 255, 0.25);
+.week-section {
+  margin-bottom: 25px;
 }
 
-.week-title {
-  font-size: 1.4rem;
-  margin-bottom: 16px;
-  color: #7bb6ff;
-  font-weight: 600;
-  border-bottom: 1px solid #1f2f4a;
-  padding-bottom: 6px;
-}
-
-/* --- Notes (Playoff / Transition Weeks) --- */
-.week-note {
-  background: #1c2b45;
-  padding: 12px 14px;
-  border-left: 4px solid #4da3ff;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 0.95rem;
-  color: #c8d9f0;
-}
-
-/* --- Matchup Cards (tight + separated + professional) --- */
+/* --- Matchup Card --- */
 .matchup-card {
   background: linear-gradient(135deg, #16233a 0%, #0f1a2b 100%);
-  padding: 8px 14px;            /* ↓ tighter padding */
-  border-radius: 8px;
-  display: grid;
-  grid-template-columns: 6px auto; /* left accent bar + content */
-  gap: 0;
-  min-height: unset;
-  border: 1px solid #1f2f4a;    /* subtle outline for separation */
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid #1f2f4a;
+  margin-bottom: 14px;
+  max-width: 500px;      /* ⭐ keeps mobile readable */
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.matchup-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 12px rgba(0, 120, 255, 0.25);
-}
-
-/* --- Left Accent Bar --- */
-.matchup-card::before {
-  content: "";
-  background: #4da3ff;
-  border-radius: 4px 0 0 4px;
-}
-
-/* --- Content Column --- */
-.matchup-content {
+/* --- Matchup Row --- */
+.matchup-row {
   display: flex;
-  flex-direction: column;
-  padding-left: 12px;          /* spacing from accent bar */
-  gap: 4px;                    /* ↓ tighter spacing */
-}
-
-/* --- Team Row (perfect alignment) --- */
-.team-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  justify-content: space-between;
   align-items: center;
-  font-size: 0.95rem;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+/* Team names */
+.matchup-teams {
+  font-size: 1rem;
   font-weight: 600;
-  line-height: 1.1;            /* ↓ tighter vertical spacing */
+  color: #e6e6e6;
+  white-space: nowrap;   /* prevent weird wrapping */
 }
 
-.team-name {
-  color: #ffffff;
-  white-space: nowrap;
+/* Spread */
+.matchup-spread {
+  font-size: 0.9rem;
+  color: #9bb3d1;
+  flex-shrink: 0;
 }
 
-.team-name:first-child {
-  text-align: left;
-}
+/* --- Mobile Fix --- */
+@media (max-width: 600px) {
 
-.team-name:last-child {
-  text-align: right;
-}
+  .matchup-row {
+    flex-direction: column;   /* ⭐ stack vertically */
+    align-items: flex-start;  /* ⭐ left align */
+    gap: 6px;
+  }
 
-.vs {
-  color: #7bb6ff;
-  font-weight: 700;
-  padding: 0 6px;
-}
+  .matchup-teams {
+    white-space: normal;      /* allow clean wrapping */
+    text-align: left;
+    width: 100%;
+  }
 
-/* --- Spread Row (minimal footprint) --- */
-.spread-row {
-  font-size: 0.8rem;
-  color: #bcd0ea;
-  text-align: center;
-  padding-top: 2px;
-  border-top: 1px solid #1f2f4a;
-  margin-top: 2px;
+  .matchup-spread {
+    width: 100%;
+    text-align: left;
+  }
+
+  .schedule-container {
+    padding: 10px;
+  }
 }
 
