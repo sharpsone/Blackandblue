@@ -29,12 +29,14 @@ export default function Schedule({ leagueInfo }) {
       const schedData = await schedRes.json();
       console.log("📅 Schedule response:", schedData);
 
-      if (!schedData?.schedule?.weeklySchedule) {
-        console.log("❌ weeklySchedule missing in frontend");
+      if (!schedData?.schedule?.weeklySchedule?.week) {
+        console.log("❌ weeklySchedule.week missing in frontend");
         return;
       }
 
-      const weeks = schedData.schedule.weeklySchedule.map(weekObj => {
+      const rawWeeks = schedData.schedule.weeklySchedule.week;
+
+      const weeks = rawWeeks.map(weekObj => {
         const week = parseInt(weekObj.week, 10);
 
         const matchups = weekObj.matchup.map(m => {
@@ -61,6 +63,7 @@ export default function Schedule({ leagueInfo }) {
       });
 
       setSchedule(weeks);
+
 
     } catch (err) {
       console.error("SCHEDULE ERROR:", err);
