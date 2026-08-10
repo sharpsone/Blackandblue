@@ -112,7 +112,7 @@ export default function Team({ leagueInfo }) {
 
   // --- SLOT DEFINITIONS (Yahoo style + your league rules) ---
   const offenseSlots = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
-  const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "CB/DB/S", "CB/DB/S"];
+  const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "DB/S", "DB/S"];
 
   // --- CONSUME-AS-YOU-ASSIGN LOGIC ---
   function assignSlots(slots, candidates) {
@@ -122,7 +122,7 @@ export default function Team({ leagueInfo }) {
         if (used.has(p.id)) return false;
 
         if (slot === "DT/DL") return ["DT", "DL", "DE"].includes(p.pos);
-        if (slot === "CB/DB/S") return ["CB", "DB", "S"].includes(p.pos);
+        if (slot === "DB/S") return ["CB", "DB", "S"].includes(p.pos);
         if (slot === "W/R/T") return ["WR", "RB", "TE"].includes(p.pos);
 
         return p.pos === slot;
@@ -151,8 +151,11 @@ export default function Team({ leagueInfo }) {
 
     return (
       <div className="team-row" onClick={() => !isEmpty && openPlayer(p)}>
+        
+        {/* Column 1 — POS */}
         <div className="team-slot">{p.slot}</div>
 
+        {/* Column 2 — Player */}
         <div className="team-player">
           <img
             src={isEmpty ? "/silhouettes/player.png" : p.headshot}
@@ -166,9 +169,8 @@ export default function Team({ leagueInfo }) {
 
             {!isEmpty && (
               <div className="team-meta">
-                <span className="meta-pos">{p.pos}</span>
                 <span className="meta-team">{p.team}</span>
-                {p.posRank && <span className="meta-rank">#{p.posRank}</span>}
+                <span className="meta-pos">{p.pos}</span>
                 {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
                 {p.healthStatus && (
                   <span className={`meta-status status-${p.healthStatus}`}>
@@ -180,7 +182,14 @@ export default function Team({ leagueInfo }) {
           </div>
         </div>
 
-        <div className="team-abbr">{isEmpty ? "" : p.team}</div>
+        {/* Column 3 — Rank */}
+        <div className="team-rank">{isEmpty ? "" : `#${p.posRank}`}</div>
+
+        {/* Column 4 — Projected Points */}
+        <div className="team-proj">
+          {isEmpty ? "" : (p.projected ?? p.avg ?? "--")}
+        </div>
+
       </div>
     );
   }
@@ -188,24 +197,30 @@ export default function Team({ leagueInfo }) {
   return (
     <div className="team-container">
       <h1 className="team-title">My Team</h1>
+      <div className="team-header">
+        <div className="col-pos">POS</div>
+        <div className="col-player">Player</div>
+        <div className="col-rank">Rank</div>
+        <div className="col-proj">Proj</div>
+      </div>
 
       <div className="team-section">
-        <h2>Starters — Offense</h2>
+        <div className="section-label offense-label">Offense</div>
         {startersOffense.map(renderPlayer)}
       </div>
 
       <div className="team-section">
-        <h2>Starters — Defense</h2>
+        <div className="section-label defense-label">Defense</div>
         {startersDefense.map(renderPlayer)}
       </div>
 
       <div className="team-section">
-        <h2>Bench</h2>
+        <div className="section-label bench-label">Bench</div>
         {bench.map(renderPlayer)}
       </div>
 
       <div className="team-section">
-        <h2>Injured Reserve</h2>
+        <div className="section-label ir-label">Injured Reserve</div>
         {ir.map(renderPlayer)}
       </div>
 

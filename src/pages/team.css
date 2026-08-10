@@ -122,3 +122,49 @@
     text-align: left;
   }
 }
+
+/* Sticky header */
+.team-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #0f1a2b;
+  display: grid;
+  grid-template-columns: 60px 1fr 60px 80px;
+  padding: 8px 12px;
+  border-bottom: 2px solid #1f2f4a;
+  font-weight: 700;
+  color: #9bb3d1;
+}
+
+.col-pos, .col-player, .col-rank, .col-proj {
+  font-size: 0.85rem;
+}
+
+/* Section labels */
+.section-label {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.offense-label { color: #4da3ff; }
+.defense-label { color: #4dff8a; }
+.bench-label   { color: #ffcc66; }
+.ir-label      { color: #ff6666; }
+
+/* Player rows */
+.team-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 60px 80px;
+  align-items: center;
+  background: #0f1a2b;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #1f2f4a;
+  margin-bottom: 10px;
+  gap: 10px;
+  cursor: pointer;
+}
