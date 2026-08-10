@@ -56,7 +56,6 @@
   border: 1px solid #1f2f4a;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
-  /* ⭐ Add these two lines */
   max-width: 500px;
   margin: 0 auto;
 }
@@ -73,7 +72,6 @@
   gap: 10px;
 }
 
-
 /* --- Type Badge --- */
 .transaction-type {
   font-weight: 700;
@@ -81,20 +79,6 @@
   border-radius: 6px;
   color: #fff;
 }
-
-/* Color coding by type */
-.pos-QB { background: #7b1fa2; }
-.pos-RB { background: #0277bd; }
-.pos-WR { background: #2e7d32; }
-.pos-TE { background: #c62828; }
-.pos-K  { background: #f9a825; }
-.pos-PK { background: #f9a825; }
-.pos-DT,
-.pos-DE,
-.pos-LB,
-.pos-CB,
-.pos-S  { background: #455a64; }
-.pos-UNK { background: #757575; }
 
 /* --- Timestamp --- */
 .transaction-time {
@@ -115,6 +99,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
 
 .player-row {
   display: grid;
@@ -131,11 +116,12 @@
 .player-name {
   font-weight: 600;
   color: #ffffff;
-  text-align: left; /* force left alignment */
+  text-align: left;
 }
 
+/* --- Position Badge --- */
 .pos-badge {
-  justify-self: center; /* center the badge */
+  justify-self: center;
   padding: 2px 6px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -144,36 +130,28 @@
   text-transform: uppercase;
 }
 
+/* --- Team --- */
 .player-team {
-  justify-self: end; /* right align */
+  justify-self: end;
   color: #bcd0ea;
   font-weight: 500;
 }
 
-.pos-badge {
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #fff;
-  text-transform: uppercase;
-  margin-left: 8px;
-}
-
-/* Yahoo-style position colors */
-.pos-QB { background: #7b1fa2; }   /* Purple */
-.pos-RB { background: #0277bd; }   /* Blue */
-.pos-WR { background: #2e7d32; }   /* Green */
-.pos-TE { background: #c62828; }   /* Red */
-.pos-K  { background: #f9a825; }   /* Yellow */
+/* --- Yahoo-style position colors --- */
+.pos-QB { background: #7b1fa2; }
+.pos-RB { background: #0277bd; }
+.pos-WR { background: #2e7d32; }
+.pos-TE { background: #c62828; }
+.pos-K,
+.pos-PK { background: #f9a825; }
 .pos-DT,
 .pos-DE,
 .pos-LB,
 .pos-CB,
-.pos-S  { background: #455a64; }   /* Slate */
-.pos-PK { background: #f9a825; }   /* Yahoo uses same as K */
-.pos-UNK { background: #757575; }  /* Gray */
+.pos-S { background: #455a64; }
+.pos-UNK { background: #757575; }
 
+/* --- Commish Badge --- */
 .commish-badge {
   background: #d50000;
   color: #fff;
@@ -182,4 +160,17 @@
   border-radius: 6px;
   margin-left: 10px;
   font-size: 0.75rem;
+}
+
+/* --- Mobile layout for filter bar --- */
+@media (max-width: 600px) {
+  .filter-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filter-bar select,
+  .filter-bar input {
+    width: 100%;
+  }
 }
