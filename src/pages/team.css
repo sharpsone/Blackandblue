@@ -24,40 +24,56 @@
   color: #9bb3d1;
 }
 
-.team-player-row {
-  display: flex;
+/* --- Player Row --- */
+.team-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 50px;
   align-items: center;
   background: #0f1a2b;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid #1f2f4a;
   margin-bottom: 10px;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
 }
 
-.team-player-photo {
-  width: 48px;
-  height: 48px;
+/* Slot label (QB, RB, WR, etc.) */
+.team-slot {
+  font-weight: 700;
+  color: #4da3ff;
+  font-size: 0.9rem;
+}
+
+/* Player tile */
+.team-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.team-photo {
+  width: 40px;
+  height: 40px;
   border-radius: 6px;
   object-fit: cover;
 }
 
-.team-player-info {
+.team-info {
   flex: 1;
 }
 
-.team-player-name {
-  font-size: 1rem;
+.team-name {
+  font-size: 0.95rem;
   font-weight: 700;
   color: #ffffff;
 }
 
-.team-player-meta {
+.team-meta {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #bcd0ea;
 }
 
@@ -87,19 +103,23 @@
 .status-O { background: #ff0000; color: #fff; }
 .status-IR { background: #990000; color: #fff; }
 
-.team-logo {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
+/* Team abbreviation badge */
+.team-abbr {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #9bb3d1;
+  text-align: right;
 }
 
 @media (max-width: 600px) {
-  .team-player-row {
-    flex-direction: column;
-    align-items: flex-start;
+  .team-row {
+    grid-template-columns: 50px 1fr;
+    grid-template-rows: auto auto;
   }
 
-  .team-logo {
-    align-self: flex-end;
+  .team-abbr {
+    grid-column: 2;
+    text-align: left;
   }
 }
+

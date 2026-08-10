@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getRoster, getPlayers } from "../utils/api";
 import PlayerModal from "../components/PlayerModal";
-import "../utils/animations.css";
 import "../pages/team.css";
 
 export default function Team({ leagueInfo }) {
@@ -11,7 +10,6 @@ export default function Team({ leagueInfo }) {
 
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   useEffect(() => {
@@ -35,7 +33,6 @@ export default function Team({ leagueInfo }) {
           ...full,
           pos: full?.position || rp?.position,
           headshot: `/api/headshot?id=${rp.id}`,
-          logo: `/assets/logos/${full?.team}.png`,
         };
       });
 
@@ -113,17 +110,35 @@ export default function Team({ leagueInfo }) {
   if (loading) return <p>Loading team...</p>;
   if (!players.length) return <p>No roster data found.</p>;
 
-  // --- Yahoo-style positional slots ---
-  const starterSlotsOffense = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
-  const starterSlotsDefense = ["DL", "LB", "DB", "DEF"];
+  // --- SLOT DEFINITIONS (Yahoo style + your league rules) ---
+  const offenseSlots = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
+  const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "CB/DB/S", "CB/DB/S"];
 
-  const startersOffense = starterSlotsOffense.map(slot =>
-    players.find(p => p.pos === slot) || { empty: true, pos: slot }
-  );
+  // --- CONSUME-AS-YOU-ASSIGN LOGIC ---
+  function assignSlots(slots, candidates) {
+    const used = new Set();
+    return slots.map(slot => {
+      const match = candidates.find(p => {
+        if (used.has(p.id)) return false;
 
-  const startersDefense = starterSlotsDefense.map(slot =>
-    players.find(p => p.pos === slot) || { empty: true, pos: slot }
-  );
+        if (slot === "DT/DL") return ["DT", "DL", "DE"].includes(p.pos);
+        if (slot === "CB/DB/S") return ["CB", "DB", "S"].includes(p.pos);
+        if (slot === "W/R/T") return ["WR", "RB", "TE"].includes(p.pos);
+
+        return p.pos === slot;
+      });
+
+      if (match) {
+        used.add(match.id);
+        return { ...match, slot };
+      }
+
+      return { empty: true, slot };
+    });
+  }
+
+  const startersOffense = assignSlots(offenseSlots, players);
+  const startersDefense = assignSlots(defenseSlots, players);
 
   const bench = players.filter(p =>
     ["R", "RES", "TAXI", "BENCH"].includes(p.status)
@@ -135,21 +150,23 @@ export default function Team({ leagueInfo }) {
     const isEmpty = p.empty;
 
     return (
-      <div className="team-player-row" onClick={() => !isEmpty && openPlayer(p)}>
-        <img
-          src={isEmpty ? "/silhouettes/player.png" : p.headshot}
-          className="team-player-photo"
-          alt={p.name}
-          onError={(e) => (e.target.src = "/silhouettes/player.png")}
-        />
+      <div className="team-row" onClick={() => !isEmpty && openPlayer(p)}>
+        <div className="team-slot">{p.slot}</div>
 
-        <div className="team-player-info">
-          <div className="team-player-name">{isEmpty ? "Empty" : p.name}</div>
+        <div className="team-player">
+          <img
+            src={isEmpty ? "/silhouettes/player.png" : p.headshot}
+            className="team-photo"
+            alt={p.name}
+            onError={(e) => (e.target.src = "/silhouettes/player.png")}
+          />
 
-          <div className="team-player-meta">
-            <span className="meta-pos">{p.pos}</span>
+          <div className="team-info">
+            <div className="team-name">{isEmpty ? "Empty" : p.name}</div>
+
             {!isEmpty && (
-              <>
+              <div className="team-meta">
+                <span className="meta-pos">{p.pos}</span>
                 <span className="meta-team">{p.team}</span>
                 {p.posRank && <span className="meta-rank">#{p.posRank}</span>}
                 {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
@@ -158,16 +175,12 @@ export default function Team({ leagueInfo }) {
                     {p.healthStatus}
                   </span>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
 
-        <img
-          src={isEmpty ? "/assets/logos/empty.png" : p.logo}
-          className="team-logo"
-          alt=""
-        />
+        <div className="team-abbr">{isEmpty ? "" : p.team}</div>
       </div>
     );
   }
@@ -206,3 +219,4 @@ export default function Team({ leagueInfo }) {
     </div>
   );
 }
+
