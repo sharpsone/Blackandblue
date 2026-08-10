@@ -16,8 +16,31 @@ export default function Schedule({ leagueInfo }) {
 
   useEffect(() => {
     console.log("🔥 useEffect running");
+    loadFranchises();   // ⭐ NEW
     loadSchedule();
   }, []);
+
+    async function loadFranchises() {
+    try {
+      console.log("📣 Fetching franchises...");
+      const res = await fetch(
+        `/api/mfl?action=franchises&leagueId=${leagueId}&year=${year}`
+      );
+      const data = await res.json();
+
+      const list = data?.franchises?.franchise || [];
+
+      const map = {};
+      list.forEach(f => {
+        map[f.id] = f.name;
+      });
+
+      console.log("📣 Franchise map:", map);
+      setFranchises(map);
+    } catch (err) {
+      console.error("FRANCHISE ERROR:", err);
+    }
+  }
 
   async function loadSchedule() {
     try {
@@ -61,12 +84,12 @@ export default function Schedule({ leagueInfo }) {
               return {
                 home: {
                   id: home.id,
-                  name: franchises[home.id] || home.id,
+                  name: franchises[home.id] || `Team ${home.id}`,
                   spread: Number(home.spread)
                 },
                 away: {
                   id: away.id,
-                  name: franchises[away.id] || away.id,
+                  name: franchises[away.id] || `Team ${away.id}`,
                   spread: Number(away.spread)
                 }
               };
