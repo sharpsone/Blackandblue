@@ -1,33 +1,179 @@
 import { useEffect, useState } from "react";
+import "../pages/transactions.css";
 import { getLeagueInfo } from "../utils/api";
 
-function Transactions({ leagueId, year }) {
-  const [league, setLeague] = useState(null);
+export default function Transactions({ leagueInfo }) {
+  const leagueId = leagueInfo?.leagueId;
+  const year = leagueInfo?.year || 2026;
+
+  const [franchises, setFranchises] = useState({});
+  const [transactions, setTransactions] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+
+  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [franchiseFilter, setFranchiseFilter] = useState("ALL");
+  const [searchFilter, setSearchFilter] = useState("");
+
   const [loading, setLoading] = useState(true);
 
+  // Load franchise names first
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await getLeagueInfo(leagueId, year);
-        setLeague(data);
-      } catch (err) {
-        console.error("TRANSACTIONS ERROR:", err);
-      }
+    loadFranchises();
+  }, []);
+
+  // Load transactions after franchise map is ready
+  useEffect(() => {
+    if (Object.keys(franchises).length > 0) {
+      loadTransactions();
+    }
+  }, [franchises]);
+
+  // Apply filters whenever filters change
+  useEffect(() => {
+    applyFilters();
+  }, [transactions, typeFilter, franchiseFilter, searchFilter]);
+
+  async function loadFranchises() {
+    try {
+      const leagueJson = await getLeagueInfo(leagueId, year);
+      const franchiseList = leagueJson.league.franchises.franchise || [];
+
+      const map = {};
+      franchiseList.forEach(f => {
+        map[f.id] = f.name || `Franchise ${f.id}`;
+      });
+
+      setFranchises(map);
+    } catch (err) {
+      console.error("FRANCHISE LOAD ERROR:", err);
+    }
+  }
+
+  async function loadTransactions() {
+    try {
+      const res = await fetch(
+        `/api/mfl?action=transactions&leagueId=${leagueId}&year=${year}`
+      );
+      const data = await res.json();
+
+      const list = data?.transactions?.transaction || [];
+
+      const parsed = list.map(t => {
+        const players = Array.isArray(t.player) ? t.player : t.player ? [t.player] : [];
+
+        return {
+          type: t.type || "Unknown",
+          franchise: t.franchise || "",
+          timestamp: Number(t.timestamp) * 1000,
+          players: players.map(p => ({
+            id: p.id,
+            name: p.name,
+            position: p.position,
+            team: p.team
+          }))
+        };
+      });
+
+      setTransactions(parsed);
+      setLoading(false);
+    } catch (err) {
+      console.error("TRANSACTION LOAD ERROR:", err);
       setLoading(false);
     }
-    load();
-  }, [leagueId, year]);
+  }
 
-  if (loading) return <p style={{ padding: "1rem" }}>Loading transactions...</p>;
+  function applyFilters() {
+    let list = [...transactions];
+
+    if (typeFilter !== "ALL") {
+      list = list.filter(t => t.type === typeFilter);
+    }
+
+    if (franchiseFilter !== "ALL") {
+      list = list.filter(t => t.franchise === franchiseFilter);
+    }
+
+    if (searchFilter.trim() !== "") {
+      const term = searchFilter.toLowerCase();
+      list = list.filter(t =>
+        t.players.some(p => p.name.toLowerCase().includes(term))
+      );
+    }
+
+    setFiltered(list);
+  }
+
+  if (loading) return <p>Loading transactions...</p>;
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1>Transactions</h1>
-      <p>Transactions endpoint not yet implemented — backend route needed.</p>
+    <div className="transactions-container">
+      <h1 className="transactions-title">League Transactions</h1>
+
+      {/* FILTER BAR */}
+      <div className="filter-bar">
+        {/* Type Filter */}
+        <select
+          value={typeFilter}
+          onChange={e => setTypeFilter(e.target.value)}
+        >
+          <option value="ALL">All Types</option>
+          <option value="Add">Add</option>
+          <option value="Drop">Drop</option>
+          <option value="Trade">Trade</option>
+          <option value="Waiver">Waiver</option>
+          <option value="LOAD_ROSTERS">Load Rosters</option>
+        </select>
+
+        {/* Franchise Filter */}
+        <select
+          value={franchiseFilter}
+          onChange={e => setFranchiseFilter(e.target.value)}
+        >
+          <option value="ALL">All Teams</option>
+          {Object.entries(franchises).map(([id, name]) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        {/* Search Filter */}
+        <input
+          type="text"
+          placeholder="Search players..."
+          value={searchFilter}
+          onChange={e => setSearchFilter(e.target.value)}
+        />
+      </div>
+
+      {/* TRANSACTION LIST */}
+      <div className="transaction-list">
+        {filtered.map((t, idx) => (
+          <div key={idx} className="transaction-card">
+            <div className="transaction-header">
+              <span className="transaction-type">{t.type}</span>
+              <span className="transaction-time">
+                {new Date(t.timestamp).toLocaleString()}
+              </span>
+            </div>
+
+            <div className="transaction-franchise">
+              {franchises[t.franchise] || `Team ${t.franchise}`}
+            </div>
+
+            <div className="transaction-players">
+              {t.players.map(p => (
+                <div key={p.id} className="player-row">
+                  <span className="player-name">{p.name}</span>
+                  <span className="player-pos">{p.position}</span>
+                  <span className="player-team">{p.team || "FA"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
-
-export default Transactions;
 
