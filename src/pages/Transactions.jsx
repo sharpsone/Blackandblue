@@ -61,8 +61,8 @@ export default function Transactions({ leagueInfo }) {
       // Normalize to array
       const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
-      // Load full player database once
-      const playersData = await fetch(`/api/mfl?action=players&year=${year}`);
+      // ⭐ FIX: include leagueId AND year
+      const playersData = await fetch(`/api/mfl?action=players&leagueId=${leagueId}&year=${year}`);
       const playersJson = await playersData.json();
       const allPlayers = playersJson?.players?.player || [];
 
@@ -70,12 +70,10 @@ export default function Transactions({ leagueInfo }) {
         let players = [];
 
         if (t.type === "LOAD_ROSTERS") {
-          // Parse comma-separated IDs
           const ids = t.transaction
             .split(",")
             .filter(x => x && x !== "|");
 
-          // Map IDs → full player objects
           players = ids.map(id => {
             const p = allPlayers.find(x => x.id === id);
             return {
@@ -86,7 +84,6 @@ export default function Transactions({ leagueInfo }) {
             };
           });
         } else {
-          // Normal MFL transaction format
           players = Array.isArray(t.player)
             ? t.player
             : t.player
