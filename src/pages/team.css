@@ -170,7 +170,7 @@
 
 /* ── Header column alignments ───────────────────────────────────── */
 .col-pos    { }                       /* inherits header flex */
-.col-player { }
+.col-player { text-align: left; }
 .col-rank   { text-align: center; }
 .col-proj   { text-align: right;  }
 
