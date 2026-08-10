@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "../pages/schedule.css";
+import { getLeagueInfo } from "../api/mfl";   // ⭐ REQUIRED IMPORT
 
 export default function Schedule({ leagueInfo }) {
   const leagueId = leagueInfo?.leagueId;
@@ -11,34 +12,32 @@ export default function Schedule({ leagueInfo }) {
 
   console.log("🔥 Schedule.jsx mounted");
   console.log("🔥 leagueInfo:", leagueInfo);
-  console.log("🔥 leagueId:", leagueId);
-  console.log("🔥 year:", year);
 
   useEffect(() => {
     console.log("🔥 useEffect running");
-    loadFranchises();   // ⭐ NEW
-    loadSchedule();
+    loadFranchisesFromLeagueInfo();
   }, []);
 
-    async function loadFranchises() {
-    try {
-      console.log("📣 Fetching franchises...");
-      const res = await fetch(
-        `/api/mfl?action=franchises&leagueId=${leagueId}&year=${year}`
-      );
-      const data = await res.json();
+  useEffect(() => {
+    if (Object.keys(franchises).length > 0) {
+      loadSchedule();   // ⭐ Only load schedule AFTER franchise names are ready
+    }
+  }, [franchises]);
 
-      const list = data?.franchises?.franchise || [];
+  async function loadFranchisesFromLeagueInfo() {
+    try {
+      const leagueJson = await getLeagueInfo(leagueId, year);
+      const franchiseList = leagueJson.league.franchises.franchise || [];
 
       const map = {};
-      list.forEach(f => {
-        map[f.id] = f.name;
+      franchiseList.forEach(f => {
+        map[f.id] = f.name || `Franchise ${f.id}`;
       });
 
       console.log("📣 Franchise map:", map);
       setFranchises(map);
     } catch (err) {
-      console.error("FRANCHISE ERROR:", err);
+      console.error("FRANCHISE LOAD ERROR:", err);
     }
   }
 
@@ -51,82 +50,25 @@ export default function Schedule({ leagueInfo }) {
       const schedData = await schedRes.json();
       console.log("📅 Schedule response:", schedData);
 
-      const scheduleRoot = schedData?.schedule;
-      if (!scheduleRoot) {
-        console.log("❌ No schedule object returned");
+      const weekly = schedData?.schedule?.weeklySchedule;
+
+      if (!Array.isArray(weekly)) {
+        console.log("❌ weeklySchedule is not an array");
         return;
       }
 
-      const weekly = scheduleRoot.weeklySchedule;
+      const weeks = weekly.map(weekObj => {
+        const week = parseInt(weekObj.week, 10);
 
-      if (Array.isArray(weekly)) {
-        console.log("📅 Using weeklySchedule ARRAY format");
-
-        const weeks = weekly.map(weekObj => {
-          const week = parseInt(weekObj.week, 10);
-
-          // ⭐ REGULAR SEASON: Weeks 0–13
-          if (week <= 13) {
-            if (!Array.isArray(weekObj.matchup)) {
-              return {
-                week,
-                matchups: [],
-                note: "Matchups not yet available for this regular season week."
-              };
-            }
-
-            const matchups = weekObj.matchup.map(m => {
-              const [f1, f2] = m.franchise;
-
-              const home = f1.isHome === "1" ? f1 : f2;
-              const away = f1.isHome === "1" ? f2 : f1;
-
-              return {
-                home: {
-                  id: home.id,
-                  name: franchises[home.id] || `Team ${home.id}`,
-                  spread: Number(home.spread)
-                },
-                away: {
-                  id: away.id,
-                  name: franchises[away.id] || `Team ${away.id}`,
-                  spread: Number(away.spread)
-                }
-              };
-            });
-
-            return { week, matchups };
+        // ⭐ REGULAR SEASON: Weeks 0–13
+        if (week <= 13) {
+          if (!Array.isArray(weekObj.matchup)) {
+            return {
+              week,
+              matchups: [],
+              note: "Matchups not yet available for this regular season week."
+            };
           }
-
-          // ⭐ PLAYOFFS: Weeks 14–17
-          return {
-            week,
-            matchups: [],
-            note:
-              week === 14
-                ? "Week 14: Final regular season week."
-                : week === 15
-                ? "Week 15: Playoffs begin. View the Playoff Bracket for matchups."
-                : week === 16
-                ? "Week 16: Playoff semifinals. View the Playoff Bracket."
-                : "Week 17: Championship week. View the Playoff Bracket."
-          };
-        });
-
-        setSchedule(weeks);
-        setLoading(false);
-        return;
-      }
-
-      // CASE 2: weeklySchedule.week exists (object or array)
-      if (weekly?.week) {
-        console.log("📅 Using weeklySchedule.week object/array format");
-
-        const rawWeeks = weekly.week;
-        const weekArray = Array.isArray(rawWeeks) ? rawWeeks : [rawWeeks];
-
-        const weeks = weekArray.map(weekObj => {
-          const week = parseInt(weekObj.week, 10);
 
           const matchups = weekObj.matchup.map(m => {
             const [f1, f2] = m.franchise;
@@ -137,70 +79,41 @@ export default function Schedule({ leagueInfo }) {
             return {
               home: {
                 id: home.id,
-                name: franchises[home.id] || home.id,
+                name: franchises[home.id] || `Team ${home.id}`,
                 spread: Number(home.spread)
               },
               away: {
                 id: away.id,
-                name: franchises[away.id] || away.id,
+                name: franchises[away.id] || `Team ${away.id}`,
                 spread: Number(away.spread)
               }
             };
           });
 
           return { week, matchups };
-        });
+        }
 
-        setSchedule(weeks);
-        setLoading(false);
-        return;
-      }
+        // ⭐ PLAYOFFS: Weeks 14–17
+        return {
+          week,
+          matchups: [],
+          note:
+            week === 14
+              ? "Week 14: Transition week before playoffs."
+              : week === 15
+              ? "Week 15: Playoffs begin. View the Playoff Bracket for matchups."
+              : week === 16
+              ? "Week 16: Playoff semifinals. View the Playoff Bracket."
+              : "Week 17: Championship week. View the Playoff Bracket."
+        };
+      });
 
-      // CASE 3: schedule.matchup flat format
-      if (scheduleRoot.matchup) {
-        console.log("📅 Using schedule.matchup flat format");
-
-        const grouped = {};
-
-        scheduleRoot.matchup.forEach(m => {
-          const week = parseInt(m.week, 10);
-          if (!grouped[week]) grouped[week] = [];
-
-          const [f1, f2] = m.franchise;
-          const home = f1.isHome === "1" ? f1 : f2;
-          const away = f1.isHome === "1" ? f2 : f1;
-
-          grouped[week].push({
-            home: {
-              id: home.id,
-              name: franchises[home.id] || home.id,
-              spread: Number(home.spread)
-            },
-            away: {
-              id: away.id,
-              name: franchises[away.id] || away.id,
-              spread: Number(away.spread)
-            }
-          });
-        });
-
-        const weeks = Object.keys(grouped).map(week => ({
-          week: Number(week),
-          matchups: grouped[week]
-        }));
-
-        setSchedule(weeks);
-        setLoading(false);
-        return;
-      }
-
-      console.log("❌ No recognizable schedule format");
-
+      setSchedule(weeks);
+      setLoading(false);
     } catch (err) {
       console.error("SCHEDULE ERROR:", err);
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   if (loading) return <p>Loading schedule...</p>;
@@ -214,9 +127,7 @@ export default function Schedule({ leagueInfo }) {
           <h2 className="week-title">Week {week.week}</h2>
 
           {week.note && (
-            <div className="week-note">
-              {week.note}
-            </div>
+            <div className="week-note">{week.note}</div>
           )}
 
           <div className="matchup-list">
