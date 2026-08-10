@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import "./Team.css";
+import "./team.css";
 
 // ─── Column layout (shared between sticky header and roster rows) ─────────────
 // Slot | Player | Opp | Proj | Actual | Status
