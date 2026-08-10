@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import './Team.css';
+import './team.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
