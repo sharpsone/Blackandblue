@@ -55,6 +55,10 @@
   border-radius: 10px;
   border: 1px solid #1f2f4a;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  /* ⭐ Add these two lines */
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .transaction-card:hover {
@@ -65,10 +69,10 @@
 /* --- Header Row --- */
 .transaction-header {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  align-items: center;
+  gap: 10px;
 }
+
 
 /* --- Type Badge --- */
 .transaction-type {
@@ -111,12 +115,12 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}.player-row {
-  display: flex;
+
+.player-row {
+  display: grid;
+  grid-template-columns: 1fr 50px 40px; /* Name | POS | Team */
   align-items: center;
-  justify-content: space-between;
   padding: 4px 0;
-  gap: 10px;
   border-bottom: 1px solid #1f2f4a;
 }
 
@@ -125,13 +129,13 @@
 }
 
 .player-name {
-  flex: 1;
   font-weight: 600;
   color: #ffffff;
+  text-align: left; /* force left alignment */
 }
 
 .pos-badge {
-  flex-shrink: 0;
+  justify-self: center; /* center the badge */
   padding: 2px 6px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -141,9 +145,7 @@
 }
 
 .player-team {
-  flex-shrink: 0;
-  width: 40px;
-  text-align: right;
+  justify-self: end; /* right align */
   color: #bcd0ea;
   font-weight: 500;
 }
