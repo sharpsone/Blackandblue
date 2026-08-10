@@ -167,10 +167,17 @@
   .filter-bar {
     flex-direction: column;
     gap: 10px;
+    padding: 10px;
   }
 
   .filter-bar select,
   .filter-bar input {
     width: 100%;
+    flex: none;
+    box-sizing: border-box;
+  }
+
+  .transactions-container {
+    padding: 10px;
   }
 }
