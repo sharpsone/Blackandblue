@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "../pages/schedule.css";
 import { getLeagueInfo } from "../utils/api";   // ⭐ FIXED
-
+//test
 export default function Schedule({ leagueInfo }) {
   const leagueId = leagueInfo?.leagueId;
   const year = leagueInfo?.year || 2026;
