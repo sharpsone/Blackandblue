@@ -36,34 +36,58 @@ export default function Schedule({ leagueInfo }) {
 
       const weekly = scheduleRoot.weeklySchedule;
 
-      // CASE 1: weeklySchedule is an ARRAY (your league!)
       if (Array.isArray(weekly)) {
         console.log("📅 Using weeklySchedule ARRAY format");
 
         const weeks = weekly.map(weekObj => {
           const week = parseInt(weekObj.week, 10);
 
-          const matchups = weekObj.matchup.map(m => {
-            const [f1, f2] = m.franchise;
+          // ⭐ REGULAR SEASON: Weeks 0–13
+          if (week <= 13) {
+            if (!Array.isArray(weekObj.matchup)) {
+              return {
+                week,
+                matchups: [],
+                note: "Matchups not yet available for this regular season week."
+              };
+            }
 
-            const home = f1.isHome === "1" ? f1 : f2;
-            const away = f1.isHome === "1" ? f2 : f1;
+            const matchups = weekObj.matchup.map(m => {
+              const [f1, f2] = m.franchise;
 
-            return {
-              home: {
-                id: home.id,
-                name: franchises[home.id] || home.id,
-                spread: Number(home.spread)
-              },
-              away: {
-                id: away.id,
-                name: franchises[away.id] || away.id,
-                spread: Number(away.spread)
-              }
-            };
-          });
+              const home = f1.isHome === "1" ? f1 : f2;
+              const away = f1.isHome === "1" ? f2 : f1;
 
-          return { week, matchups };
+              return {
+                home: {
+                  id: home.id,
+                  name: franchises[home.id] || home.id,
+                  spread: Number(home.spread)
+                },
+                away: {
+                  id: away.id,
+                  name: franchises[away.id] || away.id,
+                  spread: Number(away.spread)
+                }
+              };
+            });
+
+            return { week, matchups };
+          }
+
+          // ⭐ PLAYOFFS: Weeks 14–17
+          return {
+            week,
+            matchups: [],
+            note:
+              week === 14
+                ? "Week 14: Final regular season week."
+                : week === 15
+                ? "Week 15: Playoffs begin. View the Playoff Bracket for matchups."
+                : week === 16
+                ? "Week 16: Playoff semifinals. View the Playoff Bracket."
+                : "Week 17: Championship week. View the Playoff Bracket."
+          };
         });
 
         setSchedule(weeks);
@@ -165,6 +189,12 @@ export default function Schedule({ leagueInfo }) {
       {schedule.map(week => (
         <div key={week.week} className="schedule-week">
           <h2 className="week-title">Week {week.week}</h2>
+
+          {week.note && (
+            <div className="week-note">
+              {week.note}
+            </div>
+          )}
 
           <div className="matchup-list">
             {week.matchups.map((m, idx) => (
