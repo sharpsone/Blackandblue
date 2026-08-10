@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "../pages/schedule.css";
-import { getLeagueInfo } from "../api/mfl";   // ⭐ REQUIRED IMPORT
+import { getLeagueInfo } from "../utils/api";   // ⭐ FIXED
 
 export default function Schedule({ leagueInfo }) {
   const leagueId = leagueInfo?.leagueId;
