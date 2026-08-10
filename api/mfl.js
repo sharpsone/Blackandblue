@@ -228,28 +228,28 @@ export default async function handler(req, res) {
 
     // --- ACTION: Transactions ---
     if (action === "transactions") {
-     try {
-      const apiKey = process.env.MFL_API_KEY || "";
-      const keyParam = apiKey ? `&APIKEY=${apiKey}` : "";
+      try {
+        const apiKey = process.env.MFL_API_KEY || "";
+        const keyParam = apiKey ? `&APIKEY=${apiKey}` : "";
 
-      // IMPORTANT: use correct host (www44)
-      const host = leagueInfo?.host || "www44.myfantasyleague.com";
+        // ⭐ Use your existing host detection logic
+        const host = detectMflHost(year);
 
-      const url = `https://${host}/${year}/export?TYPE=transactions&L=${leagueId}${keyParam}&JSON=1`;
+        const url = `https://${host}/${year}/export?TYPE=transactions&L=${leagueId}${keyParam}&JSON=1`;
 
-      console.log("🔵 Fetching MFL transactions:", url);
+        console.log("🔵 Fetching MFL transactions:", url);
 
-      const response = await fetch(url);
-      const data = await response.json();
+        const response = await fetch(url);
+        const data = await response.json();
 
-      console.log("🟢 MFL transactions response:", data);
+        console.log("🟢 MFL transactions response:", data);
 
-      return res.status(200).json(data);
-     } catch (err) {
-      console.error("🔴 TRANSACTIONS ERROR:", err);
-      return res.status(500).json({ error: "Failed to load transactions" });
-     }
-   }
+        return res.status(200).json(data);
+      } catch (err) {
+        console.error("🔴 TRANSACTIONS ERROR:", err);
+        return res.status(500).json({ error: "Failed to load transactions" });
+      }
+    }
 
     // -----------------------------
     // ACTION: playerNewsFeed
