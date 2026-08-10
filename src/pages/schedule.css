@@ -4,29 +4,31 @@
   margin: 0 auto;
   padding: 20px;
   color: #e6e6e6;
+  font-family: 'Inter', sans-serif;
 }
 
 .schedule-title {
   text-align: center;
   font-size: 2rem;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   color: #4da3ff;
-  letter-spacing: 1px;
+  font-weight: 700;
 }
 
 /* --- Week Section --- */
 .schedule-week {
-  margin-bottom: 30px;
-  padding: 15px 20px;
+  margin-bottom: 32px;
+  padding: 20px;
   background: #0f1a2b;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 0 12px rgba(0, 80, 255, 0.25);
 }
 
 .week-title {
   font-size: 1.4rem;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   color: #7bb6ff;
+  font-weight: 600;
   border-bottom: 1px solid #1f2f4a;
   padding-bottom: 6px;
 }
@@ -34,10 +36,10 @@
 /* --- Notes (Playoff / Transition Weeks) --- */
 .week-note {
   background: #1c2b45;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-left: 4px solid #4da3ff;
   border-radius: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   font-size: 0.95rem;
   color: #c8d9f0;
 }
@@ -46,16 +48,16 @@
 .matchup-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .matchup-card {
   background: #152238;
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   border-left: 4px solid #4da3ff;
 }
@@ -67,24 +69,36 @@
 
 /* --- Team Row --- */
 .team-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #e6e6e6;
 }
 
 .team-name {
   color: #ffffff;
 }
 
+.team-name:first-child {
+  text-align: left;
+}
+
+.team-name:last-child {
+  text-align: right;
+}
+
 .vs {
   color: #7bb6ff;
   font-weight: 700;
+  padding: 0 10px;
 }
 
 /* --- Spread Row --- */
 .spread-row {
   font-size: 0.9rem;
   color: #bcd0ea;
+  text-align: center;
+  padding-top: 4px;
+  border-top: 1px solid #1f2f4a;
 }
