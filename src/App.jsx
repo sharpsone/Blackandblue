@@ -9,7 +9,7 @@ import NavBar from "./components/NavBar";
 
 // PAGE IMPORTS
 import Standings from "./pages/Standings";
-import Roster from "./pages/Roster";
+import Team from "./pages/Team";
 import Matchups from "./pages/SubmitLineup";
 import FreeAgents from "./pages/FreeAgents";
 import PlayerStats from "./pages/PlayerStats";
@@ -62,8 +62,8 @@ function MainApp() {
     switch (page) {
       case "standings":
         return <Standings leagueInfo={leagueInfo} />;
-      case "roster":
-        return <Roster leagueInfo={leagueInfo} />;
+      case "team":
+        return <Team leagueInfo={leagueInfo} />;
       case "matchups":
         return <Matchups leagueInfo={leagueInfo} />;
       case "freeagents":
