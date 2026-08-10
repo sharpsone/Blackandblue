@@ -7,11 +7,8 @@
 }
 
 .team-title {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 25px;
-  color: #4da3ff;
-  font-weight: 700;
+  padding-bottom: 25px;
+  margin-bottom: 0;
 }
 
 .team-section {
@@ -27,14 +24,14 @@
 /* --- Player Row --- */
 .team-row {
   display: grid;
-  grid-template-columns: 60px 1fr 50px;
+  grid-template-columns: 50px 1fr 50px 60px;
   align-items: center;
   background: #0f1a2b;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
   border: 1px solid #1f2f4a;
-  margin-bottom: 10px;
-  gap: 10px;
+  margin-bottom: 6px;
+  gap: 6px;
   cursor: pointer;
 }
 
@@ -130,17 +127,9 @@
 
 /* Sticky header */
 .team-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: #0f1a2b;
-  display: grid;
-  grid-template-columns: 60px 1fr 60px 80px;
-  padding: 8px 12px;
-  border-bottom: 2px solid #1f2f4a;
-  font-weight: 700;
-  color: #9bb3d1;
+  grid-template-columns: 50px 1fr 50px 60px;
 }
+
 
 .col-pos, .col-player, .col-rank, .col-proj {
   font-size: 0.85rem;
@@ -158,33 +147,6 @@
 .defense-label { color: #4dff8a; }
 .bench-label   { color: #ffcc66; }
 .ir-label      { color: #ff6666; }
-
-/* Player rows */
-.team-row {
-  display: grid;
-  grid-template-columns: 50px 1fr 50px 60px;
-  align-items: center;
-  background: #0f1a2b;
-  padding: 4px 8px;        /* smaller */
-  border-radius: 8px;      /* smaller */
-  border: 1px solid #1f2f4a;
-  margin-bottom: 6px;      /* smaller */
-  gap: 6px;                /* smaller */
-  cursor: pointer;
-}
-
-.team-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: #0f1a2b;
-  display: grid;
-  grid-template-columns: 60px 1fr 60px 80px;
-  padding: 8px 12px;
-  border-bottom: 2px solid #1f2f4a;
-  font-weight: 700;
-  color: #9bb3d1;
-}
 
 .col-pos, .col-player, .col-rank, .col-proj {
   font-size: 0.85rem;
