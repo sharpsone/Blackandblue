@@ -1,0 +1,105 @@
+.team-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #e6e6e6;
+  font-family: 'Inter', sans-serif;
+}
+
+.team-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 25px;
+  color: #4da3ff;
+  font-weight: 700;
+}
+
+.team-section {
+  margin-bottom: 30px;
+}
+
+.team-section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  color: #9bb3d1;
+}
+
+.team-player-row {
+  display: flex;
+  align-items: center;
+  background: #0f1a2b;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #1f2f4a;
+  margin-bottom: 10px;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.team-player-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.team-player-info {
+  flex: 1;
+}
+
+.team-player-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.team-player-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #bcd0ea;
+}
+
+.meta-pos {
+  font-weight: 700;
+  color: #4da3ff;
+}
+
+.meta-rank {
+  background: #1f2f4a;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.meta-bye {
+  color: #ffcc66;
+}
+
+.meta-status {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.status-Q { background: #ffcc00; color: #000; }
+.status-D { background: #ff6600; color: #000; }
+.status-O { background: #ff0000; color: #fff; }
+.status-IR { background: #990000; color: #fff; }
+
+.team-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .team-player-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .team-logo {
+    align-self: flex-end;
+  }
+}

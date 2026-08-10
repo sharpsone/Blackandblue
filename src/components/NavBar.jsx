@@ -4,7 +4,7 @@ import "./navbar.css";
 export default function NavBar({ page, setPage }) {
   const tabs = [
     { id: "standings", label: "Standings" },
-    { id: "roster", label: "My Roster" },
+    { id: "team", label: "Team" },
     { id: "matchups", label: "Submit Lineup" },
     { id: "live", label: "Live Scoring" },
     { id: "playerstats", label: "Player Stats" },
