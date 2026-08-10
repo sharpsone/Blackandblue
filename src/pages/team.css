@@ -1,3 +1,4 @@
+/* Container */
 .team-container {
   max-width: 900px;
   margin: 0 auto;
@@ -6,25 +7,51 @@
   font-family: 'Inter', sans-serif;
 }
 
+/* Title */
 .team-title {
-  padding-bottom: 25px;
+  text-align: center;
+  font-size: 2rem;
+  padding-bottom: 20px;   /* prevents margin collapse */
   margin-bottom: 0;
+  color: #4da3ff;
+  font-weight: 700;
 }
 
-.team-section {
-  margin-bottom: 30px;
-}
-
-.team-section h2 {
-  font-size: 1.3rem;
-  margin-bottom: 12px;
+/* Sticky header */
+.team-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #0f1a2b;
+  display: grid;
+  grid-template-columns: 50px 1fr 50px 60px; /* MUST match team-row */
+  padding: 6px 10px;
+  border-bottom: 2px solid #1f2f4a;
+  font-weight: 700;
   color: #9bb3d1;
 }
 
-/* --- Player Row --- */
+.col-pos, .col-player, .col-rank, .col-proj {
+  font-size: 0.85rem;
+}
+
+/* Section labels */
+.section-label {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.offense-label { color: #4da3ff; }
+.defense-label { color: #4dff8a; }
+.bench-label   { color: #ffcc66; }
+.ir-label      { color: #ff6666; }
+
+/* Player Row — FINAL VERSION */
 .team-row {
   display: grid;
-  grid-template-columns: 50px 1fr 50px 60px;
+  grid-template-columns: 50px 1fr 50px 60px; /* MUST match sticky header */
   align-items: center;
   background: #0f1a2b;
   padding: 4px 8px;
@@ -35,7 +62,7 @@
   cursor: pointer;
 }
 
-/* Slot label (QB, RB, WR, etc.) */
+/* POS column */
 .team-slot {
   font-weight: 700;
   color: #4da3ff;
@@ -46,7 +73,7 @@
 .team-player {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .team-photo {
@@ -73,22 +100,20 @@
   color: #bcd0ea;
 }
 
+.meta-team {
+  font-weight: 700;
+  color: #9bb3d1;
+}
+
 .meta-pos {
   font-weight: 700;
   color: #4da3ff;
-}
-
-.meta-rank {
-  background: #1f2f4a;
-  padding: 2px 6px;
-  border-radius: 6px;
 }
 
 .meta-matchup {
   color: #9bb3d1;
   font-weight: 600;
 }
-
 
 .meta-bye {
   color: #ffcc66;
@@ -105,49 +130,29 @@
 .status-O { background: #ff0000; color: #fff; }
 .status-IR { background: #990000; color: #fff; }
 
-/* Team abbreviation badge */
-.team-abbr {
+/* Rank column */
+.team-rank {
   font-weight: 700;
   font-size: 0.9rem;
   color: #9bb3d1;
+  text-align: center;
+}
+
+/* Projected points column */
+.team-proj {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #4da3ff;
   text-align: right;
 }
 
+/* Mobile */
 @media (max-width: 600px) {
   .team-row {
-    grid-template-columns: 50px 1fr;
-    grid-template-rows: auto auto;
+    grid-template-columns: 40px 1fr 40px 50px;
   }
 
-  .team-abbr {
-    grid-column: 2;
-    text-align: left;
+  .team-header {
+    grid-template-columns: 40px 1fr 40px 50px;
   }
-}
-
-/* Sticky header */
-.team-header {
-  grid-template-columns: 50px 1fr 50px 60px;
-}
-
-
-.col-pos, .col-player, .col-rank, .col-proj {
-  font-size: 0.85rem;
-}
-
-/* Section labels */
-.section-label {
-  margin-top: 10px;
-  margin-bottom: 4px;
-  font-size: 0.9rem;
-}
-
-
-.offense-label { color: #4da3ff; }
-.defense-label { color: #4dff8a; }
-.bench-label   { color: #ffcc66; }
-.ir-label      { color: #ff6666; }
-
-.col-pos, .col-player, .col-rank, .col-proj {
-  font-size: 0.85rem;
 }
