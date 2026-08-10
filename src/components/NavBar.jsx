@@ -9,11 +9,11 @@ export default function NavBar({ page, setPage }) {
     { id: "live", label: "Live Scoring" },
     { id: "playerstats", label: "Player Stats" },
     { id: "transactions", label: "Transactions" },
-    { id: "draft", label: "Draft Results" },
+   // { id: "draft", label: "Draft Results" },
     { id: "messages", label: "Message Board" },
     { id: "freeagents", label: "Free Agents" },
     { id: "schedule", label: "Schedule" },
-    { id: "playoffs", label: "Playoff Bracket" }
+   // { id: "playoffs", label: "Playoff Bracket" }
   ];
 
   return (
