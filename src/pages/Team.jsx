@@ -38,60 +38,74 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
-  async function loadRoster() {
-    try {
-      // Fetch roster, full player list, and NFL schedule in parallel
-      const [rosterData, playerData, schedData] = await Promise.all([
-        getRoster(leagueId, myFranchiseId, year),
-        getPlayers(year),
-        fetch(`/api/mfl?action=nflSchedule&leagueId=${leagueId}&year=${year}`)
-          .then(r => r.json())
-          .catch(() => null),   // schedule failure is non-fatal
-      ]);
-
-      const rosterPlayers = rosterData?.roster?.players || [];
-      const allPlayers    = playerData?.players         || [];
-
-      // ── Matchup map: derived once, applied to every player ───────────────
-      const matchupMap = buildMatchupMap(schedData);
-
-      const merged = rosterPlayers.map(rp => {
-        const full     = allPlayers.find(p => p.id === rp.id) || {};
-        const teamAbbr = full.team || rp.team || "";
-
-        return {
-          ...rp,
-          ...full,
-          pos:       full.position  || rp.position  || "",
-          // ── Projected points: explicit assignment with fallback chain ──
-          projected: full.projected ?? rp.projected ?? null,
-          avg:       full.avg       ?? rp.avg       ?? null,
-          // ── Matchup: populated on initial load, not only after click ──
-          matchup:   matchupMap[teamAbbr] || null,
-          headshot:  `/api/headshot?id=${rp.id}`,
-        };
-      });
-
-      // Compute position rank within each position group
-      const grouped = {};
-      merged.forEach(p => {
-        if (!p.pos) return;
-        if (!grouped[p.pos]) grouped[p.pos] = [];
-        grouped[p.pos].push(p);
-      });
-      Object.values(grouped).forEach(group => {
-        group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
-        group.forEach((p, i) => { p.posRank = i + 1; });
-      });
-
-      setPlayers(merged);
-    } catch (err) {
-      console.error("TEAM LOAD ERROR:", err);
-    } finally {
-      // Always clear loading, even on error
-      setLoading(false);
-    }
+  // Build { playerId: projectedScore } from MFL projectedScores response
+  function buildProjMap(projData) {
+    const map = {};
+    const scores = projData?.projectedScores?.playerScore;
+    if (!Array.isArray(scores)) return map;
+    scores.forEach(s => {
+      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
+    });
+    return map;
   }
+
+ async function loadRoster() {
+  try {
+    const [rosterData, playerData, schedData, projData] = await Promise.all([
+      getRoster(leagueId, myFranchiseId, year),
+      getPlayers(year),
+      fetch(`/api/mfl?action=nflSchedule&leagueId=${leagueId}&year=${year}`)
+        .then(r => r.json()).catch(() => null),
+      // ← bulk projected scores for all players this week
+      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
+        .then(r => r.json()).catch(() => null),
+    ]);
+
+    const rosterPlayers = rosterData?.roster?.players || [];
+    const allPlayers    = playerData?.players         || [];
+
+    const matchupMap = buildMatchupMap(schedData);
+    const projMap    = buildProjMap(projData);
+
+    // ── posRank: sort ALL NFL players per position, not just your roster ──
+    // This gives correct NFL-wide rank (e.g. RB #12) instead of team rank (#2)
+    const posGroups = {};
+    allPlayers.forEach(p => {
+      const pos = p.position || p.pos;
+      if (!pos) return;
+      if (!posGroups[pos]) posGroups[pos] = [];
+      posGroups[pos].push(p);
+    });
+    Object.values(posGroups).forEach(group => {
+      group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
+      group.forEach((p, i) => { p._posRank = i + 1; });
+    });
+
+    const merged = rosterPlayers.map(rp => {
+      const full     = allPlayers.find(p => p.id === rp.id) || {};
+      const teamAbbr = full.team || rp.team || "";
+
+      return {
+        ...rp,
+        ...full,
+        pos:       full.position  || rp.position  || "",
+        // projMap lookup first → full.projected fallback → rp.projected fallback
+        projected: projMap[String(rp.id)] ?? full.projected ?? rp.projected ?? null,
+        avg:       full.avg       ?? rp.avg       ?? null,
+        matchup:   matchupMap[teamAbbr] || null,
+        // NFL-wide position rank from full allPlayers pool
+        posRank:   full._posRank  ?? null,
+        headshot:  `/api/headshot?id=${rp.id}`,
+      };
+    });
+
+    setPlayers(merged);
+  } catch (err) {
+    console.error("TEAM LOAD ERROR:", err);
+  } finally {
+    setLoading(false);
+  }
+}
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
