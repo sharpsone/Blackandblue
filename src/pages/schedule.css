@@ -27,7 +27,7 @@
   border-radius: 10px;
   border: 1px solid #1f2f4a;
   margin-bottom: 14px;
-  max-width: 500px;      /* ⭐ keeps mobile readable */
+  max-width: 500px;      /* keeps mobile readable */
   margin-left: auto;
   margin-right: auto;
 }
@@ -41,15 +41,29 @@
   flex-wrap: nowrap;
 }
 
-/* Team names */
+/* --- Team Names + VS --- */
 .matchup-teams {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;   /* allow clean wrapping */
+  gap: 6px;          /* spacing between name / vs / name */
   font-size: 1rem;
   font-weight: 600;
   color: #e6e6e6;
-  white-space: nowrap;   /* prevent weird wrapping */
 }
 
-/* Spread */
+.team-name {
+  font-weight: 600;
+  color: #e6e6e6;
+}
+
+.vs {
+  font-weight: 700;
+  color: #9bb3d1;
+  padding: 0 4px;    /* ensures spacing even if gap fails */
+}
+
+/* --- Spread --- */
 .matchup-spread {
   font-size: 0.9rem;
   color: #9bb3d1;
@@ -60,15 +74,14 @@
 @media (max-width: 600px) {
 
   .matchup-row {
-    flex-direction: column;   /* ⭐ stack vertically */
-    align-items: flex-start;  /* ⭐ left align */
+    flex-direction: column;   /* stack vertically */
+    align-items: flex-start;  /* left align */
     gap: 6px;
   }
 
   .matchup-teams {
-    white-space: normal;      /* allow clean wrapping */
-    text-align: left;
     width: 100%;
+    text-align: left;
   }
 
   .matchup-spread {
