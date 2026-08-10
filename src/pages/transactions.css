@@ -151,3 +151,27 @@
   text-align: right;
   color: #bcd0ea;
 }
+
+.pos-badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  margin-left: 8px;
+}
+
+/* Yahoo-style position colors */
+.pos-QB { background: #7b1fa2; }   /* Purple */
+.pos-RB { background: #0277bd; }   /* Blue */
+.pos-WR { background: #2e7d32; }   /* Green */
+.pos-TE { background: #c62828; }   /* Red */
+.pos-K  { background: #f9a825; }   /* Yellow */
+.pos-DT,
+.pos-DE,
+.pos-LB,
+.pos-CB,
+.pos-S  { background: #455a64; }   /* Slate */
+.pos-PK { background: #f9a825; }   /* Yahoo uses same as K */
+.pos-UNK { background: #757575; }  /* Gray */

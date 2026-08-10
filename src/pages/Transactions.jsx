@@ -175,28 +175,39 @@ export default function Transactions({ leagueInfo }) {
       {/* TRANSACTION LIST */}
       <div className="transaction-list">
         {filtered.map((t, idx) => (
-          <div key={idx} className="transaction-card">
-            <div className="transaction-header">
-              <span className="transaction-type">{t.type}</span>
-              <span className="transaction-time">
-                {new Date(t.timestamp).toLocaleString()}
-              </span>
-            </div>
+        <div key={idx} className="transaction-card">
+          <div className="transaction-header">
+            <span className={`transaction-type ${t.type}`}>
+              {t.type}
+            </span>
 
-            <div className="transaction-franchise">
-              {franchises[t.franchise] || `Team ${t.franchise}`}
-            </div>
+            {t.by_commish === "1" && (
+              <span className="commish-badge">C</span>
+            )}
 
-            <div className="transaction-players">
-              {t.players.map(p => (
-                <div key={p.id} className="player-row">
-                  <span className="player-name">{p.name}</span>
-                  <span className="player-pos">{p.position}</span>
-                  <span className="player-team">{p.team || "FA"}</span>
-                </div>
-              ))}
-            </div>
+            <span className="transaction-time">
+              {new Date(t.timestamp).toLocaleString()}
+            </span>
           </div>
+
+          <div className="transaction-franchise">
+            {franchises[t.franchise] || `Team ${t.franchise}`}
+          </div>
+
+          <div className="transaction-players">
+            {t.players.map(p => (
+              <div key={p.id} className="player-row">
+                <span className="player-name">{p.name}</span>
+
+                <span className={`pos-badge pos-${p.position}`}>
+                  {p.position}
+                </span>
+
+                <span className="player-team">{p.team || "FA"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
         ))}
       </div>
     </div>
