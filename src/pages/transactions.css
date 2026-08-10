@@ -79,29 +79,18 @@
 }
 
 /* Color coding by type */
-.transaction-type.Add {
-  background: #00c853; /* green */
-}
-
-.transaction-type.Drop {
-  background: #d50000; /* red */
-}
-
-.transaction-type.Trade {
-  background: #ffab00; /* gold */
-}
-
-.transaction-type.Waiver {
-  background: #2962ff; /* blue */
-}
-
-.transaction-type.LOAD_ROSTERS {
-  background: #6a1b9a; /* purple */
-}
-
-.transaction-type.Unknown {
-  background: #455a64; /* gray */
-}
+.pos-QB { background: #7b1fa2; }
+.pos-RB { background: #0277bd; }
+.pos-WR { background: #2e7d32; }
+.pos-TE { background: #c62828; }
+.pos-K  { background: #f9a825; }
+.pos-PK { background: #f9a825; }
+.pos-DT,
+.pos-DE,
+.pos-LB,
+.pos-CB,
+.pos-S  { background: #455a64; }
+.pos-UNK { background: #757575; }
 
 /* --- Timestamp --- */
 .transaction-time {
@@ -122,12 +111,12 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.player-row {
+}.player-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: 4px 0;
+  gap: 10px;
   border-bottom: 1px solid #1f2f4a;
 }
 
@@ -136,11 +125,25 @@
 }
 
 .player-name {
+  flex: 1;
   font-weight: 600;
   color: #ffffff;
 }
 
+.pos-badge {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+}
+
 .player-team {
+  flex-shrink: 0;
+  width: 40px;
+  text-align: right;
   color: #bcd0ea;
   font-weight: 500;
 }
@@ -173,8 +176,8 @@
   background: #d50000;
   color: #fff;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 6px;
-  margin-right: 10px;
+  margin-left: 10px;
   font-size: 0.75rem;
 }

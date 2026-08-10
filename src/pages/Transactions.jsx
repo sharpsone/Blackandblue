@@ -14,6 +14,7 @@ export default function Transactions({ leagueInfo }) {
   const [franchiseFilter, setFranchiseFilter] = useState("ALL");
   const [searchFilter, setSearchFilter] = useState("");
 
+  const [expanded, setExpanded] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Load franchise names first
@@ -183,31 +184,46 @@ export default function Transactions({ leagueInfo }) {
             </span>
 
             {t.by_commish && (
-              <span className="commish-badge">C</span>
+              <span className="commish-badge">Commish</span>
             )}
 
             <span className="transaction-time">
               {new Date(t.timestamp).toLocaleString()}
             </span>
+
+            {/* Expand / Collapse Toggle */}
+            {t.players.length > 4 && (
+              <button
+                className="expand-btn"
+                onClick={() =>
+                  setExpanded(prev => ({ ...prev, [idx]: !prev[idx] }))
+                }
+              >
+                {expanded[idx] ? "Hide" : `Show ${t.players.length} players`}
+              </button>
+            )}
           </div>
 
           <div className="transaction-franchise">
             {franchises[t.franchise] || `Team ${t.franchise}`}
           </div>
 
-          <div className="transaction-players">
-            {t.players.map(p => (
-              <div key={p.id} className="player-row">
-                <span className="player-name">{p.name}</span>
+          {/* COLLAPSIBLE PLAYER LIST */}
+          {(expanded[idx] || t.players.length <= 8) && (
+            <div className="transaction-players">
+              {t.players.map(p => (
+                <div key={p.id} className="player-row">
+                  <span className="player-name">{p.name}</span>
 
-                <span className={`pos-badge pos-${p.position}`}>
-                  {p.position}
-                </span>
+                  <span className={`pos-badge pos-${p.position}`}>
+                    {p.position}
+                  </span>
 
-                <span className="player-team">{p.team || "FA"}</span>
-              </div>
-            ))}
-          </div>
+                  <span className="player-team">{p.team || "FA"}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         ))}
       </div>
