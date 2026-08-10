@@ -226,13 +226,15 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // --- ACTION: Transactions ---
+    // -----------------------------
+    // ACTION: transactions
+    // -----------------------------
     if (action === "transactions") {
       try {
         const apiKey = process.env.MFL_API_KEY || "";
         const keyParam = apiKey ? `&APIKEY=${apiKey}` : "";
 
-        // ⭐ Use your existing host detection logic
+        // ⭐ Use your existing host detection function
         const host = detectMflHost(year);
 
         const url = `https://${host}/${year}/export?TYPE=transactions&L=${leagueId}${keyParam}&JSON=1`;
