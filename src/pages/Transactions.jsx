@@ -56,10 +56,17 @@ export default function Transactions({ leagueInfo }) {
       );
       const data = await res.json();
 
-      const list = data?.transactions?.transaction || [];
+      const raw = data?.transactions?.transaction;
+
+      // Normalize to array
+      const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
       const parsed = list.map(t => {
-        const players = Array.isArray(t.player) ? t.player : t.player ? [t.player] : [];
+        const players = Array.isArray(t.player)
+          ? t.player
+          : t.player
+          ? [t.player]
+          : [];
 
         return {
           type: t.type || "Unknown",
@@ -75,6 +82,7 @@ export default function Transactions({ leagueInfo }) {
       });
 
       setTransactions(parsed);
+
       setLoading(false);
     } catch (err) {
       console.error("TRANSACTION LOAD ERROR:", err);
