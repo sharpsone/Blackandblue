@@ -57,7 +57,6 @@ export default function Schedule({ leagueInfo }) {
         return;
       }
 
-      const weeks = weekly.map(weekObj => {
       const weeks = weekly.map((weekObj, index) => {
       const realWeek = index + 1;   // ⭐ index 13 = Week 14
 
