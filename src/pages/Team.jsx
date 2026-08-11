@@ -200,16 +200,15 @@ async function loadRoster() {
           const news = newsList.filter(n => n.slug === slug);
 
           return {
-            ...rp,
-            ...full,
+            ...rp,          // ⭐ keeps rp.name
+            ...full,        // ❌ overwrites name — we fix this next
+            name: rp.name,  // ⭐ restore correct name
             pos: full.position || rp.position || "",
             projected: proj,
             avg: full.avg ?? rp.avg ?? null,
             matchup: matchupMap[teamAbbr] || null,
             posRank: full._posRank ?? null,
             headshot: `/api/headshot?id=${rp.id}`,
-
-            // ⭐ NEW FIELDS
             slug,
             healthStatus,
             externalNews: news
