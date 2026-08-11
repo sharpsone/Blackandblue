@@ -202,9 +202,11 @@ export default function Team({ leagueInfo }) {
               {!isEmpty && (
                 <span className="team-badges">
                   {/* HEALTH BADGE */}
-                  {p.healthStatus && (
+                  {p.healthStatus !== "Healthy" && (
                     <span className={`health-badge health-${p.healthStatus}`}>
-                      {p.healthStatus}
+                      {p.healthStatus === "Questionable" && "Q"}
+                      {p.healthStatus === "Doubtful" && "D"}
+                      {p.healthStatus === "Out" && "O"}
                     </span>
                   )}
 

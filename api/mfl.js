@@ -11,9 +11,8 @@ function detectMflHost(year) {
 export default async function handler(req, res) {
   try {
     const { action } = req.query;
-    
-    const apiKey = process.env.MFL_API_KEY;   // ⭐ REQUIRED HERE
 
+    const apiKey = process.env.MFL_API_KEY;
     const leagueId =
       req.query.leagueId ||
       req.cookies?.leagueId ||
@@ -24,9 +23,52 @@ export default async function handler(req, res) {
       req.cookies?.year ||
       process.env.MFL_YEAR;
 
+    // -----------------------------
+    // ACTIONS THAT DO NOT REQUIRE leagueId
+    // -----------------------------
+
+    if (action === "injuries") {
+      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`;
+      const data = await callMFL(url);
+      return res.status(200).json(data);
+    }
+
+    if (action === "playerNewsFeedBulk") {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const fourWeeksSec = 28 * 24 * 60 * 60;
+
+      let sleeperNews = [];
+      try {
+        const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
+        const sleeperJson = await sleeperResp.json();
+
+        sleeperNews = sleeperJson
+          .filter(n => n.created && (nowSec - n.created) <= fourWeeksSec)
+          .map(n => ({
+            id: n.player_id || null,
+            source: "Sleeper",
+            headline: n.title || "",
+            body: n.body || "",
+            date: n.created
+          }));
+      } catch (err) {
+        console.log("Sleeper bulk news failed:", err.message);
+      }
+
+      return res.status(200).json({ news: sleeperNews });
+    }
+
+    // -----------------------------
+    // NOW VALIDATE leagueId/year
+    // -----------------------------
     if (!leagueId || !year) {
       return res.status(400).json({ error: "Missing leagueId or year" });
     }
+
+    // -----------------------------
+    // ACTIONS THAT REQUIRE leagueId
+    // -----------------------------
+    // (league, rosters, projectedScores, freeAgents, etc.)
 
     async function callMFL(url) {
       console.log("CALLING MFL:", url);
@@ -266,43 +308,6 @@ export default async function handler(req, res) {
         console.error("🔴 TRANSACTIONS ERROR:", err);
         return res.status(500).json({ error: "Failed to load transactions" });
       }
-    }
-
-    // --- ACTION: injuries ---
-    if (action === "injuries") {
-      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`;
-      const data = await callMFL(url);
-      return res.status(200).json(data);
-    }
-
-    // -----------------------------
-    // ACTION: playerNewsFeedBulk -used by teams.jsx
-    // -----------------------------
-    if (action === "playerNewsFeedBulk") {
-      const nowSec = Math.floor(Date.now() / 1000);
-      const fourWeeksSec = 28 * 24 * 60 * 60;
-
-      let sleeperNews = [];
-      try {
-        const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
-        const sleeperJson = await sleeperResp.json();
-
-        sleeperNews = sleeperJson
-          .filter(n => n.created && (nowSec - n.created) <= fourWeeksSec)
-          .map(n => ({
-            id: n.player_id || null,
-            source: "Sleeper",
-            headline: n.title || "",
-            body: n.body || "",
-            date: n.created
-          }));
-      } catch (err) {
-        console.log("Sleeper bulk news failed:", err.message);
-      }
-
-      return res.status(200).json({
-        news: sleeperNews
-      });
     }
 
     // -----------------------------
