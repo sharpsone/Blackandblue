@@ -49,32 +49,36 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
-  async function loadRoster() {
-    try {
-      // STEP 1 — load everything EXCEPT news
-      const [
-        rosterData,
-        playerData,
-        schedData,
-        projData,
-        injuriesData
-      ] = await Promise.all([
-        getRoster(leagueId, myFranchiseId, year),
-        getPlayers(year),
-        fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
-        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
-        fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json())
-      ]);
+async function loadRoster() {
+  try {
+    // STEP 1 — load everything EXCEPT news
+    const [
+      rosterData,
+      playerData,
+      schedData,
+      projData,
+      injuriesData
+    ] = await Promise.all([
+      getRoster(leagueId, myFranchiseId, year),
+      getPlayers(year),
+      fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
+      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+      fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json())
+    ]);
 
-      // STEP 2 — now rosterPlayers exists
-      const rosterPlayers = rosterData?.roster?.players || [];
+    // ⭐ ONLY ONE DECLARATION HERE
+    const rosterPlayers = rosterData?.roster?.players || [];
 
-      // STEP 3 — NOW we can fetch news
-      const newsData = await fetch(
-        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-      ).then(r => r.json());
+    // STEP 2 — now fetch news
+    const newsData = await fetch(
+      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+    ).then(r => r.json());
 
-      const newsList = newsData?.news || [];
+    const newsList = newsData?.news || [];
+
+    // STEP 3 — merge everything (your existing merge block)
+    // ...
+
 
     // STEP 4 — merge everything (your existing merge block)
   
