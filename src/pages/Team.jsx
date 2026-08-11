@@ -57,6 +57,12 @@ export default function Team({ leagueInfo }) {
       fetch(`/api/mfl?action=schedule&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
       fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
     ]);
+    //fetch injuries from mfl api
+    const injuriesRes = await fetch(
+      `/api/mfl?action=injuries&leagueId=${leagueId}&year=${year}`
+    );
+    const injuriesData = await injuriesRes.json();
+    const injuriesList = injuriesData?.injuries?.injury || [];
 
     const projRes = await fetch(
       `/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`
@@ -89,6 +95,9 @@ export default function Team({ leagueInfo }) {
       const teamAbbr = full.team || rp.team || "";
       //merge projections
       const proj = projList.find(x => x.id === rp.id);
+      // injuries merge
+      const inj = injuriesList.find(x => x.id === rp.id);
+      const healthStatus = inj?.status || "Healthy";
 
       return {
         ...rp,
@@ -102,6 +111,7 @@ export default function Team({ leagueInfo }) {
         posRank:   full._posRank  ?? null,
         headshot:  `/api/headshot?id=${rp.id}`,
         projected: proj?.score ?? null,
+        healthStatus: healthStatus,
       };
     });
 
