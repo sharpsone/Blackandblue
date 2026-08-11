@@ -95,31 +95,43 @@ if (action === "fantasyProsNewsBulk") {
       return res.status(200).json({ news: [] });
     }
 
-    const list = JSON.parse(players); // array of { id, name }
-    const nowSec = Math.floor(Date.now() / 1000);
-    const fourWeeksSec = 28 * 24 * 60 * 60;
-
+    const list = JSON.parse(players);
     const items = [];
 
     for (const p of list) {
       const name = p.name;
-      if (!name) continue;
+      if (!name) {
+        console.log("❌ Player missing name:", p);
+        continue;
+      }
 
-      // --- Slug generator (same as PlayerModal)
+      // --- Slug generator
       const [lastRaw, firstRaw] = name.split(",");
       const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const slug  = `${first}-${last}`;
 
       const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+
+      console.log("🔎 PLAYER:", name);
+      console.log("🔎 SLUG:", slug);
+      console.log("🔎 FP URL:", fpUrl);
+
       const fpResp = await fetch(fpUrl);
       const fpHtml = await fpResp.text();
+
+      console.log("📄 HTML SAMPLE:", fpHtml.slice(0, 500));
 
       const blocks = fpHtml.match(
         /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
       );
 
-      if (!blocks) continue;
+      console.log("🧱 BLOCK COUNT:", blocks ? blocks.length : 0);
+
+      if (!blocks || blocks.length === 0) {
+        console.log("❌ No FP blocks found for:", name);
+        continue;
+      }
 
       for (const block of blocks) {
         const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
@@ -146,7 +158,6 @@ if (action === "fantasyProsNewsBulk") {
     return res.status(200).json({ news: [] });
   }
 }
-
 
     // -----------------------------
     // NOW VALIDATE leagueId/year
