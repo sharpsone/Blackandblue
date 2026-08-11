@@ -275,25 +275,34 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // --- ACTION: playerNewsFeedBulk ---
+    // -----------------------------
+    // ACTION: playerNewsFeedBulk -used by teams.jsx
+    // -----------------------------
     if (action === "playerNewsFeedBulk") {
-      const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
-      const sleeperJson = await sleeperResp.json();
-
       const nowSec = Math.floor(Date.now() / 1000);
-      const twoWeeks = 14 * 24 * 3600;
+      const fourWeeksSec = 28 * 24 * 60 * 60;
 
-      const news = sleeperJson
-        .filter(n => n.created && nowSec - n.created < twoWeeks)
-        .map(n => ({
-          id: n.player_id || null,
-          date: n.created,
-          source: "Sleeper",
-          headline: n.title || "",
-          body: n.body || ""
-        }));
+      let sleeperNews = [];
+      try {
+        const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
+        const sleeperJson = await sleeperResp.json();
 
-      return res.status(200).json({ news });
+        sleeperNews = sleeperJson
+          .filter(n => n.created && (nowSec - n.created) <= fourWeeksSec)
+          .map(n => ({
+            id: n.player_id || null,
+            source: "Sleeper",
+            headline: n.title || "",
+            body: n.body || "",
+            date: n.created
+          }));
+      } catch (err) {
+        console.log("Sleeper bulk news failed:", err.message);
+      }
+
+      return res.status(200).json({
+        news: sleeperNews
+      });
     }
 
     // -----------------------------
