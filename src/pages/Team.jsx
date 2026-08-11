@@ -57,7 +57,7 @@ export default function Team({ leagueInfo }) {
         fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
         fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
         fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json()),
-        fetch(`/api/mfl?action=playerNewsFeedBulk&year=${year}`).then(r => r.json())
+        fetch(`/api/mfl?action=fantasyProsNewsBulk&year=${year}`)
       ]);
 
       const injuriesList = injuriesData?.injuries?.injury || [];
