@@ -59,34 +59,50 @@ if (action === "playerNewsFeedBulk") {
 }
 
 // -----------------------------
-// ACTION: fantasyProsNewsBulk (SAFE VERSION)
+// ACTIONS fantasy pros news (bulk or single) - do not require leagueId
 // -----------------------------
 if (action === "fantasyProsNewsBulk") {
   console.log("🔥 fantasyProsNewsBulk HIT");
 
   try {
-    const url = "https://www.fantasypros.com/nfl/news/feed.php";
-    const resp = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"   // ⭐ required or FP blocks server requests
-      }
-    });
+    const { players } = req.query;
 
-    if (!resp.ok) {
-      console.log("❌ FP fetch failed:", resp.status);
+    if (!players) {
       return res.status(200).json({ news: [] });
     }
 
-    const json = await resp.json();
+    const list = JSON.parse(players); // array of { id, name }
 
-    const items = json.map(n => ({
-      slug: n.player_slug || null,
-      source: "FantasyPros",
-      headline: n.title || null,
-      body: n.summary || null,
-      impact: n.fantasy_impact || null,
-      timestamp: n.timestamp || null
-    }));
+    const items = [];
+
+    for (const p of list) {
+      const [lastRaw, firstRaw] = p.name.split(",");
+      const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const last = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const slug = `${first}-${last}`;
+
+      const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+      const fpResp = await fetch(fpUrl);
+      const fpHtml = await fpResp.text();
+
+      const blocks = fpHtml.match(
+        /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+      );
+
+      if (!blocks) continue;
+
+      for (const block of blocks) {
+        const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+        const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
+
+        items.push({
+          slug,
+          source: "FantasyPros",
+          headline: headlineMatch ? headlineMatch[1].trim() : null,
+          body: bodyMatch ? bodyMatch[1].trim() : null,
+        });
+      }
+    }
 
     console.log("✅ FINAL BULK NEWS COUNT:", items.length);
     return res.status(200).json({ news: items });
@@ -95,6 +111,7 @@ if (action === "fantasyProsNewsBulk") {
     return res.status(200).json({ news: [] });
   }
 }
+
 
     // -----------------------------
     // NOW VALIDATE leagueId/year

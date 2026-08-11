@@ -64,7 +64,8 @@ export default function Team({ leagueInfo }) {
           fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
           fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
           fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json()),
-          fetch(`/api/mfl?action=fantasyProsNewsBulk&year=${year}`).then(r => r.json())   // ⭐ YOU FORGOT .json()
+          fetch(`/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`)
+            .then(r => r.json())
         ]);
 
         const injuriesList = injuriesData?.injuries?.injury || [];
