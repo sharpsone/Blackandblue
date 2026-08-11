@@ -49,123 +49,59 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
- async function loadRoster() {
-  try {
-    const [rosterData, playerData, schedData, projData] = await Promise.all([
-      getRoster(leagueId, myFranchiseId, year),
-      getPlayers(year),
-      fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
-      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
-    ]);
-    //fetch injuries from mfl api
-    const injuriesRes = await fetch(
-      `/api/mfl?action=injuries&leagueId=${leagueId}&year=${year}`
-    );
-    const injuriesData = await injuriesRes.json();
-    const injuriesList = injuriesData?.injuries?.injury || [];
+  async function loadRoster() {
+    try {
+      const [rosterData, playerData, schedData, projData] = await Promise.all([
+        getRoster(leagueId, myFranchiseId, year),
+        getPlayers(year),
+        fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
+        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
+      ]);
 
-    //fetch news from mfl api
-    const newsRes = await fetch(
-      `/api/mfl?action=playerNewsFeedBulk&leagueId=${leagueId}&year=${year}`
-    );
-    const newsData = await newsRes.json();
-    const newsList = newsData?.news || [];
+      const rosterPlayers = rosterData?.roster?.players || [];
+      const allPlayers    = playerData?.players         || [];
 
-    const projRes = await fetch(
-      `/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`
-    );
-    
-    //Schedule data
-    const weekMatchups = schedData.nflSchedule.matchup || [];
+      const matchupMap = buildMatchupMap(schedData);
+      const projMap    = buildProjMap(projData);
 
-    const matchup = weekMatchups.find(
-      m => m.team[0].id === full.team || m.team[1].id === full.team
-    );
-
-    let kickoffPacific = null;
-    if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
-      const unix = Number(matchup.kickoff);
-      kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
-        timeZone: "America/Los_Angeles",
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
+      // Build NFL-wide posRank
+      const posGroups = {};
+      allPlayers.forEach(p => {
+        const pos = p.position || p.pos;
+        if (!pos) return;
+        if (!posGroups[pos]) posGroups[pos] = [];
+        posGroups[pos].push(p);
       });
+      Object.values(posGroups).forEach(group => {
+        group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
+        group.forEach((p, i) => { p._posRank = i + 1; });
+      });
+
+      const merged = rosterPlayers.map(rp => {
+        const full     = allPlayers.find(p => p.id === rp.id) || {};
+        const teamAbbr = full.team || rp.team || "";
+
+        const proj = projMap[String(rp.id)] ?? null;
+
+        return {
+          ...rp,
+          ...full,
+          pos: full.position || rp.position || "",
+          projected: proj,
+          avg: full.avg ?? rp.avg ?? null,
+          matchup: matchupMap[teamAbbr] || null,
+          posRank: full._posRank ?? null,
+          headshot: `/api/headshot?id=${rp.id}`,
+        };
+      });
+
+      setPlayers(merged);
+    } catch (err) {
+      console.error("TEAM LOAD ERROR:", err);
+    } finally {
+      setLoading(false);
     }
-
-    const matchupData = matchup
-      ? {
-          opponent:
-            matchup.team[0].id === full.team
-              ? matchup.team[1].id
-              : matchup.team[0].id,
-          kickoff: kickoffPacific,
-          home: matchup.team[0].id === full.team,
-          spread: matchup.team[0].spread || matchup.team[1].spread || null,
-          status: matchup.status || null
-        }
-      : null;
-
-    const projList = projData?.projectedScores?.playerScore || [];
-
-    const rosterPlayers = rosterData?.roster?.players || [];
-    const allPlayers    = playerData?.players         || [];
-
-    const matchupMap = buildMatchupMap(schedData);
-    const projMap    = buildProjMap(projData);
-
-    // ── posRank: sort ALL NFL players per position, not just your roster ──
-    // This gives correct NFL-wide rank (e.g. RB #12) instead of team rank (#2)
-    const posGroups = {};
-    allPlayers.forEach(p => {
-      const pos = p.position || p.pos;
-      if (!pos) return;
-      if (!posGroups[pos]) posGroups[pos] = [];
-      posGroups[pos].push(p);
-    });
-    Object.values(posGroups).forEach(group => {
-      group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
-      group.forEach((p, i) => { p._posRank = i + 1; });
-    });
-
-    const merged = rosterPlayers.map(rp => {
-      const full     = allPlayers.find(p => p.id === rp.id) || {};
-      const teamAbbr = full.team || rp.team || "";
-      //merge projections
-      const proj = projList.find(x => x.id === rp.id);
-      // injuries merge
-      const inj = injuriesList.find(x => x.id === rp.id);
-      const healthStatus = inj?.status || "Healthy";
-      // news merge
-      const news = newsList.filter(n => n.id === rp.id);
-
-      return {
-        ...rp,
-        ...full,
-        pos:       full.position  || rp.position  || "",
-        // projMap lookup first → full.projected fallback → rp.projected fallback
-        projected: projMap[String(rp.id)] ?? full.projected ?? rp.projected ?? null,
-        avg:       full.avg       ?? rp.avg       ?? null,
-        matchup:   matchupMap[teamAbbr] || null,
-        // NFL-wide position rank from full allPlayers pool
-        posRank:   full._posRank  ?? null,
-        headshot:  `/api/headshot?id=${rp.id}`,
-        projected: proj?.score ?? null,
-        healthStatus: healthStatus,
-        externalNews: news,
-        matchup: matchupData,
-      };
-    });
-
-    setPlayers(merged);
-  } catch (err) {
-    console.error("TEAM LOAD ERROR:", err);
-  } finally {
-    setLoading(false);
   }
-}
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
