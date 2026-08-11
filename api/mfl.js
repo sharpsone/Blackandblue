@@ -58,104 +58,53 @@ export default async function handler(req, res) {
       return res.status(200).json({ news: sleeperNews });
     }
 
-  // -----------------------------
-  // ACTION: fantasyProsNewsBulk (SAFE VERSION)
-  // -----------------------------
-  if (action === "fantasyProsNewsBulk") {
-    console.log("🔥 fantasyProsNewsBulk HIT");
+    // -----------------------------
+    // ACTION: fantasyProsNewsBulk (SAFE VERSION)
+    // -----------------------------
+    if (action === "fantasyProsNewsBulk") {
+      console.log("🔥 fantasyProsNewsBulk HIT");
 
-    try {
-      const url = "https://www.fantasypros.com/nfl/news/";
-      const resp = await fetch(url);
+      try {
+        const url = "https://www.fantasypros.com/nfl/news/";
+        const resp = await fetch(url);
 
-      if (!resp.ok) {
-        console.log("❌ FP fetch failed:", resp.status);
+        if (!resp.ok) {
+          console.log("❌ FP fetch failed:", resp.status);
+          return res.status(200).json({ news: [] });
+        }
+
+        const html = await resp.text();
+        console.log("📄 FP HTML length:", html.length);
+
+        const blocks =
+          html.match(/<div class="news-item[\s\S]*?<div class="news-item-footer">/gi) ||
+          html.match(/<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi) ||
+          [];
+
+        console.log("🧱 FP blocks found:", blocks.length);
+
+        const items = [];
+
+        for (const block of blocks) {
+          const headlineMatch = block.match(/<b>([^<]+)<\/b>/i);
+          const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
+          const slugMatch = block.match(/\/nfl\/news\/([^"]+)\.php/i);
+
+          items.push({
+            slug: slugMatch ? slugMatch[1].trim() : null,
+            source: "FantasyPros",
+            headline: headlineMatch ? headlineMatch[1].trim() : null,
+            body: bodyMatch ? bodyMatch[1].trim() : null,
+          });
+        }
+
+        console.log("✅ FINAL BULK NEWS COUNT:", items.length);
+        return res.status(200).json({ news: items });
+      } catch (err) {
+        console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
         return res.status(200).json({ news: [] });
       }
-
-      const html = await resp.text();
-      console.log("📄 FP HTML length:", html.length);
-
-      // Try both patterns safely
-      const blocks =
-        html.match(/<div class="news-item[\s\S]*?<div class="news-item-footer">/gi) ||
-        html.match(/<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi) ||
-        [];
-
-      console.log("🧱 FP blocks found:", blocks.length);
-
-      const items = [];
-
-      for (const block of blocks) {
-        const headlineMatch = block.match(/<b>([^<]+)<\/b>/i);
-        const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
-        const slugMatch = block.match(/\/nfl\/news\/([^"]+)\.php/i);
-
-        items.push({
-          slug: slugMatch ? slugMatch[1].trim() : null,
-          source: "FantasyPros",
-          headline: headlineMatch ? headlineMatch[1].trim() : null,
-          body: bodyMatch ? bodyMatch[1].trim() : null,
-        });
-      }
-
-      console.log("✅ FINAL BULK NEWS COUNT:", items.length);
-      return res.status(200).json({ news: items });
-    } catch (err) {
-      console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
-      return res.status(200).json({ news: [] });  // ⭐ NEVER crash Promise.all
     }
-  }
-
-
-  // -----------------------------
-  // Sleeper bulk (with logging)
-  // -----------------------------
-    try {
-      console.log("🌐 Fetching Sleeper bulk news...");
-      const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
-      const sleeperJson = await sleeperResp.json();
-
-      console.log("📰 Sleeper items:", sleeperJson.length);
-
-      const nowSec = Math.floor(Date.now() / 1000);
-      const fourWeeksSec = 28 * 24 * 60 * 60;
-
-      const sleeperItems = sleeperJson
-        .filter(n => n.created && (nowSec - n.created) <= fourWeeksSec)
-        .map(n => {
-          console.log("🔎 Sleeper title:", n.title);
-          console.log("🔎 Sleeper player_name:", n.player_name);
-
-          let slug = null;
-          if (n.player_name) {
-            const parts = n.player_name.split(" ");
-            if (parts.length >= 2) {
-              const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-              const last = parts[1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-              slug = `${first}-${last}`;
-            }
-          }
-
-          console.log("🔎 Sleeper slug:", slug);
-
-          return {
-            slug,
-            source: "Sleeper",
-            headline: n.title || "",
-            body: n.body || "",
-            date: n.created
-          };
-        });
-
-      items = [...items, ...sleeperItems];
-    } catch (err) {
-      console.log("❌ Sleeper bulk news failed:", err.message);
-    }
-
-  console.log("✅ FINAL BULK NEWS COUNT:", items.length);
-  return res.status(200).json({ news: items });
-}
 
     // -----------------------------
     // NOW VALIDATE leagueId/year
