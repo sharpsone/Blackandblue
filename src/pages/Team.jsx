@@ -20,7 +20,7 @@ export default function Team({ leagueInfo }) {
   useEffect(() => {
     if (!myFranchiseId) return;
     loadRoster();
-  }, [myFranchiseId]);
+  }, [myFranchiseId, leagueId, year]);
 
   // ─── Build { "KC": "vs LAR", "LAR": "@ KC", … } from MFL nflSchedule ──────
   function buildMatchupMap(schedData) {
