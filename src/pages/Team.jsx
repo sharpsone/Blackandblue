@@ -51,7 +51,9 @@ export default function Team({ leagueInfo }) {
 
 async function loadRoster() {
   try {
-    // STEP 1 — load everything EXCEPT news
+    //
+    // STEP 1 — SAFE PARALLEL LOAD (NO THROWING)
+    //
     const [
       rosterData,
       playerData,
@@ -59,31 +61,84 @@ async function loadRoster() {
       projData,
       injuriesData
     ] = await Promise.all([
-      getRoster(leagueId, myFranchiseId, year),
-      getPlayers(year),
-      fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
-      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
-      fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json())
+      // ROSTER
+      getRoster(leagueId, myFranchiseId, year).catch(err => {
+        console.log("❌ getRoster failed:", err);
+        return null;
+      }),
+
+      // PLAYERS
+      getPlayers(year).catch(err => {
+        console.log("❌ getPlayers failed:", err);
+        return { players: [] };
+      }),
+
+      // SCHEDULE
+      fetch(`/data/nflScheduleWeek1.json`)
+        .then(r => r.json())
+        .catch(err => {
+          console.log("❌ schedule JSON failed:", err);
+          return { nflSchedule: { matchup: [] } };
+        }),
+
+      // PROJECTED SCORES (SAFE PARSE)
+      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
+        .then(r => r.text())
+        .then(t => {
+          try {
+            return JSON.parse(t);
+          } catch {
+            console.log("❌ projectedScores JSON parse failed");
+            return { projectedScores: { playerScore: [] } };
+          }
+        })
+        .catch(err => {
+          console.log("❌ projectedScores fetch failed:", err);
+          return { projectedScores: { playerScore: [] } };
+        }),
+
+      // INJURIES
+      fetch(`/api/mfl?action=injuries&year=${year}`)
+        .then(r => r.json())
+        .catch(err => {
+          console.log("❌ injuries JSON failed:", err);
+          return { injuries: { injury: [] } };
+        })
     ]);
 
-    // ⭐ NOW fetch news — using the SAME rosterPlayers
+    //
+    // STEP 2 — ROSTER MUST EXIST
+    //
+    if (!rosterData || !rosterData.roster) {
+      console.log("❌ No roster data found");
+      setRoster([]);
+      return;
+    }
+
+    const rosterPlayers = rosterData.roster.players || [];
+
+    //
+    // STEP 3 — NOW FETCH NEWS (AFTER rosterPlayers EXISTS)
+    //
     const newsData = await fetch(
       `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-    ).then(r => r.json());
+    )
+      .then(r => r.json())
+      .catch(err => {
+        console.log("❌ fantasyProsNewsBulk failed:", err);
+        return { news: [] };
+      });
 
-    const newsList = newsData?.news || [];
+    const newsList = newsData.news || [];
 
-    // ⭐ Continue with your merge logic
-        // STEP 4 — merge everything (your existing merge block)
-  
-        const injuriesList = injuriesData?.injuries?.injury || [];
-       // const newsList     = newsData?.news || [];
+    //
+    // STEP 4 — MERGE EVERYTHING (your existing merge logic)
+    //
+    const injuriesList = injuriesData?.injuries?.injury || [];
+    const allPlayers = playerData?.players || [];
 
-        const rosterPlayers = rosterData?.roster?.players || [];
-        const allPlayers    = playerData?.players         || [];
-
-        const matchupMap = buildMatchupMap(schedData);
-        const projMap    = buildProjMap(projData);
+    const matchupMap = buildMatchupMap(schedData);
+    const projMap = buildProjMap(projData);
 
         // -----------------------------
         // ⭐ Generate FantasyPros slug for each player
