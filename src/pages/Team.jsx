@@ -54,11 +54,8 @@ export default function Team({ leagueInfo }) {
     const [rosterData, playerData, schedData, projData] = await Promise.all([
       getRoster(leagueId, myFranchiseId, year),
       getPlayers(year),
-      fetch(`/api/mfl?action=nflSchedule&leagueId=${leagueId}&year=${year}`)
-        .then(r => r.json()).catch(() => null),
-      // ← bulk projected scores for all players this week
-      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
-        .then(r => r.json()).catch(() => null),
+      fetch(`/api/mfl?action=schedule&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
     ]);
 
     const projRes = await fetch(
