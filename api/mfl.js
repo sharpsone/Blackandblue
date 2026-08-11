@@ -58,6 +58,30 @@ if (action === "playerNewsFeedBulk") {
   return res.status(200).json({ news: sleeperNews });
 }
 
+
+function makeSlug(name) {
+  if (!name || typeof name !== "string") return null;
+
+  // Case 1: "Last, First"
+  if (name.includes(",")) {
+    const [lastRaw, firstRaw] = name.split(",");
+    const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    return `${first}-${last}`;
+  }
+
+  // Case 2: "First Last"
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    return `${first}-${last}`;
+  }
+
+  // Case 3: Single word (Defense, Kicker, etc.)
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
 // -----------------------------
 // ACTIONS fantasy pros news (bulk or single) - do not require leagueId
 // -----------------------------
