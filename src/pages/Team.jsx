@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getRoster, getPlayers } from "../utils/api";
+import { getRoster, getPlayers } from "../..utils/api";
 import PlayerModal from "../components/PlayerModal";
 import "../pages/team.css";
 
