@@ -77,6 +77,7 @@ export default function Team({ leagueInfo }) {
     
     //Schedule data
     const weekMatchups = schedData.nflSchedule.matchup || [];
+
     const matchup = weekMatchups.find(
       m => m.team[0].id === full.team || m.team[1].id === full.team
     );
