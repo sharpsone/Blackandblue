@@ -51,10 +51,9 @@ export default function Team({ leagueInfo }) {
 
  async function loadRoster() {
   try {
-    const [rosterData, playerData, schedData, projData] = await Promise.all([
+    const [rosterData, playerData, projData] = await Promise.all([
       getRoster(leagueId, myFranchiseId, year),
       getPlayers(year),
-      fetch(`/api/mfl?action=schedule&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
       fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
     ]);
     //fetch injuries from mfl api
@@ -64,10 +63,50 @@ export default function Team({ leagueInfo }) {
     const injuriesData = await injuriesRes.json();
     const injuriesList = injuriesData?.injuries?.injury || [];
 
+    //fetch news from mfl api
+    const newsRes = await fetch(
+      `/api/mfl?action=playerNewsFeedBulk&leagueId=${leagueId}&year=${year}`
+    );
+    const newsData = await newsRes.json();
+    const newsList = newsData?.news || [];
+
     const projRes = await fetch(
       `/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`
     );
-   
+    
+    //Schedule data
+    const schedData = await fetch(`/data/nflScheduleWeek1.json`).then(r => r.json());
+    const weekMatchups = schedData.nflSchedule.matchup || [];
+    const matchup = weekMatchups.find(
+      m => m.team[0].id === full.team || m.team[1].id === full.team
+    );
+
+    let kickoffPacific = null;
+    if (matchup?.kickoff && !isNaN(matchup.kickoff)) {
+      const unix = Number(matchup.kickoff);
+      kickoffPacific = new Date(unix * 1000).toLocaleString("en-US", {
+        timeZone: "America/Los_Angeles",
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+      });
+    }
+
+    const matchupData = matchup
+      ? {
+          opponent:
+            matchup.team[0].id === full.team
+              ? matchup.team[1].id
+              : matchup.team[0].id,
+          kickoff: kickoffPacific,
+          home: matchup.team[0].id === full.team,
+          spread: matchup.team[0].spread || matchup.team[1].spread || null,
+          status: matchup.status || null
+        }
+      : null;
+
     const projList = projData?.projectedScores?.playerScore || [];
 
     const rosterPlayers = rosterData?.roster?.players || [];
@@ -98,6 +137,8 @@ export default function Team({ leagueInfo }) {
       // injuries merge
       const inj = injuriesList.find(x => x.id === rp.id);
       const healthStatus = inj?.status || "Healthy";
+      // news merge
+      const news = newsList.filter(n => n.id === rp.id);
 
       return {
         ...rp,
@@ -112,6 +153,8 @@ export default function Team({ leagueInfo }) {
         headshot:  `/api/headshot?id=${rp.id}`,
         projected: proj?.score ?? null,
         healthStatus: healthStatus,
+        externalNews: news,
+        matchup: matchupData,
       };
     });
 
