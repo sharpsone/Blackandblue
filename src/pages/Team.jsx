@@ -66,21 +66,18 @@ async function loadRoster() {
       fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json())
     ]);
 
-    // ⭐ ONLY ONE DECLARATION HERE
+    // ⭐ KEEP THIS — this is your real roster
     const rosterPlayers = rosterData?.roster?.players || [];
 
-    // STEP 2 — now fetch news
+    // ⭐ NOW fetch news — using the SAME rosterPlayers
     const newsData = await fetch(
       `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
     ).then(r => r.json());
 
     const newsList = newsData?.news || [];
 
-    // STEP 3 — merge everything (your existing merge block)
-    // ...
-
-
-    // STEP 4 — merge everything (your existing merge block)
+    // ⭐ Continue with your merge logic
+        // STEP 4 — merge everything (your existing merge block)
   
         const injuriesList = injuriesData?.injuries?.injury || [];
        // const newsList     = newsData?.news || [];
