@@ -61,6 +61,9 @@ export default async function handler(req, res) {
 // -----------------------------
 // ACTION: fantasyProsNewsBulk (updated for 2026 HTML)
 // -----------------------------
+ // -----------------------------
+// ACTION: fantasyProsNewsBulk (with logging)
+// -----------------------------
 if (action === "fantasyProsNewsBulk") {
   console.log("🔥 fantasyProsNewsBulk HIT");
 
@@ -74,41 +77,30 @@ if (action === "fantasyProsNewsBulk") {
 
     console.log("📄 FantasyPros HTML length:", html.length);
 
-    // ⭐ Updated regex for 2026 FantasyPros HTML
     const blocks = html.match(
-      /<div class="news-item[\s\S]*?<div class="news-item-footer">/gi
+      /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
     );
 
     console.log("🧱 FantasyPros blocks found:", blocks ? blocks.length : 0);
 
     if (blocks) {
       for (const block of blocks) {
-        const headlineMatch = block.match(/<b>([^<]+)<\/b>/i);
-        const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
-        const slugMatch = block.match(/\/nfl\/news\/([^"]+)\.php/i);
+        const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+        const playerMatch = block.match(/players\/([^"]+)/i);
 
-        const headline = headlineMatch ? headlineMatch[1].trim() : null;
-        const body = bodyMatch ? bodyMatch[1].trim() : null;
-        const slug = slugMatch ? slugMatch[1].trim() : null;
-
-        console.log("🔎 FP headline:", headline);
-        console.log("🔎 FP slug:", slug);
+        console.log("🔎 FP headline:", headlineMatch ? headlineMatch[1] : "NONE");
+        console.log("🔎 FP slug:", playerMatch ? playerMatch[1] : "NONE");
 
         items.push({
-          slug,
+          slug: playerMatch ? playerMatch[1].trim() : null,
           source: "FantasyPros",
-          headline,
-          body,
+          headline: headlineMatch ? headlineMatch[1].trim() : null,
         });
       }
     }
   } catch (err) {
     console.log("❌ FantasyPros bulk news failed:", err.message);
   }
-
-  console.log("✅ FINAL BULK NEWS COUNT:", items.length);
-  return res.status(200).json({ news: items });
-}
 
   // -----------------------------
   // Sleeper bulk (with logging)
