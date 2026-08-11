@@ -180,3 +180,44 @@ p {
   color: #aaa;
   text-align: center;
 }
+
+/* Name row */
+.team-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Badge container */
+.team-badges {
+  display: flex;
+  gap: 6px;
+}
+
+/* HEALTH BADGES */
+.health-badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #fff;
+}
+
+.health-Q { background: #ffcc00; color: #000; }   /* Questionable */
+.health-D { background: #ff6600; color: #000; }   /* Doubtful */
+.health-O { background: #ff0000; color: #fff; }   /* Out */
+
+/* NEWS BADGES */
+.news-badge {
+  font-size: 0.9rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.news-recent {
+  color: #c77dff;   /* purple */
+}
+
+.news-old {
+  color: #888;      /* grey */
+}

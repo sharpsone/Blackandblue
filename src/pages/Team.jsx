@@ -194,19 +194,49 @@ export default function Team({ leagueInfo }) {
             onError={e => { e.target.src = "/silhouettes/player.png"; }}
           />
           <div className="team-info">
-            <div className="team-name">{isEmpty ? "Empty" : p.name}</div>
+            <div className="team-name-row">
+              <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
+
+              {!isEmpty && (
+                <span className="team-badges">
+                  {/* HEALTH BADGE */}
+                  {p.healthStatus && (
+                    <span className={`health-badge health-${p.healthStatus}`}>
+                      {p.healthStatus}
+                    </span>
+                  )}
+
+                  {/* NEWS BADGE */}
+                  {p.externalNews && p.externalNews.length > 0 && (
+                    <span
+                      className={`news-badge ${
+                        Date.now() / 1000 - p.externalNews[0].date < 14 * 24 * 3600
+                          ? "news-recent"
+                          : "news-old"
+                      }`}
+                    >
+                      📰
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+
             {!isEmpty && (
-              <div className="team-meta">
-                {p.team          && <span className="meta-team">{p.team}</span>}
-                {p.pos           && <span className="meta-pos">{p.pos}</span>}
-                {p.matchup       && <span className="meta-matchup">{p.matchup}</span>}
-                {p.byeWeek       && <span className="meta-bye">Bye {p.byeWeek}</span>}
-                {p.healthStatus  && (
-                  <span className={`meta-status status-${p.healthStatus}`}>
-                    {p.healthStatus}
-                  </span>
-                )}
-              </div>
+            <div className="team-meta">
+              <span className="meta-team">{p.team}</span>
+              <span className="meta-pos">{p.pos}</span>
+
+              {/* Opponent + kickoff */}
+              {p.matchup && (
+                <span className="meta-matchup">
+                  {p.matchup.home ? "v" : "@"} {p.matchup.opponent} · {p.matchup.kickoff}
+                </span>
+              )}
+
+              {/* Bye week */}
+              {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
+            </div>
             )}
           </div>
         </div>
