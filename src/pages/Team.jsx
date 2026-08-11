@@ -49,74 +49,95 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
-  async function loadRoster() {
-    try {
-      const [rosterData, playerData, schedData, projData, injuriesData, newsData] = await Promise.all([
-        getRoster(leagueId, myFranchiseId, year),
-        getPlayers(year),
-        fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
-        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
-        fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json()),
-        fetch(`/api/mfl?action=fantasyProsNewsBulk&year=${year}`)
-      ]);
+    async function loadRoster() {
+      try {
+        const [
+          rosterData,
+          playerData,
+          schedData,
+          projData,
+          injuriesData,
+          newsData
+        ] = await Promise.all([
+          getRoster(leagueId, myFranchiseId, year),
+          getPlayers(year),
+          fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
+          fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+          fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json()),
+          fetch(`/api/mfl?action=fantasyProsNewsBulk&year=${year}`).then(r => r.json())   // ⭐ YOU FORGOT .json()
+        ]);
 
-      const injuriesList = injuriesData?.injuries?.injury || [];
-      const newsList     = newsData?.news || [];
+        const injuriesList = injuriesData?.injuries?.injury || [];
+        const newsList     = newsData?.news || [];
 
-      const rosterPlayers = rosterData?.roster?.players || [];
-      const allPlayers    = playerData?.players         || [];
+        const rosterPlayers = rosterData?.roster?.players || [];
+        const allPlayers    = playerData?.players         || [];
 
-      const matchupMap = buildMatchupMap(schedData);
-      const projMap    = buildProjMap(projData);
+        const matchupMap = buildMatchupMap(schedData);
+        const projMap    = buildProjMap(projData);
 
-      // Build NFL-wide posRank
-      const posGroups = {};
-      allPlayers.forEach(p => {
-        const pos = p.position || p.pos;
-        if (!pos) return;
-        if (!posGroups[pos]) posGroups[pos] = [];
-        posGroups[pos].push(p);
-      });
-      Object.values(posGroups).forEach(group => {
-        group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
-        group.forEach((p, i) => { p._posRank = i + 1; });
-      });
+        // -----------------------------
+        // ⭐ Generate FantasyPros slug for each player
+        // -----------------------------
+        function makeSlug(name) {
+          if (!name) return null;
+          const [last, first] = name.split(",");
+          return `${first.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${last.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+        }
 
-      const merged = rosterPlayers.map(rp => {
-        const full     = allPlayers.find(p => p.id === rp.id) || {};
-        const teamAbbr = full.team || rp.team || "";
-
-        const proj = projMap[String(rp.id)] ?? null;
-        
-        const inj = injuriesList.find(x => x.id === rp.id);
-        const healthStatus = inj?.status || "Healthy";
-
-        const news = newsList.filter(n => {
-          if (!n.id) return false;
-          return full.slug === n.id;   // or however you store slugs
+        // Build NFL-wide posRank
+        const posGroups = {};
+        allPlayers.forEach(p => {
+          const pos = p.position || p.pos;
+          if (!pos) return;
+          if (!posGroups[pos]) posGroups[pos] = [];
+          posGroups[pos].push(p);
+        });
+        Object.values(posGroups).forEach(group => {
+          group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
+          group.forEach((p, i) => { p._posRank = i + 1; });
         });
 
-        return {
-          ...rp,
-          ...full,
-          pos: full.position || rp.position || "",
-          projected: proj,
-          avg: full.avg ?? rp.avg ?? null,
-          matchup: matchupMap[teamAbbr] || null,
-          posRank: full._posRank ?? null,
-          headshot: `/api/headshot?id=${rp.id}`,
-          healthStatus,
-          externalNews: news,
-        };
-      });
+        const merged = rosterPlayers.map(rp => {
+          const full     = allPlayers.find(p => p.id === rp.id) || {};
+          const teamAbbr = full.team || rp.team || "";
 
-      setPlayers(merged);
-    } catch (err) {
-      console.error("TEAM LOAD ERROR:", err);
-    } finally {
-      setLoading(false);
+          const proj = projMap[String(rp.id)] ?? null;
+
+          // ⭐ Injuries
+          const inj = injuriesList.find(x => x.id === rp.id);
+          const healthStatus = inj?.status || null;   // ⭐ DO NOT DEFAULT TO "Healthy"
+
+          // ⭐ Generate slug for this player
+          const slug = makeSlug(full.name);
+
+          // ⭐ Match news by slug (NOT by MFL ID)
+          const news = newsList.filter(n => n.slug === slug);
+
+          return {
+            ...rp,
+            ...full,
+            pos: full.position || rp.position || "",
+            projected: proj,
+            avg: full.avg ?? rp.avg ?? null,
+            matchup: matchupMap[teamAbbr] || null,
+            posRank: full._posRank ?? null,
+            headshot: `/api/headshot?id=${rp.id}`,
+
+            // ⭐ NEW FIELDS
+            slug,
+            healthStatus,
+            externalNews: news
+          };
+        });
+
+        setPlayers(merged);
+      } catch (err) {
+        console.error("TEAM LOAD ERROR:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
