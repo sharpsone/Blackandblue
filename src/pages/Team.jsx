@@ -64,9 +64,8 @@ export default function Team({ leagueInfo }) {
     const projRes = await fetch(
       `/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`
     );
-    const projData = await projRes.json();
+   
     const projList = projData?.projectedScores?.playerScore || [];
-
 
     const rosterPlayers = rosterData?.roster?.players || [];
     const allPlayers    = playerData?.players         || [];
