@@ -115,14 +115,17 @@ async function loadRoster() {
       return;
     }
 
-    const rosterPlayers = rosterData.roster.players || [];
+    //const rosterPlayers = rosterData.roster.players || [];
+    const rosterPlayers = rosterData?.roster?.players.map(p => ({
+      id: p.id,
+      name: p.name,   // ⭐ REQUIRED
+      status: p.status
+    }));
 
     //
     // STEP 3 — NOW FETCH NEWS (AFTER rosterPlayers EXISTS)
     //
-    const newsData = await fetch(
-      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-    )
+    const newsData = await fetch(`/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`)
       .then(r => r.json())
       .catch(err => {
         console.log("❌ fantasyProsNewsBulk failed:", err);
