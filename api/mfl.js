@@ -59,48 +59,49 @@ export default async function handler(req, res) {
     }
 
 // -----------------------------
-// ACTION: fantasyProsNewsBulk (updated for 2026 HTML)
-// -----------------------------
- // -----------------------------
-// ACTION: fantasyProsNewsBulk (with logging)
+// ACTION: fantasyProsNewsBulk (safe version)
 // -----------------------------
 if (action === "fantasyProsNewsBulk") {
   console.log("🔥 fantasyProsNewsBulk HIT");
 
-  const url = "https://www.fantasypros.com/nfl/news/";
-  let items = [];
-
   try {
-    console.log("🌐 Fetching FantasyPros bulk page:", url);
+    const url = "https://www.fantasypros.com/nfl/news/";
     const resp = await fetch(url);
     const html = await resp.text();
 
     console.log("📄 FantasyPros HTML length:", html.length);
 
-    const blocks = html.match(
-      /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
-    );
+    // Try both old and new patterns
+    let blocks =
+      html.match(/<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi)
+      || html.match(/<div class="news-item[\s\S]*?<div class="news-item-footer">/gi)
+      || [];
 
-    console.log("🧱 FantasyPros blocks found:", blocks ? blocks.length : 0);
+    console.log("🧱 FantasyPros blocks found:", blocks.length);
 
-    if (blocks) {
-      for (const block of blocks) {
-        const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-        const playerMatch = block.match(/players\/([^"]+)/i);
+    const items = [];
 
-        console.log("🔎 FP headline:", headlineMatch ? headlineMatch[1] : "NONE");
-        console.log("🔎 FP slug:", playerMatch ? playerMatch[1] : "NONE");
+    for (const block of blocks) {
+      const headlineMatch = block.match(/<b>([^<]+)<\/b>/i);
+      const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
+      const slugMatch = block.match(/\/nfl\/news\/([^"]+)\.php/i);
 
-        items.push({
-          slug: playerMatch ? playerMatch[1].trim() : null,
-          source: "FantasyPros",
-          headline: headlineMatch ? headlineMatch[1].trim() : null,
-        });
-      }
+      items.push({
+        slug: slugMatch ? slugMatch[1].trim() : null,
+        source: "FantasyPros",
+        headline: headlineMatch ? headlineMatch[1].trim() : null,
+        body: bodyMatch ? bodyMatch[1].trim() : null,
+      });
     }
+
+    console.log("✅ FINAL BULK NEWS COUNT:", items.length);
+    return res.status(200).json({ news: items });
   } catch (err) {
-    console.log("❌ FantasyPros bulk news failed:", err.message);
+    console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
+    return res.status(200).json({ news: [] });   // ⭐ NEVER BREAK PROMISE.ALL
   }
+}
+
 
   // -----------------------------
   // Sleeper bulk (with logging)
