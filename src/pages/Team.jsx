@@ -66,9 +66,6 @@ async function loadRoster() {
       fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json())
     ]);
 
-    // ⭐ KEEP THIS — this is your real roster
-    const rosterPlayers = rosterData?.roster?.players || [];
-
     // ⭐ NOW fetch news — using the SAME rosterPlayers
     const newsData = await fetch(
       `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
