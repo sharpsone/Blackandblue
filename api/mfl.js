@@ -59,6 +59,41 @@ export default async function handler(req, res) {
     }
 
     // -----------------------------
+    // ACTION: fantasyProsNewsBulk
+    // -----------------------------
+    if (action === "fantasyProsNewsBulk") {
+      const url = "https://www.fantasypros.com/nfl/news/";
+      const resp = await fetch(url);
+      const html = await resp.text();
+
+      const items = [];
+      const blocks = html.match(
+        /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+      );
+
+      if (blocks) {
+        for (const block of blocks) {
+          const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+          const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
+          const playerMatch = block.match(/<a[^>]*href="[^"]*players\/([^"]+)"[^>]*>/i);
+
+          const headline = headlineMatch ? headlineMatch[1].trim() : null;
+          const body = bodyMatch ? bodyMatch[1].trim() : null;
+          const playerSlug = playerMatch ? playerMatch[1].trim() : null;
+
+          items.push({
+            id: playerSlug || null,
+            source: "FantasyPros",
+            headline,
+            body,
+          });
+        }
+      }
+
+      return res.status(200).json({ news: items });
+    }
+
+    // -----------------------------
     // NOW VALIDATE leagueId/year
     // -----------------------------
     if (!leagueId || !year) {
