@@ -144,10 +144,28 @@ async function loadRoster() {
         // ⭐ Generate FantasyPros slug for each player
         // -----------------------------
         function makeSlug(name) {
-          if (!name) return null;
-          const [last, first] = name.split(",");
-          return `${first.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${last.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+          if (!name || typeof name !== "string") return null;
+
+          // Case 1: "Last, First"
+          if (name.includes(",")) {
+            const [lastRaw, firstRaw] = name.split(",");
+            const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            return `${first}-${last}`;
+          }
+
+          // Case 2: "First Last"
+          const parts = name.trim().split(" ");
+          if (parts.length >= 2) {
+            const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            return `${first}-${last}`;
+          }
+
+          // Case 3: Single word (Defense, Kicker, etc.)
+          return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
         }
+            
 
         // Build NFL-wide posRank
         const posGroups = {};

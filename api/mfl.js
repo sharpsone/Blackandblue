@@ -76,10 +76,9 @@ if (action === "fantasyProsNewsBulk") {
     const items = [];
 
     for (const p of list) {
-      const [lastRaw, firstRaw] = p.name.split(",");
-      const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const last = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const slug = `${first}-${last}`;
+      const slug = makeSlug(p.name);
+       if (!slug) continue;
+
 
       const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
       const fpResp = await fetch(fpUrl);
