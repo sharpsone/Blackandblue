@@ -91,7 +91,10 @@ export default function Team({ leagueInfo }) {
         const inj = injuriesList.find(x => x.id === rp.id);
         const healthStatus = inj?.status || "Healthy";
 
-        const news = newsList.filter(n => n.id === rp.id);
+        const news = newsList.filter(n => {
+          if (!n.id) return false;
+          return full.slug === n.id;   // or however you store slugs
+        });
 
         return {
           ...rp,
