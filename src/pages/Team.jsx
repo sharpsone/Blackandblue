@@ -51,11 +51,13 @@ export default function Team({ leagueInfo }) {
 
   async function loadRoster() {
     try {
-      const [rosterData, playerData, schedData, projData] = await Promise.all([
+      const [rosterData, playerData, schedData, projData, injuriesData, newsData] = await Promise.all([
         getRoster(leagueId, myFranchiseId, year),
         getPlayers(year),
         fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
-        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
+        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+        fetch(`/api/mfl?action=injuries&year=${year}`).then(r => r.json()),
+        fetch(`/api/mfl?action=playerNewsFeedBulk&year=${year}`).then(r => r.json())
       ]);
 
       const rosterPlayers = rosterData?.roster?.players || [];
@@ -82,6 +84,11 @@ export default function Team({ leagueInfo }) {
         const teamAbbr = full.team || rp.team || "";
 
         const proj = projMap[String(rp.id)] ?? null;
+        
+        const inj = injuriesList.find(x => x.id === rp.id);
+        const healthStatus = inj?.status || "Healthy";
+
+        const news = newsList.filter(n => n.id === rp.id);
 
         return {
           ...rp,
@@ -92,6 +99,8 @@ export default function Team({ leagueInfo }) {
           matchup: matchupMap[teamAbbr] || null,
           posRank: full._posRank ?? null,
           headshot: `/api/headshot?id=${rp.id}`,
+          healthStatus,
+          externalNews: news,
         };
       });
 

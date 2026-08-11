@@ -268,6 +268,34 @@ export default async function handler(req, res) {
       }
     }
 
+    // --- ACTION: injuries ---
+    if (action === "injuries") {
+      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=injuries&W=&JSON=1`;
+      const data = await callMFL(url);
+      return res.status(200).json(data);
+    }
+
+    // --- ACTION: playerNewsFeedBulk ---
+    if (action === "playerNewsFeedBulk") {
+      const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
+      const sleeperJson = await sleeperResp.json();
+
+      const nowSec = Math.floor(Date.now() / 1000);
+      const twoWeeks = 14 * 24 * 3600;
+
+      const news = sleeperJson
+        .filter(n => n.created && nowSec - n.created < twoWeeks)
+        .map(n => ({
+          id: n.player_id || null,
+          date: n.created,
+          source: "Sleeper",
+          headline: n.title || "",
+          body: n.body || ""
+        }));
+
+      return res.status(200).json({ news });
+    }
+
     // -----------------------------
     // ACTION: playerNewsFeed
     // -----------------------------
