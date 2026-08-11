@@ -60,6 +60,9 @@ export default function Team({ leagueInfo }) {
         fetch(`/api/mfl?action=playerNewsFeedBulk&year=${year}`).then(r => r.json())
       ]);
 
+      const injuriesList = injuriesData?.injuries?.injury || [];
+      const newsList     = newsData?.news || [];
+
       const rosterPlayers = rosterData?.roster?.players || [];
       const allPlayers    = playerData?.players         || [];
 
