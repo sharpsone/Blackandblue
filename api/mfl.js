@@ -65,38 +65,28 @@ if (action === "fantasyProsNewsBulk") {
   console.log("🔥 fantasyProsNewsBulk HIT");
 
   try {
-    const url = "https://www.fantasypros.com/nfl/news/";
-    const resp = await fetch(url);
+    const url = "https://www.fantasypros.com/nfl/news/feed.php";
+    const resp = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"   // ⭐ required or FP blocks server requests
+      }
+    });
 
     if (!resp.ok) {
       console.log("❌ FP fetch failed:", resp.status);
       return res.status(200).json({ news: [] });
     }
 
-    const html = await resp.text();
-    console.log("📄 FP HTML length:", html.length);
+    const json = await resp.json();
 
-    const blocks =
-      html.match(/<div class="news-item[\s\S]*?<div class="news-item-footer">/gi) ||
-      html.match(/<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi) ||
-      [];
-
-    console.log("🧱 FP blocks found:", blocks.length);
-
-    const items = [];
-
-    for (const block of blocks) {
-      const headlineMatch = block.match(/<b>([^<]+)<\/b>/i);
-      const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
-      const slugMatch = block.match(/\/nfl\/news\/([^"]+)\.php/i);
-
-      items.push({
-        slug: slugMatch ? slugMatch[1].trim() : null,
-        source: "FantasyPros",
-        headline: headlineMatch ? headlineMatch[1].trim() : null,
-        body: bodyMatch ? bodyMatch[1].trim() : null,
-      });
-    }
+    const items = json.map(n => ({
+      slug: n.player_slug || null,
+      source: "FantasyPros",
+      headline: n.title || null,
+      body: n.summary || null,
+      impact: n.fantasy_impact || null,
+      timestamp: n.timestamp || null
+    }));
 
     console.log("✅ FINAL BULK NEWS COUNT:", items.length);
     return res.status(200).json({ news: items });
