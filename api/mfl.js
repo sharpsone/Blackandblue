@@ -83,26 +83,33 @@ function makeSlug(name) {
 }
 
 // -----------------------------
-// ACTIONS fantasy pros news (bulk or single) - do not require leagueId
+// ACTION: fantasyProsNewsBulk (PlayerModal-style bulk scraper)
 // -----------------------------
 if (action === "fantasyProsNewsBulk") {
   console.log("🔥 fantasyProsNewsBulk HIT");
 
   try {
     const { players } = req.query;
-
     if (!players) {
+      console.log("❌ No players provided");
       return res.status(200).json({ news: [] });
     }
 
     const list = JSON.parse(players); // array of { id, name }
+    const nowSec = Math.floor(Date.now() / 1000);
+    const fourWeeksSec = 28 * 24 * 60 * 60;
 
     const items = [];
 
     for (const p of list) {
-      const slug = makeSlug(p.name);
-       if (!slug) continue;
+      const name = p.name;
+      if (!name) continue;
 
+      // --- Slug generator (same as PlayerModal)
+      const [lastRaw, firstRaw] = name.split(",");
+      const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const slug  = `${first}-${last}`;
 
       const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
       const fpResp = await fetch(fpUrl);
@@ -116,13 +123,18 @@ if (action === "fantasyProsNewsBulk") {
 
       for (const block of blocks) {
         const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-        const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
+        const bodyMatch     = block.match(/<p>([^<]+)<\/p>/i);
+        const impactMatch   = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+        const timestampMatch = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
         items.push({
+          player: name,
           slug,
           source: "FantasyPros",
           headline: headlineMatch ? headlineMatch[1].trim() : null,
           body: bodyMatch ? bodyMatch[1].trim() : null,
+          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+          timestamp: timestampMatch ? timestampMatch[1].trim() : null,
         });
       }
     }
