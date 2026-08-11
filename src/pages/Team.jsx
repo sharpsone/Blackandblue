@@ -51,9 +51,10 @@ export default function Team({ leagueInfo }) {
 
  async function loadRoster() {
   try {
-    const [rosterData, playerData, projData] = await Promise.all([
+    const [rosterData, playerData, schedData, projData] = await Promise.all([
       getRoster(leagueId, myFranchiseId, year),
       getPlayers(year),
+      fetch(`/data/nflScheduleWeek1.json`).then(r => r.json()),
       fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`).then(r => r.json())
     ]);
     //fetch injuries from mfl api
@@ -75,7 +76,6 @@ export default function Team({ leagueInfo }) {
     );
     
     //Schedule data
-    const schedData = await fetch(`/data/nflScheduleWeek1.json`).then(r => r.json());
     const weekMatchups = schedData.nflSchedule.matchup || [];
     const matchup = weekMatchups.find(
       m => m.team[0].id === full.team || m.team[1].id === full.team
