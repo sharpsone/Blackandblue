@@ -233,7 +233,10 @@ export default async function handler(req, res) {
 
     // --- ACTION: projectedScores ---
     if (action === "projectedScores") {
-      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
+      const apiKey = process.env.MFL_API_KEY;
+
+      const url = `https://www44.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&APIKEY=${apiKey}&W=1&JSON=1`;
+
       const data = await callMFL(url);
       return res.status(200).json(data);
     }
