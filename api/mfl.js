@@ -58,36 +58,35 @@ export default async function handler(req, res) {
       return res.status(200).json({ news: sleeperNews });
     }
 
-// -----------------------------
-// ACTION: fantasyProsNewsBulk (SAFE VERSION)
-// -----------------------------
-if (action === "fantasyProsNewsBulk") {
-  console.log("🔥 fantasyProsNewsBulk HIT");
+  // -----------------------------
+  // ACTION: fantasyProsNewsBulk (SAFE VERSION)
+  // -----------------------------
+  if (action === "fantasyProsNewsBulk") {
+    console.log("🔥 fantasyProsNewsBulk HIT");
 
-  try {
-    const url = "https://www.fantasypros.com/nfl/news/";
-    const resp = await fetch(url);
+    try {
+      const url = "https://www.fantasypros.com/nfl/news/";
+      const resp = await fetch(url);
 
-    if (!resp.ok) {
-      console.log("❌ FP fetch failed:", resp.status);
-      return res.status(200).json({ news: [] });
-    }
+      if (!resp.ok) {
+        console.log("❌ FP fetch failed:", resp.status);
+        return res.status(200).json({ news: [] });
+      }
 
-    const html = await resp.text();
-    console.log("📄 FP HTML length:", html.length);
+      const html = await resp.text();
+      console.log("📄 FP HTML length:", html.length);
 
-    // Try both patterns safely
-    const blocks =
-      html.match(/<div class="news-item[\s\S]*?<div class="news-item-footer">/gi) ||
-      html.match(/<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi) ||
-      [];
+      // Try both patterns safely
+      const blocks =
+        html.match(/<div class="news-item[\s\S]*?<div class="news-item-footer">/gi) ||
+        html.match(/<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi) ||
+        [];
 
-    console.log("🧱 FP blocks found:", blocks.length);
+      console.log("🧱 FP blocks found:", blocks.length);
 
-    const items = [];
+      const items = [];
 
-    for (const block of blocks) {
-      try {
+      for (const block of blocks) {
         const headlineMatch = block.match(/<b>([^<]+)<\/b>/i);
         const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
         const slugMatch = block.match(/\/nfl\/news\/([^"]+)\.php/i);
@@ -98,18 +97,16 @@ if (action === "fantasyProsNewsBulk") {
           headline: headlineMatch ? headlineMatch[1].trim() : null,
           body: bodyMatch ? bodyMatch[1].trim() : null,
         });
-      } catch (innerErr) {
-        console.log("⚠️ FP block parse error:", innerErr.message);
       }
-    }
 
-    console.log("✅ FINAL BULK NEWS COUNT:", items.length);
-    return res.status(200).json({ news: items });
-  } catch (err) {
-    console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
-    return res.status(200).json({ news: [] });  // ⭐ NEVER crash Promise.all
+      console.log("✅ FINAL BULK NEWS COUNT:", items.length);
+      return res.status(200).json({ news: items });
+    } catch (err) {
+      console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
+      return res.status(200).json({ news: [] });  // ⭐ NEVER crash Promise.all
+    }
   }
-}
+
 
   // -----------------------------
   // Sleeper bulk (with logging)
