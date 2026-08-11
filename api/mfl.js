@@ -231,6 +231,13 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+    // --- ACTION: projectedScores ---
+    if (action === "projectedScores") {
+      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=projectedScores&L=${leagueId}&W=1&JSON=1`;
+      const data = await callMFL(url);
+      return res.status(200).json(data);
+    }
+
     // -----------------------------
     // ACTION: transactions
     // -----------------------------

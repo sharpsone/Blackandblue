@@ -61,6 +61,13 @@ export default function Team({ leagueInfo }) {
         .then(r => r.json()).catch(() => null),
     ]);
 
+    const projRes = await fetch(
+      `/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`
+    );
+    const projData = await projRes.json();
+    const projList = projData?.projectedScores?.playerScore || [];
+
+
     const rosterPlayers = rosterData?.roster?.players || [];
     const allPlayers    = playerData?.players         || [];
 
@@ -84,6 +91,8 @@ export default function Team({ leagueInfo }) {
     const merged = rosterPlayers.map(rp => {
       const full     = allPlayers.find(p => p.id === rp.id) || {};
       const teamAbbr = full.team || rp.team || "";
+      //merge projections
+      const proj = projList.find(x => x.id === rp.id);
 
       return {
         ...rp,
@@ -96,6 +105,7 @@ export default function Team({ leagueInfo }) {
         // NFL-wide position rank from full allPlayers pool
         posRank:   full._posRank  ?? null,
         headshot:  `/api/headshot?id=${rp.id}`,
+        projected: proj?.score ?? null,
       };
     });
 
