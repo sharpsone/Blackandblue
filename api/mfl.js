@@ -123,7 +123,7 @@ if (action === "fantasyProsNewsBulk") {
       console.log("📄 HTML SAMPLE:", fpHtml.slice(0, 500));
 
       const blocks = fpHtml.match(
-        /<div class="(?:featured-news-item|news-item|player-news-item)[\s\S]*?<div class="(?:featured-news-item-content|news-item-content|player-news-item-content)[\s\S]*?<\/div>\s*<\/div>/gi
+        /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
       );
 
       console.log("🧱 BLOCK COUNT:", blocks ? blocks.length : 0);
@@ -490,23 +490,50 @@ if (action === "fantasyProsNewsBulk") {
         const fpHtml = await fpResp.text();
 
         const blocks = fpHtml.match(
-          /<div class="(?:featured-news-item|news-item|player-news-item)[\s\S]*?<div class="(?:featured-news-item-content|news-item-content|player-news-item-content)[\s\S]*?<\/div>\s*<\/div>/gi
+          /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
         );
 
         if (blocks) {
           for (const block of blocks) {
-            const headlineMatch = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-            const bodyMatch = block.match(/<p>([^<]+)<\/p>/i);
-            const impactMatch = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-            const timestampMatch = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+            const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+            const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+            const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+            const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-            fpItems.push({
+            // Convert timestamp → UNIX seconds
+            let ts = null;
+            if (timestampMatch) {
+              const raw = timestampMatch[1].trim();
+              const parsed = new Date(raw).getTime();
+              if (!isNaN(parsed)) {
+                ts = Math.floor(parsed / 1000);
+              }
+            }
+
+            // Extract body text safely
+            const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+
+            // ⭐ Skip fake blocks
+            if (
+              !headlineMatch &&
+              bodyText.length === 0 &&
+              !impactMatch &&
+              !timestampMatch
+            ) {
+              continue;
+            }
+
+            // Push real block
+            items.push({
+              player: name,
+              slug,
               source: "FantasyPros",
               headline: headlineMatch ? headlineMatch[1].trim() : null,
-              body: bodyMatch ? bodyMatch[1].trim() : null,
+              body: bodyText || null,
               fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-              timestamp: timestampMatch ? timestampMatch[1].trim() : null,
+              timestamp: ts,
             });
+
 
             fpItems = fpItems.filter(item => {
               if (!item.timestamp) return true;
