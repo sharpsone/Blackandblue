@@ -184,7 +184,7 @@ export default function PlayerModal({
               {news.length > 0 ? (
                 news.map((item, idx) => {
                   const isOpen = openNews[idx] || false;
-
+                    console.log("NEWS ITEM:", item);   // ⭐ ADD THIS LINE
                   return (
                     <div key={idx} className="fa-news-item">
                       <div
