@@ -105,7 +105,7 @@ if (action === "fantasyProsNewsBulk") {
         continue;
       }
 
-      // --- Slug generator
+      // Slug
       const [lastRaw, firstRaw] = name.split(",");
       const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -113,59 +113,40 @@ if (action === "fantasyProsNewsBulk") {
 
       const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
 
-      console.log("🔎 PLAYER:", name);
-      console.log("🔎 SLUG:", slug);
-      console.log("🔎 FP URL:", fpUrl);
-
       const fpResp = await fetch(fpUrl);
       const fpHtml = await fpResp.text();
-
-      console.log("📄 HTML SAMPLE:", fpHtml.slice(0, 500));
 
       const blocks = fpHtml.match(
         /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
       );
 
-      console.log("🧱 BLOCK COUNT:", blocks ? blocks.length : 0);
-
-      if (!blocks || blocks.length === 0) {
-        console.log("❌ No FP blocks found for:", name);
-        continue;
-      }
+      if (!blocks) continue;
 
       for (const block of blocks) {
-       // --- Extract fields
-      // Extract fields
-      const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-      const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
-      const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-      const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+        const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+        const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+        const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+        const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-      // ⭐ Require timestamp for real news
-      if (!timestampMatch) {
-        continue;
-      }
+        // Require timestamp
+        if (!timestampMatch) continue;
 
-      // Convert timestamp → UNIX seconds parse
+        // Timestamp parser
         let ts = null;
-
         if (timestampMatch) {
           let raw = timestampMatch[1].trim();
           let parsed = new Date(raw).getTime();
 
-          // Fallback 1: remove ordinal suffixes (st, nd, rd, th)
           if (isNaN(parsed)) {
             raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
             parsed = new Date(raw).getTime();
           }
 
-          // Fallback 2: add current year if missing
           if (isNaN(parsed)) {
             raw = `${raw} ${new Date().getFullYear()}`;
             parsed = new Date(raw).getTime();
           }
 
-          // Fallback 3: try US format explicitly
           if (isNaN(parsed)) {
             parsed = Date.parse(raw);
           }
@@ -175,37 +156,13 @@ if (action === "fantasyProsNewsBulk") {
           }
         }
 
-      // Extract body text safely
-      const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+        const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
-      // Determine if this block has ANY meaningful content
-     // const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
-     // const hasBody     = bodyText.length > 0;
-     // const hasImpact   = impactMatch && impactMatch[1].trim().length > 0;
-
-      // ⭐ Skip wrapper blocks (no headline, no body, no impact)
-      //if (!hasHeadline && !hasBody && !hasImpact) {
-     //   continue;
-    //  }
-
-        // Require headline OR timestamp
         const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
         const hasTime     = ts !== null;
 
-        if (!hasHeadline && !hasTime) {
-          continue;
-        }
+        if (!hasHeadline && !hasTime) continue;
 
-      // Push real block
-      //fpItems.push({
-       // player: name,
-       // slug,
-        //source: "FantasyPros",
-        //headline: headlineMatch ? headlineMatch[1].trim() : null,
-        //body: bodyText || null,
-      //  fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-      //  timestamp: ts,
-      //});
         fpItems.push({
           player: name,
           slug,
@@ -215,18 +172,28 @@ if (action === "fantasyProsNewsBulk") {
           fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
           timestamp: ts
         });
+      }
+    }
 
-        // Sort newest first
-        fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    // Sort newest first
+    fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        // ⭐ FILTER: Only keep last 10 weeks
-        const nowSec = Math.floor(Date.now() / 1000);
-        const tenWeeksSec = 10 * 7 * 24 * 3600;
+    // Filter last 10 weeks
+    const nowSec = Math.floor(Date.now() / 1000);
+    const tenWeeksSec = 10 * 7 * 24 * 3600;
 
-        fpItems = fpItems.filter(item => {
-          if (!item.timestamp) return false;
-          return (nowSec - item.timestamp) <= tenWeeksSec;
-        });
+    const filtered = fpItems.filter(item => {
+      if (!item.timestamp) return false;
+      return (nowSec - item.timestamp) <= tenWeeksSec;
+    });
+
+    return res.status(200).json({ news: filtered });
+
+  } catch (err) {
+    console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
+    return res.status(200).json({ news: [] });
+  }
+}
 
     // -----------------------------
     // NOW VALIDATE leagueId/year
@@ -480,140 +447,151 @@ if (action === "fantasyProsNewsBulk") {
       }
     }
 
-  // -----------------------------
-// ACTION: playerNewsFeed (clean rewrite)
-// -----------------------------
-if (action === "playerNewsFeed") {
-  const { name } = req.query;
+    // -----------------------------
+    // ACTION: playerNewsFeed (fully corrected)
+    // -----------------------------
+    if (action === "playerNewsFeed") {
+      const { name } = req.query;
 
-  if (!name) {
-    return res.status(400).json({ error: "Missing player name" });
-  }
+      if (!name) {
+        return res.status(400).json({ error: "Missing player name" });
+      }
 
-  const normalizedName = name.toLowerCase();
-  const nowSec = Math.floor(Date.now() / 1000);
-  const fourWeeksSec = 28 * 24 * 60 * 60;
+      const nowSec = Math.floor(Date.now() / 1000);
+      const fourWeeksSec = 28 * 24 * 60 * 60;
 
-  // -----------------------------
-  // SLEEPER NEWS (unchanged)
-  // -----------------------------
-  let sleeperItem = null;
-  try {
-    const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
-    const sleeperJson = await sleeperResp.json();
+      // -----------------------------
+      // SLEEPER NEWS
+      // -----------------------------
+      let sleeperItem = null;
+      try {
+        const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
+        const sleeperJson = await sleeperResp.json();
 
-    const recent = sleeperJson
-      .filter(n => {
-        if (!n.created) return false;
-        const age = nowSec - n.created;
-        if (age > fourWeeksSec) return false;
+        const recent = sleeperJson
+          .filter(n => {
+            if (!n.created) return false;
+            const age = nowSec - n.created;
+            if (age > fourWeeksSec) return false;
 
-        const text = `${n.title || ""} ${n.body || ""}`.toLowerCase();
-        return text.includes(normalizedName);
-      })
-      .sort((a, b) => b.created - a.created);
+            const text = `${n.title || ""} ${n.body || ""}`.toLowerCase();
+            return text.includes(name.toLowerCase());
+          })
+          .sort((a, b) => b.created - a.created);
 
-    if (recent.length > 0) {
-      const n = recent[0];
-      sleeperItem = {
-        source: "Sleeper",
-        headline: n.title || "",
-        body: n.body || "",
-        timestamp: n.created
-      };
+        if (recent.length > 0) {
+          const n = recent[0];
+          sleeperItem = {
+            source: "Sleeper",
+            headline: n.title || "",
+            body: n.body || "",
+            timestamp: n.created
+          };
+        }
+      } catch (err) {
+        console.log("Sleeper news failed:", err.message);
+      }
+
+      // -----------------------------
+      // FANTASYPROS NEWS
+      // -----------------------------
+      let fpItems = [];
+
+      try {
+        const [lastRaw, firstRaw] = name.split(",");
+        const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const slug  = `${first}-${last}`;
+
+        const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+        const fpResp = await fetch(fpUrl);
+        const fpHtml = await fpResp.text();
+
+        const blocks = fpHtml.match(
+          /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+        );
+
+        if (blocks) {
+          for (const block of blocks) {
+            const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+            const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+            const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+            const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+
+            // Skip blocks with no timestamp
+            if (!timestampMatch) continue;
+
+            // -----------------------------
+            // Timestamp parser (bulletproof)
+            // -----------------------------
+            let ts = null;
+            if (timestampMatch) {
+              let raw = timestampMatch[1].trim();
+              let parsed = new Date(raw).getTime();
+
+              if (isNaN(parsed)) {
+                raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
+                parsed = new Date(raw).getTime();
+              }
+
+              if (isNaN(parsed)) {
+                raw = `${raw} ${new Date().getFullYear()}`;
+                parsed = new Date(raw).getTime();
+              }
+
+              if (isNaN(parsed)) {
+                parsed = Date.parse(raw);
+              }
+
+              if (!isNaN(parsed)) {
+                ts = Math.floor(parsed / 1000);
+              }
+            }
+
+            const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+            const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
+
+            if (!hasHeadline && !ts) continue;
+
+            fpItems.push({
+              player: name,
+              slug,
+              source: "FantasyPros",
+              headline: hasHeadline ? headlineMatch[1].trim() : null,
+              body: bodyText || null,
+              fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+              timestamp: ts
+            });
+          }
+        }
+
+      } catch (err) {
+        console.log("FantasyPros news failed:", err.message);
+      }
+
+      // -----------------------------
+      // FILTER: Only last 10 weeks
+      // -----------------------------
+      const tenWeeksSec = 10 * 7 * 24 * 3600;
+      fpItems = fpItems.filter(item => {
+        if (!item.timestamp) return false;
+        return (nowSec - item.timestamp) <= tenWeeksSec;
+      });
+
+      // Sort newest first
+      fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      // -----------------------------
+      // MERGE FP + SLEEPER
+      // -----------------------------
+      const merged = [...fpItems];
+      if (sleeperItem) merged.push(sleeperItem);
+
+      return res.status(200).json({
+        player: name,
+        news: merged
+      });
     }
-  } catch (err) {
-    console.log("Sleeper news failed:", err.message);
-  }
-
-  // -----------------------------
-  // FANTASYPROS NEWS (clean rewrite)
-  // -----------------------------
-  let fpItems = [];
-
-  try {
-    const [lastRaw, firstRaw] = name.split(",");
-    const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const slug  = `${first}-${last}`;
-
-    const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
-    const fpResp = await fetch(fpUrl);
-    const fpHtml = await fpResp.text();
-
-    const blocks = fpHtml.match(
-      /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
-    );
-
-    if (blocks) {
-      for (const block of blocks) {
-
-        // Extract fields
-        const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-        const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
-        const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-        const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
-
-        // Convert timestamp → UNIX seconds
-        let ts = null;
-
-        if (timestampMatch) {
-          let raw = timestampMatch[1].trim();
-          let parsed = new Date(raw).getTime();
-
-          // Fallback 1: remove ordinal suffixes (st, nd, rd, th)
-          if (isNaN(parsed)) {
-            raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
-            parsed = new Date(raw).getTime();
-          }
-
-          // Fallback 2: add current year if missing
-          if (isNaN(parsed)) {
-            raw = `${raw} ${new Date().getFullYear()}`;
-            parsed = new Date(raw).getTime();
-          }
-
-          // Fallback 3: try US format explicitly
-          if (isNaN(parsed)) {
-            parsed = Date.parse(raw);
-          }
-
-          if (!isNaN(parsed)) {
-            ts = Math.floor(parsed / 1000);
-          }
-        }
-
-        const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
-
-        // ⭐ Require headline OR timestamp (bulletproof)
-        const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
-        const hasTime     = ts !== null;
-
-        if (!hasHeadline && !hasTime) {
-          continue;
-        }
-
-          fpItems.push({
-          player: name,
-          slug,
-          source: "FantasyPros",
-          headline: hasHeadline ? headlineMatch[1].trim() : null,
-          body: bodyText || null,
-          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-          timestamp: ts
-        });
-
-        // Sort newest first
-        fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-        // ⭐ FILTER: Only keep last 10 weeks
-        const nowSec = Math.floor(Date.now() / 1000);
-        const tenWeeksSec = 10 * 7 * 24 * 3600;
-
-        fpItems = fpItems.filter(item => {
-          if (!item.timestamp) return false;
-          return (nowSec - item.timestamp) <= tenWeeksSec;
-        });
 
   // -----------------------------
   // MERGE FP + SLEEPER
