@@ -91,12 +91,14 @@ export default function Team({ leagueInfo }) {
 
       const allPlayers = playerDataState?.players || [];
 
-      // ───────────────────────────────────────────────────────────────
-      // STEP 1 — Build rosterPlayers (old logic)
-      // ───────────────────────────────────────────────────────────────
-      const rosterPlayers = rosterData.roster.players.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
+      // ⭐ PLACE IT RIGHT HERE
+      if (!allPlayers.length) {
+        console.warn("⚠️ Player master list empty — getPlayers() may have failed");
+      }
 
+      // STEP 1 — Build rosterPlayers (old logic)
+      const rosterPlayers = rosterData.roster.players.map(rp => {
+        const full = allPlayers.find(p => String(p.id) === String(rp.id)) || {};
         return {
           id: rp.id,
           status: rp.status,
@@ -106,6 +108,7 @@ export default function Team({ leagueInfo }) {
           avg: full.avg || null
         };
       });
+
 
       // ───────────────────────────────────────────────────────────────
       // STEP 2 — Build maps (old logic)
