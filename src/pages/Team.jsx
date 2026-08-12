@@ -17,10 +17,12 @@ export default function Team({ leagueInfo }) {
   const [loading,        setLoading]        = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
-  useEffect(() => {
-    if (!myFranchiseId) return;
-    loadRoster();
-  }, [myFranchiseId, leagueId, year]);
+  //useEffect(() => {
+    //if (!myFranchiseId) return;
+    //loadRoster();
+  //}, [myFranchiseId, leagueId, year]);
+
+  const [playerDataState, setPlayerDataState] = useState(null);
 
   // ─── Build { "KC": "vs LAR", "LAR": "@ KC", … } from MFL nflSchedule ──────
   function buildMatchupMap(schedData) {
@@ -49,6 +51,20 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
+useEffect(() => {
+  async function loadPlayers() {
+    try {
+      const data = await getPlayers(year);
+      setPlayerDataState(data);
+    } catch (err) {
+      console.error("❌ getPlayers failed:", err);
+      setPlayerDataState({ players: [] });
+    }
+  }
+
+  loadPlayers();
+}, [year]);
+
 async function loadRoster() {
   try {
     //
@@ -56,24 +72,15 @@ async function loadRoster() {
     //
     const [
       rosterData,
-      playerData,
       schedData,
       projData,
       injuriesData
     ] = await Promise.all([
-      // ROSTER
       getRoster(leagueId, myFranchiseId, year).catch(err => {
         console.log("❌ getRoster failed:", err);
         return null;
       }),
 
-      // PLAYERS
-      getPlayers(year).catch(err => {
-        console.log("❌ getPlayers failed:", err);
-        return { players: [] };
-      }),
-
-      // SCHEDULE
       fetch(`/data/nflScheduleWeek1.json`)
         .then(r => r.json())
         .catch(err => {
@@ -81,7 +88,6 @@ async function loadRoster() {
           return { nflSchedule: { matchup: [] } };
         }),
 
-      // PROJECTED SCORES (SAFE PARSE)
       fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
         .then(r => r.text())
         .then(t => {
@@ -97,7 +103,6 @@ async function loadRoster() {
           return { projectedScores: { playerScore: [] } };
         }),
 
-      // INJURIES
       fetch(`/api/mfl?action=injuries&year=${year}`)
         .then(r => r.json())
         .catch(err => {
@@ -115,17 +120,29 @@ async function loadRoster() {
       return;
     }
 
-    //const rosterPlayers = rosterData.roster.players || [];
-    const rosterPlayers = rosterData?.roster?.players.map(p => ({
-      id: p.id,
-      name: p.name,   // ⭐ REQUIRED
-      status: p.status
-    }));
+    //
+    // ⭐ USE playerDataState (guaranteed loaded)
+    //
+    const allPlayers = playerDataState?.players || [];
 
     //
-    // STEP 3 — NOW FETCH NEWS (AFTER rosterPlayers EXISTS)
+    // STEP 3 — BUILD rosterPlayers WITH REAL NAMES
     //
-    const newsData = await fetch(`/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`)
+    const rosterPlayers = rosterData.roster.players.map(rp => {
+      const full = allPlayers.find(p => p.id === rp.id) || {};
+      return {
+        id: rp.id,
+        name: full.name || rp.name || null,   // ⭐ NOW ALWAYS HAS NAME
+        status: rp.status
+      };
+    });
+
+    //
+    // STEP 4 — FETCH NEWS USING REAL NAMES
+    //
+    const newsData = await fetch(
+      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+    )
       .then(r => r.json())
       .catch(err => {
         console.log("❌ fantasyProsNewsBulk failed:", err);
@@ -135,93 +152,64 @@ async function loadRoster() {
     const newsList = newsData.news || [];
 
     //
-    // STEP 4 — MERGE EVERYTHING (your existing merge logic)
+    // STEP 5 — MERGE EVERYTHING (unchanged)
     //
     const injuriesList = injuriesData?.injuries?.injury || [];
-    const allPlayers = playerData?.players || [];
-
     const matchupMap = buildMatchupMap(schedData);
     const projMap = buildProjMap(projData);
 
-        // -----------------------------
-        // ⭐ Generate FantasyPros slug for each player
-        // -----------------------------
-        function makeSlug(name) {
-          if (!name || typeof name !== "string") return null;
-
-          // Case 1: "Last, First"
-          if (name.includes(",")) {
-            const [lastRaw, firstRaw] = name.split(",");
-            const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-            const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-            return `${first}-${last}`;
-          }
-
-          // Case 2: "First Last"
-          const parts = name.trim().split(" ");
-          if (parts.length >= 2) {
-            const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-            const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-            return `${first}-${last}`;
-          }
-
-          // Case 3: Single word (Defense, Kicker, etc.)
-          return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        }
-            
-
-        // Build NFL-wide posRank
-        const posGroups = {};
-        allPlayers.forEach(p => {
-          const pos = p.position || p.pos;
-          if (!pos) return;
-          if (!posGroups[pos]) posGroups[pos] = [];
-          posGroups[pos].push(p);
-        });
-        Object.values(posGroups).forEach(group => {
-          group.sort((a, b) => (a.rank || 9999) - (b.rank || 9999));
-          group.forEach((p, i) => { p._posRank = i + 1; });
-        });
-
-        const merged = rosterPlayers.map(rp => {
-          const full     = allPlayers.find(p => p.id === rp.id) || {};
-          const teamAbbr = full.team || rp.team || "";
-
-          const proj = projMap[String(rp.id)] ?? null;
-
-          // ⭐ Injuries
-          const inj = injuriesList.find(x => x.id === rp.id);
-          const healthStatus = inj?.status || null;   // ⭐ DO NOT DEFAULT TO "Healthy"
-
-          // ⭐ Generate slug for this player
-          const slug = makeSlug(full.name);
-
-          // ⭐ Match news by slug (NOT by MFL ID)
-          const news = newsList.filter(n => n.slug === slug);
-
-          return {
-            ...rp,          // ⭐ keeps rp.name
-            ...full,        // ❌ overwrites name — we fix this next
-            name: rp.name,  // ⭐ restore correct name
-            pos: full.position || rp.position || "",
-            projected: proj,
-            avg: full.avg ?? rp.avg ?? null,
-            matchup: matchupMap[teamAbbr] || null,
-            posRank: full._posRank ?? null,
-            headshot: `/api/headshot?id=${rp.id}`,
-            slug,
-            healthStatus,
-            externalNews: news
-          };
-        });
-
-        setPlayers(merged);
-      } catch (err) {
-        console.error("TEAM LOAD ERROR:", err);
-      } finally {
-        setLoading(false);
+    function makeSlug(name) {
+      if (!name || typeof name !== "string") return null;
+      if (name.includes(",")) {
+        const [lastRaw, firstRaw] = name.split(",");
+        const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        return `${first}-${last}`;
       }
+      const parts = name.trim().split(" ");
+      if (parts.length >= 2) {
+        const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        return `${first}-${last}`;
+      }
+      return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
     }
+
+    const merged = rosterPlayers.map(rp => {
+      const full = allPlayers.find(p => p.id === rp.id) || {};
+      const slug = makeSlug(rp.name);
+      const news = newsList.filter(n => n.slug === slug);
+
+      return {
+        ...rp,
+        ...full,
+        name: rp.name,
+        pos: full.position || rp.position || "",
+        projected: projMap[String(rp.id)] ?? null,
+        avg: full.avg ?? rp.avg ?? null,
+        matchup: matchupMap[full.team] || null,
+        posRank: full._posRank ?? null,
+        headshot: `/api/headshot?id=${rp.id}`,
+        slug,
+        healthStatus: (injuriesList.find(x => x.id === rp.id)?.status) || null,
+        externalNews: news
+      };
+    });
+
+    setPlayers(merged);
+  } catch (err) {
+    console.error("TEAM LOAD ERROR:", err);
+  } finally {
+    setLoading(false);
+  }
+}
+
+useEffect(() => {
+  if (!myFranchiseId) return;
+  if (!playerDataState) return;   // ⭐ WAIT FOR PLAYERS FIRST
+  loadRoster();
+}, [myFranchiseId, playerDataState]);
+
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
