@@ -162,7 +162,7 @@ if (action === "fantasyProsNewsBulk") {
       }
 
       // Push real block
-      items.push({
+      fpItems.push({
         player: name,
         slug,
         source: "FantasyPros",
@@ -175,7 +175,7 @@ if (action === "fantasyProsNewsBulk") {
     }
 
     console.log("✅ FINAL BULK NEWS COUNT:", items.length);
-    return res.status(200).json({ news: items });
+    return res.status(200).json({ news: fpItems });
   } catch (err) {
     console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
     return res.status(200).json({ news: [] });
