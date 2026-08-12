@@ -135,42 +135,35 @@ if (action === "fantasyProsNewsBulk") {
 
       for (const block of blocks) {
        // --- Extract fields
+      // Extract fields
       const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
       const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
       const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
       const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-// Extract body text safely
-const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
-
-// Determine if this block has meaningful content
-const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
-const hasTime     = timestampMatch && timestampMatch[1].trim().length > 0;
-
-// ⭐ HARD RULE: Real FP news ALWAYS has headline OR timestamp
-if (!hasHeadline && !hasTime) {
-  continue;
-}
-
+      // ⭐ Require timestamp for real news
+      if (!timestampMatch) {
+        continue;
+      }
 
       // Convert timestamp → UNIX seconds
       let ts = null;
-      if (timestampMatch) {
-        const raw = timestampMatch[1].trim();
-        const parsed = new Date(raw).getTime();
-        if (!isNaN(parsed)) {
-          ts = Math.floor(parsed / 1000);
-        }
+      const raw = timestampMatch[1].trim();
+      const parsed = new Date(raw).getTime();
+      if (!isNaN(parsed)) {
+        ts = Math.floor(parsed / 1000);
       }
 
+      // Extract body text safely
+      const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
-      // ⭐ Skip fake blocks (no headline, no body, no impact, no timestamp)
-      if (
-        (!headlineMatch || headlineMatch[1].trim().length === 0) &&
-        (bodyText.length === 0) &&
-        !impactMatch &&
-        !timestampMatch
-      ) {
+      // Determine if this block has ANY meaningful content
+      const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
+      const hasBody     = bodyText.length > 0;
+      const hasImpact   = impactMatch && impactMatch[1].trim().length > 0;
+
+      // ⭐ Skip wrapper blocks (no headline, no body, no impact)
+      if (!hasHeadline && !hasBody && !hasImpact) {
         continue;
       }
 
