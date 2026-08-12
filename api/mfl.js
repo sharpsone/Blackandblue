@@ -135,10 +135,23 @@ if (action === "fantasyProsNewsBulk") {
 
       for (const block of blocks) {
        // --- Extract fields
-      const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-      const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
-      const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-      const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+      //const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+      //const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+      //const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+      //const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+// Extract body text safely
+const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+
+// ⭐ Determine if this block has ANY meaningful content
+const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
+const hasBody     = bodyText.length > 0;
+const hasImpact   = impactMatch && impactMatch[1].trim().length > 0;
+const hasTime     = timestampMatch && timestampMatch[1].trim().length > 0;
+
+// ⭐ Skip wrapper blocks (no headline, no body, no impact, no timestamp)
+if (!hasHeadline && !hasBody && !hasImpact && !hasTime) {
+  continue;
+}
 
       // Convert timestamp → UNIX seconds
       let ts = null;
@@ -150,10 +163,6 @@ if (action === "fantasyProsNewsBulk") {
         }
       }
 
-      // ⭐ If timestamp is null → this is NOT real news
-      if (!ts) {
-        continue;
-      }
 
       // ⭐ Skip fake blocks (no headline, no body, no impact, no timestamp)
       if (
