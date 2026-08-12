@@ -76,14 +76,15 @@ export default function Team({ leagueInfo }) {
           })
       ]);
 
-      if (!rosterData || !rosterData.roster) {
+      if (!rosterData || !Array.isArray(rosterData.players)) {
+        console.log("❌ rosterData.players missing:", rosterData);
         setPlayers([]);
         return;
       }
 
       const allPlayers = playerDataState?.players || [];
 
-      const rosterPlayers = rosterData.roster.players.map(rp => {
+      const rosterPlayers = rosterData.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         return {
           id: rp.id,
