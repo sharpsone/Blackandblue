@@ -513,7 +513,7 @@ if (action === "fantasyProsNewsBulk") {
             // Extract body text safely
             const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
-            // ⭐ Skip fake blocks
+            // ⭐ Skip fake blocks with no meaningful content
             if (
               !headlineMatch &&
               bodyText.length === 0 &&
@@ -523,7 +523,6 @@ if (action === "fantasyProsNewsBulk") {
               continue;
             }
 
-            // Push real block
             items.push({
               player: name,
               slug,
@@ -533,7 +532,6 @@ if (action === "fantasyProsNewsBulk") {
               fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
               timestamp: ts,
             });
-
 
             fpItems = fpItems.filter(item => {
               if (!item.timestamp) return true;
