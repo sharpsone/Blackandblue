@@ -307,18 +307,10 @@ useEffect(() => {
                 )}
 
                 {/* NEWS BADGE */}
-                {p.externalNews && p.externalNews.length > 0 && (
-                  (() => {
-                    const newest = p.externalNews[0];
-                    const ageSeconds = Date.now() / 1000 - newest.date;
-                    const isRecent = ageSeconds < 7 * 24 * 3600;   // ⭐ 1 week
-
-                    return (
-                      <span className={`news-badge ${isRecent ? "news-recent" : "news-old"}`}>
-                        📰
-                      </span>
-                    );
-                  })()
+                {hasNews && (
+                  <span className={`news-badge ${isRecentNews ? "news-recent" : "news-old"}`}>
+                    📰
+                  </span>
                 )}
               </span>
             )}
