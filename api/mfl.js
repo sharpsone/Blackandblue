@@ -96,7 +96,7 @@ if (action === "fantasyProsNewsBulk") {
     }
 
     const list = JSON.parse(players);
-    const items = [];
+    const fpItems = [];
 
     for (const p of list) {
       const name = p.name;
