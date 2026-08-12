@@ -140,19 +140,18 @@ if (action === "fantasyProsNewsBulk") {
       const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
       const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-      // Extract body text safely
+// Extract body text safely
 const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
-// ⭐ Determine if this block has ANY meaningful content
+// Determine if this block has meaningful content
 const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
-const hasBody     = bodyText.length > 0;
-const hasImpact   = impactMatch && impactMatch[1].trim().length > 0;
 const hasTime     = timestampMatch && timestampMatch[1].trim().length > 0;
 
-// ⭐ Skip wrapper blocks (no headline, no body, no impact, no timestamp)
-if (!hasHeadline && !hasBody && !hasImpact && !hasTime) {
+// ⭐ HARD RULE: Real FP news ALWAYS has headline OR timestamp
+if (!hasHeadline && !hasTime) {
   continue;
 }
+
 
       // Convert timestamp → UNIX seconds
       let ts = null;
