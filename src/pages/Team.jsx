@@ -61,6 +61,23 @@ useEffect(() => {
   loadPlayers();
 }, [year]);
 
+// ⭐ PLACE THIS HERE — BEFORE loadRoster()
+const location = useLocation();
+
+// 3️⃣ Reload roster when navigating to Team page
+useEffect(() => {
+  if (location.pathname === "/team") {
+    loadRoster();
+  }
+}, [location.pathname]);
+
+// 2️⃣ Load roster after players load
+useEffect(() => {
+  if (!myFranchiseId) return;
+  if (!playerDataState) return;
+  loadRoster();
+}, [myFranchiseId, playerDataState]);
+
 async function loadRoster() {
   try {
     //
@@ -205,15 +222,6 @@ useEffect(() => {
   if (!playerDataState) return;   // ⭐ WAIT FOR PLAYERS FIRST
   loadRoster();
 }, [myFranchiseId, playerDataState]);
-
-//force roster refresh when teams is opened
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.pathname === "/team") {
-      loadRoster();
-    }
-  }, [location.pathname]);
 
 
   // ─── Player modal ─────────────────────────────────────────────────────────
