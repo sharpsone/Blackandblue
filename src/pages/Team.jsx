@@ -90,6 +90,8 @@ export default function Team({ leagueInfo }) {
       }
 
       const allPlayers = playerDataState?.players || [];
+      console.log("MASTER PLAYER LIST:", allPlayers.slice(0, 50));
+      console.log("FIRST 20 ROSTER IDS:", rosterData.roster.players.map(p => p.id));
 
       // ⭐ PLACE IT RIGHT HERE
       if (!allPlayers.length) {
