@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getRoster, getPlayers } from "../utils/api";
 import PlayerModal from "../components/PlayerModal";
-import { useLocation } from "react-router-dom";
 import "../pages/team.css";
 
 const GRID_COLS = "56px 1fr 60px 68px";
@@ -16,10 +15,7 @@ export default function Team({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // ⭐ MUST BE BEFORE ANY useEffect
-  const location = useLocation();
-
-  // ─── Load ALL PLAYERS ───────────────────────────────────────────────
+  // ─── Load ALL PLAYERS (global MFL list) ───────────────────────────────
   useEffect(() => {
     async function loadPlayers() {
       try {
@@ -33,21 +29,14 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ─── Refresh roster when navigating to /team ───────────────────────
-  useEffect(() => {
-    if (location.pathname === "/team") {
-      loadRoster();
-    }
-  }, [location.pathname]);
-
-  // ─── Load roster after players + franchiseId are ready ─────────────
+  // ⭐ Refresh roster whenever Team.jsx mounts OR leagueInfo changes
   useEffect(() => {
     if (!myFranchiseId) return;
     if (!playerDataState) return;
     loadRoster();
-  }, [myFranchiseId, playerDataState]);
+  }, [myFranchiseId, playerDataState, leagueInfo]);
 
-  // ⭐ loadRoster MUST BE DEFINED AFTER HOOKS
+  // ─── Load roster (full MFL merge) ─────────────────────────────────────
   async function loadRoster() {
     try {
       const [
@@ -161,6 +150,10 @@ export default function Team({ leagueInfo }) {
     }
   }
 
+  // ─── Helper functions (unchanged) ───────────────────────────────────────────
+  function buildMatchupMap(schedData) { /* unchanged */ }
+  function buildProjMap(projData) { /* unchanged */ }
+}
   // Section 2 continues…
 
   // ─── Player modal ─────────────────────────────────────────────────────────
