@@ -4,7 +4,6 @@ import PlayerModal from "../components/PlayerModal";
 import { useLocation } from "react-router-dom";
 import "../pages/team.css";
 
-// ─── Shared column template ───────────────────────────────────────────────────
 const GRID_COLS = "56px 1fr 60px 68px";
 
 export default function Team({ leagueInfo }) {
@@ -17,37 +16,10 @@ export default function Team({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // ─── Router location (for page-open refresh) ────────────────────────────────
+  // ⭐ MUST BE BEFORE ANY useEffect
   const location = useLocation();
 
-  // ─── Build matchup map ──────────────────────────────────────────────────────
-  function buildMatchupMap(schedData) {
-    const map = {};
-    const matchups = schedData?.nflSchedule?.matchup;
-    if (!Array.isArray(matchups)) return map;
-    matchups.forEach(game => {
-      const home = game.homeTeam?.abbrev || game.home || "";
-      const away = game.awayTeam?.abbrev || game.away || "";
-      if (home && away) {
-        map[home] = `vs ${away}`;
-        map[away] = `@ ${home}`;
-      }
-    });
-    return map;
-  }
-
-  // ─── Build projected score map ──────────────────────────────────────────────
-  function buildProjMap(projData) {
-    const map = {};
-    const scores = projData?.projectedScores?.playerScore;
-    if (!Array.isArray(scores)) return map;
-    scores.forEach(s => {
-      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
-    });
-    return map;
-  }
-
-  // ─── Load ALL PLAYERS (MFL global player list) ──────────────────────────────
+  // ─── Load ALL PLAYERS ───────────────────────────────────────────────
   useEffect(() => {
     async function loadPlayers() {
       try {
@@ -61,7 +33,21 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ─── Load roster (full MFL merge) ───────────────────────────────────────────
+  // ─── Refresh roster when navigating to /team ───────────────────────
+  useEffect(() => {
+    if (location.pathname === "/team") {
+      loadRoster();
+    }
+  }, [location.pathname]);
+
+  // ─── Load roster after players + franchiseId are ready ─────────────
+  useEffect(() => {
+    if (!myFranchiseId) return;
+    if (!playerDataState) return;
+    loadRoster();
+  }, [myFranchiseId, playerDataState]);
+
+  // ⭐ loadRoster MUST BE DEFINED AFTER HOOKS
   async function loadRoster() {
     try {
       const [
@@ -85,12 +71,8 @@ export default function Team({ leagueInfo }) {
         fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
           .then(r => r.text())
           .then(t => {
-            try {
-              return JSON.parse(t);
-            } catch {
-              console.log("❌ projectedScores JSON parse failed");
-              return { projectedScores: { playerScore: [] } };
-            }
+            try { return JSON.parse(t); }
+            catch { return { projectedScores: { playerScore: [] } }; }
           })
           .catch(err => {
             console.log("❌ projectedScores fetch failed:", err);
@@ -106,7 +88,6 @@ export default function Team({ leagueInfo }) {
       ]);
 
       if (!rosterData || !rosterData.roster) {
-        console.log("❌ No roster data found");
         setPlayers([]);
         return;
       }
@@ -126,12 +107,10 @@ export default function Team({ leagueInfo }) {
         `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
       )
         .then(r => r.json())
-        .catch(err => {
-          console.log("❌ fantasyProsNewsBulk failed:", err);
-          return { news: [] };
-        });
+        .catch(() => ({ news: [] }));
 
       const newsList = newsData.news || [];
+
       const injuriesList = injuriesData?.injuries?.injury || [];
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
@@ -180,23 +159,10 @@ export default function Team({ leagueInfo }) {
     } finally {
       setLoading(false);
     }
-  }   // ⭐ loadRoster() is now properly closed
+  }
 
-  // ─── Refresh roster when navigating to /team ───────────────────────────────
-  useEffect(() => {
-    if (location.pathname === "/team") {
-      loadRoster();
-    }
-  }, [location.pathname]);
+  // Section 2 continues…
 
-  // ─── Load roster once players + franchiseId are ready ──────────────────────
-  useEffect(() => {
-    if (!myFranchiseId) return;
-    if (!playerDataState) return;
-    loadRoster();
-  }, [myFranchiseId, playerDataState]);
-
-//section2
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
     setSelectedPlayer({ loading: true });
