@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getRoster, getPlayers } from "../utils/api";
 import PlayerModal from "../components/PlayerModal";
+import { useLocation } from "react-router-dom";
 import "../pages/team.css";
 
 // ─── Shared column template ───────────────────────────────────────────────────
@@ -206,7 +207,6 @@ useEffect(() => {
 }, [myFranchiseId, playerDataState]);
 
 //force roster refresh when teams is opened
-  import { useLocation } from "react-router-dom";
   const location = useLocation();
 
   useEffect(() => {
