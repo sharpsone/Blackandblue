@@ -457,129 +457,130 @@ if (action === "fantasyProsNewsBulk") {
       }
     }
 
-    // -----------------------------
-    // ACTION: playerNewsFeed
-    // -----------------------------
-    if (action === "playerNewsFeed") {
-      const { name } = req.query;
+  // -----------------------------
+// ACTION: playerNewsFeed (clean rewrite)
+// -----------------------------
+if (action === "playerNewsFeed") {
+  const { name } = req.query;
 
-      if (!name) {
-        return res.status(400).json({ error: "Missing player name" });
-      }
+  if (!name) {
+    return res.status(400).json({ error: "Missing player name" });
+  }
 
-      const normalizedName = name.toLowerCase();
-      const nowSec = Math.floor(Date.now() / 1000);
-      const fourWeeksSec = 28 * 24 * 60 * 60;
+  const normalizedName = name.toLowerCase();
+  const nowSec = Math.floor(Date.now() / 1000);
+  const fourWeeksSec = 28 * 24 * 60 * 60;
 
-      let sleeperItem = null;
-      try {
-        const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
-        const sleeperJson = await sleeperResp.json();
+  // -----------------------------
+  // SLEEPER NEWS (unchanged)
+  // -----------------------------
+  let sleeperItem = null;
+  try {
+    const sleeperResp = await fetch("https://api.sleeper.app/v1/news/nfl");
+    const sleeperJson = await sleeperResp.json();
 
-        const recent = sleeperJson
-          .filter(n => {
-            if (!n.created) return false;
-            const age = nowSec - n.created;
-            if (age > fourWeeksSec) return false;
+    const recent = sleeperJson
+      .filter(n => {
+        if (!n.created) return false;
+        const age = nowSec - n.created;
+        if (age > fourWeeksSec) return false;
 
-            const text = `${n.title || ""} ${n.body || ""}`.toLowerCase();
-            return text.includes(normalizedName);
-          })
-          .sort((a, b) => b.created - a.created);
+        const text = `${n.title || ""} ${n.body || ""}`.toLowerCase();
+        return text.includes(normalizedName);
+      })
+      .sort((a, b) => b.created - a.created);
 
-        if (recent.length > 0) {
-          const n = recent[0];
-          sleeperItem = {
-            source: "Sleeper",
-            headline: n.title || "",
-            body: n.body || "",
-            date: n.created
-          };
-        }
-      } catch (err) {
-        console.log("Sleeper news failed:", err.message);
-      }
+    if (recent.length > 0) {
+      const n = recent[0];
+      sleeperItem = {
+        source: "Sleeper",
+        headline: n.title || "",
+        body: n.body || "",
+        timestamp: n.created
+      };
+    }
+  } catch (err) {
+    console.log("Sleeper news failed:", err.message);
+  }
 
-      let fpItems = [];
+  // -----------------------------
+  // FANTASYPROS NEWS (clean rewrite)
+  // -----------------------------
+  let fpItems = [];
 
-      try {
-        const [lastRaw, firstRaw] = name.split(",");
-        const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        const last = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        const slug = `${first}-${last}`;
+  try {
+    const [lastRaw, firstRaw] = name.split(",");
+    const first = (firstRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const slug  = `${first}-${last}`;
 
-        const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
-        const fpResp = await fetch(fpUrl);
-        const fpHtml = await fpResp.text();
+    const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+    const fpResp = await fetch(fpUrl);
+    const fpHtml = await fpResp.text();
 
-        const blocks = fpHtml.match(
-          /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
-        );
+    const blocks = fpHtml.match(
+      /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+    );
 
-        if (blocks) {
-          for (const block of blocks) {
-            const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-            const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
-            const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-            const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+    if (blocks) {
+      for (const block of blocks) {
 
-            // Convert timestamp → UNIX seconds
-            let ts = null;
-            if (timestampMatch) {
-              const raw = timestampMatch[1].trim();
-              const parsed = new Date(raw).getTime();
-              if (!isNaN(parsed)) {
-                ts = Math.floor(parsed / 1000);
-              }
-            }
+        // Extract fields
+        const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+        const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+        const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+        const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-            // Extract body text safely
-            const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
-
-            // ⭐ Skip fake blocks with no meaningful content
-            if (
-              !headlineMatch &&
-              bodyText.length === 0 &&
-              !impactMatch &&
-              !timestampMatch
-            ) {
-              continue;
-            }
-
-            items.push({
-              player: name,
-              slug,
-              source: "FantasyPros",
-              headline: headlineMatch ? headlineMatch[1].trim() : null,
-              body: bodyText || null,
-              fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-              timestamp: ts,
-            });
-
-            fpItems = fpItems.filter(item => {
-              if (!item.timestamp) return true;
-
-              const match = item.timestamp.match(/(\d+)\s+weeks?/i);
-              if (!match) return true;
-
-              const weeks = parseInt(match[1], 10);
-              return weeks <= 10;
-            });
+        // Convert timestamp → UNIX seconds
+        let ts = null;
+        if (timestampMatch) {
+          const raw = timestampMatch[1].trim();
+          const parsed = new Date(raw).getTime();
+          if (!isNaN(parsed)) {
+            ts = Math.floor(parsed / 1000);
           }
         }
 
-      } catch (err) {
-        console.log("FantasyPros news failed:", err.message);
+        const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+
+        // ⭐ Require headline OR timestamp (bulletproof)
+        const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
+        const hasTime     = ts !== null;
+
+        if (!hasHeadline && !hasTime) {
+          continue;
+        }
+
+        fpItems.push({
+          player: name,
+          slug,
+          source: "FantasyPros",
+          headline: hasHeadline ? headlineMatch[1].trim() : null,
+          body: bodyText || null,
+          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+          timestamp: ts
+        });
       }
 
-      const merged = [...fpItems];
-      if (sleeperItem) merged.push(sleeperItem);
-
-      return res.status(200).json({
-        player: name,
-        news: merged
-      });
+      // Sort newest first
+      fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
+
+  } catch (err) {
+    console.log("FantasyPros news failed:", err.message);
+  }
+
+  // -----------------------------
+  // MERGE FP + SLEEPER
+  // -----------------------------
+  const merged = [...fpItems];
+  if (sleeperItem) merged.push(sleeperItem);
+
+  return res.status(200).json({
+    player: name,
+    news: merged
+  });
+}
 
   // -----------------------------
   // ⭐ ESPN Stats Fetcher
