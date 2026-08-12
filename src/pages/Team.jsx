@@ -159,11 +159,30 @@ export default function Team({ leagueInfo }) {
     }
   }
 
-  // ───────────────────────────────────────────────────────────────
-  // Helper functions (unchanged)
-  // ───────────────────────────────────────────────────────────────
+  // ─── Helper functions ───────────────────────────────────────────
   function buildMatchupMap(schedData) { /* unchanged */ }
   function buildProjMap(projData) { /* unchanged */ }
+
+  // ⭐ RESTORED OLD SLUG FUNCTION — REQUIRED BY MERGE LOGIC
+  function makeSlug(name) {
+    if (!name || typeof name !== "string") return null;
+
+    if (name.includes(",")) {
+      const [lastRaw, firstRaw] = name.split(",");
+      const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      return `${first}-${last}`;
+    }
+
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      return `${first}-${last}`;
+    }
+
+    return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
 
   // ⭐ SECTION 2 — RENDER LOGIC (INSIDE COMPONENT)
 
