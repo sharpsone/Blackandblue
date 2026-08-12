@@ -146,13 +146,34 @@ if (action === "fantasyProsNewsBulk") {
         continue;
       }
 
-      // Convert timestamp → UNIX seconds
-      let ts = null;
-      const raw = timestampMatch[1].trim();
-      const parsed = new Date(raw).getTime();
-      if (!isNaN(parsed)) {
-        ts = Math.floor(parsed / 1000);
-      }
+      // Convert timestamp → UNIX seconds parse
+        let ts = null;
+
+        if (timestampMatch) {
+          let raw = timestampMatch[1].trim();
+          let parsed = new Date(raw).getTime();
+
+          // Fallback 1: remove ordinal suffixes (st, nd, rd, th)
+          if (isNaN(parsed)) {
+            raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
+            parsed = new Date(raw).getTime();
+          }
+
+          // Fallback 2: add current year if missing
+          if (isNaN(parsed)) {
+            raw = `${raw} ${new Date().getFullYear()}`;
+            parsed = new Date(raw).getTime();
+          }
+
+          // Fallback 3: try US format explicitly
+          if (isNaN(parsed)) {
+            parsed = Date.parse(raw);
+          }
+
+          if (!isNaN(parsed)) {
+            ts = Math.floor(parsed / 1000);
+          }
+        }
 
       // Extract body text safely
       const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
@@ -185,25 +206,27 @@ if (action === "fantasyProsNewsBulk") {
       //  fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
       //  timestamp: ts,
       //});
-      fpItems.push({
-      player: name,
-      slug,
-      source: "FantasyPros",
-      headline: headlineMatch ? headlineMatch[1].trim() : null,
-      body: bodyMatch ? bodyMatch[1].trim() : null,
-      fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-      timestamp: ts,   // ⭐ REQUIRED
-      });
-      }
-    }
+        fpItems.push({
+          player: name,
+          slug,
+          source: "FantasyPros",
+          headline: hasHeadline ? headlineMatch[1].trim() : null,
+          body: bodyText || null,
+          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+          timestamp: ts
+        });
 
-    console.log("✅ FINAL BULK NEWS COUNT:", fpItems.length);
-    return res.status(200).json({ news: fpItems });
-  } catch (err) {
-    console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
-    return res.status(200).json({ news: [] });
-  }
-}
+        // Sort newest first
+        fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        // ⭐ FILTER: Only keep last 10 weeks
+        const nowSec = Math.floor(Date.now() / 1000);
+        const tenWeeksSec = 10 * 7 * 24 * 3600;
+
+        fpItems = fpItems.filter(item => {
+          if (!item.timestamp) return false;
+          return (nowSec - item.timestamp) <= tenWeeksSec;
+        });
 
     // -----------------------------
     // NOW VALIDATE leagueId/year
@@ -533,9 +556,28 @@ if (action === "playerNewsFeed") {
 
         // Convert timestamp → UNIX seconds
         let ts = null;
+
         if (timestampMatch) {
-          const raw = timestampMatch[1].trim();
-          const parsed = new Date(raw).getTime();
+          let raw = timestampMatch[1].trim();
+          let parsed = new Date(raw).getTime();
+
+          // Fallback 1: remove ordinal suffixes (st, nd, rd, th)
+          if (isNaN(parsed)) {
+            raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
+            parsed = new Date(raw).getTime();
+          }
+
+          // Fallback 2: add current year if missing
+          if (isNaN(parsed)) {
+            raw = `${raw} ${new Date().getFullYear()}`;
+            parsed = new Date(raw).getTime();
+          }
+
+          // Fallback 3: try US format explicitly
+          if (isNaN(parsed)) {
+            parsed = Date.parse(raw);
+          }
+
           if (!isNaN(parsed)) {
             ts = Math.floor(parsed / 1000);
           }
@@ -551,7 +593,7 @@ if (action === "playerNewsFeed") {
           continue;
         }
 
-        fpItems.push({
+          fpItems.push({
           player: name,
           slug,
           source: "FantasyPros",
@@ -560,15 +602,18 @@ if (action === "playerNewsFeed") {
           fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
           timestamp: ts
         });
-      }
 
-      // Sort newest first
-      fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    }
+        // Sort newest first
+        fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-  } catch (err) {
-    console.log("FantasyPros news failed:", err.message);
-  }
+        // ⭐ FILTER: Only keep last 10 weeks
+        const nowSec = Math.floor(Date.now() / 1000);
+        const tenWeeksSec = 10 * 7 * 24 * 3600;
+
+        fpItems = fpItems.filter(item => {
+          if (!item.timestamp) return false;
+          return (nowSec - item.timestamp) <= tenWeeksSec;
+        });
 
   // -----------------------------
   // MERGE FP + SLEEPER
