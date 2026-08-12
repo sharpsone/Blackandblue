@@ -123,7 +123,7 @@ if (action === "fantasyProsNewsBulk") {
       console.log("📄 HTML SAMPLE:", fpHtml.slice(0, 500));
 
       const blocks = fpHtml.match(
-        /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+        /<div class="news-item[\s\S]*?<div class="news-item-content[\s\S]*?<\/div>\s*<\/div>/gi
       );
 
       console.log("🧱 BLOCK COUNT:", blocks ? blocks.length : 0);
@@ -490,8 +490,9 @@ if (action === "fantasyProsNewsBulk") {
         const fpHtml = await fpResp.text();
 
         const blocks = fpHtml.match(
-          /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
+          /<div class="news-item[\s\S]*?<div class="news-item-content[\s\S]*?<\/div>\s*<\/div>/gi
         );
+
 
         if (blocks) {
           for (const block of blocks) {
