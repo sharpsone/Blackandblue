@@ -174,7 +174,7 @@ if (action === "fantasyProsNewsBulk") {
       }
     }
 
-    console.log("✅ FINAL BULK NEWS COUNT:", items.length);
+    console.log("✅ FINAL BULK NEWS COUNT:", fpItems.length);
     return res.status(200).json({ news: fpItems });
   } catch (err) {
     console.log("❌ fantasyProsNewsBulk ERROR:", err.message);
