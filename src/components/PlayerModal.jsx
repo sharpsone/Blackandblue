@@ -202,9 +202,17 @@ export default function PlayerModal({
                       <div className="fa-news-meta always-visible">
                         {item.timestamp && (
                           <span className="fa-news-time">
-                            Reported: {item.timestamp}
+                            Reported:{" "}
+                            {new Date(item.timestamp * 1000).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                            })}
                           </span>
                         )}
+
                         {item.source && (
                           <span className="fa-news-source">
                             Source: {item.source}
