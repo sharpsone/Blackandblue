@@ -215,9 +215,9 @@ p {
 }
 
 .news-recent {
-  color: #c77dff;   /* purple */
+  color: purple;
 }
 
 .news-old {
-  color: #888;      /* grey */
+  color: grey;
 }
