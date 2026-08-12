@@ -291,36 +291,39 @@ useEffect(() => {
             alt={isEmpty ? "Empty slot" : p.name}
             onError={e => { e.target.src = "/silhouettes/player.png"; }}
           />
-          <div className="team-info">
-            <div className="team-name-row">
-              <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
+        <div className="team-info">
+          <div className="team-name-row">
+            <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
 
-              {!isEmpty && (
-                <span className="team-badges">
-                  {/* HEALTH BADGE */}
-                  {p.healthStatus !== "Healthy" && (
-                    <span className={`health-badge health-${p.healthStatus}`}>
-                      {p.healthStatus === "Questionable" && "Q"}
-                      {p.healthStatus === "Doubtful" && "D"}
-                      {p.healthStatus === "Out" && "O"}
-                    </span>
-                  )}
+            {!isEmpty && (
+              <span className="team-badges">
+                {/* HEALTH BADGE */}
+                {p.healthStatus !== "Healthy" && (
+                  <span className={`health-badge health-${p.healthStatus}`}>
+                    {p.healthStatus === "Questionable" && "Q"}
+                    {p.healthStatus === "Doubtful" && "D"}
+                    {p.healthStatus === "Out" && "O"}
+                  </span>
+                )}
 
-                  {/* NEWS BADGE */}
-                  {p.externalNews && p.externalNews.length > 0 && (
-                    <span
-                      className={`news-badge ${
-                        Date.now() / 1000 - p.externalNews[0].date < 14 * 24 * 3600
-                          ? "news-recent"
-                          : "news-old"
-                      }`}
-                    >
-                      📰
-                    </span>
-                  )}
-                </span>
-              )}
-            </div>
+                {/* NEWS BADGE */}
+                {p.externalNews && p.externalNews.length > 0 && (
+                  (() => {
+                    const newest = p.externalNews[0];
+                    const ageSeconds = Date.now() / 1000 - newest.date;
+                    const isRecent = ageSeconds < 7 * 24 * 3600;   // ⭐ 1 week
+
+                    return (
+                      <span className={`news-badge ${isRecent ? "news-recent" : "news-old"}`}>
+                        📰
+                      </span>
+                    );
+                  })()
+                )}
+              </span>
+            )}
+          </div>
+        </div>
 
             {!isEmpty && (
             <div className="team-meta">
