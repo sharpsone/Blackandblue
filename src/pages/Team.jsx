@@ -17,11 +17,6 @@ export default function Team({ leagueInfo }) {
   const [loading,        setLoading]        = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
-  //useEffect(() => {
-    //if (!myFranchiseId) return;
-    //loadRoster();
-  //}, [myFranchiseId, leagueId, year]);
-
   const [playerDataState, setPlayerDataState] = useState(null);
 
   // ─── Build { "KC": "vs LAR", "LAR": "@ KC", … } from MFL nflSchedule ──────

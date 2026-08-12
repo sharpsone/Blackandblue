@@ -150,11 +150,15 @@ if (action === "fantasyProsNewsBulk") {
         }
       }
 
-      // ⭐ Skip fake blocks
-      const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+      // ⭐ If timestamp is null → this is NOT real news
+      if (!ts) {
+        continue;
+      }
+
+      // ⭐ Skip fake blocks (no headline, no body, no impact, no timestamp)
       if (
-        !headlineMatch &&
-        bodyText.length === 0 &&
+        (!headlineMatch || headlineMatch[1].trim().length === 0) &&
+        (bodyText.length === 0) &&
         !impactMatch &&
         !timestampMatch
       ) {
