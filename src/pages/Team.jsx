@@ -317,6 +317,7 @@ useEffect(() => {
           </div>
         </div>
 
+
             {!isEmpty && (
             <div className="team-meta">
               <span className="meta-team">{p.team}</span>
