@@ -205,6 +205,16 @@ useEffect(() => {
   loadRoster();
 }, [myFranchiseId, playerDataState]);
 
+//force roster refresh when teams is opened
+  import { useLocation } from "react-router-dom";
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/team") {
+      loadRoster();
+    }
+  }, [location.pathname]);
+
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
