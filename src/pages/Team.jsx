@@ -153,7 +153,7 @@ export default function Team({ leagueInfo }) {
   // ─── Helper functions (unchanged) ───────────────────────────────────────────
   function buildMatchupMap(schedData) { /* unchanged */ }
   function buildProjMap(projData) { /* unchanged */ }
-}
+
   // Section 2 continues…
 
   // ─── Player modal ─────────────────────────────────────────────────────────
