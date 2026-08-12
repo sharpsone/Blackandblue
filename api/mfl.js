@@ -135,41 +135,42 @@ if (action === "fantasyProsNewsBulk") {
 
       for (const block of blocks) {
        // --- Extract fields
-        const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-        const bodyMatch       = block.match(/<p>([^<]+)<\/p>/i);
-        const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-        const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+      const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+      const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+      const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+      const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-        // --- Convert timestamp string → UNIX seconds
-        let ts = null;
-        if (timestampMatch) {
-          const raw = timestampMatch[1].trim();
-          const parsed = new Date(raw).getTime();
-          if (!isNaN(parsed)) {
-            ts = Math.floor(parsed / 1000);
-          }
+      // Convert timestamp → UNIX seconds
+      let ts = null;
+      if (timestampMatch) {
+        const raw = timestampMatch[1].trim();
+        const parsed = new Date(raw).getTime();
+        if (!isNaN(parsed)) {
+          ts = Math.floor(parsed / 1000);
         }
+      }
 
-        // --- FILTER OUT EMPTY / FAKE BLOCKS
-        if (
-          !headlineMatch &&
-          !bodyMatch &&
-          !impactMatch &&
-          !timestampMatch
-        ) {
-          continue;
-        }
+      // ⭐ Skip fake blocks
+      const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
+      if (
+        !headlineMatch &&
+        bodyText.length === 0 &&
+        !impactMatch &&
+        !timestampMatch
+      ) {
+        continue;
+      }
 
-        // --- Push REAL news block
-        items.push({
-          player: name,
-          slug,
-          source: "FantasyPros",
-          headline: headlineMatch ? headlineMatch[1].trim() : null,
-          body: bodyMatch ? bodyMatch[1].trim() : null,
-          fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-          timestamp: ts,   // ⭐ now a UNIX timestamp (or null)
-        });
+      // Push real block
+      items.push({
+        player: name,
+        slug,
+        source: "FantasyPros",
+        headline: headlineMatch ? headlineMatch[1].trim() : null,
+        body: bodyText || null,
+        fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+        timestamp: ts,
+      });
       }
     }
 
