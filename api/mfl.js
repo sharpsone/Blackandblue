@@ -158,24 +158,41 @@ if (action === "fantasyProsNewsBulk") {
       const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
       // Determine if this block has ANY meaningful content
-      const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
-      const hasBody     = bodyText.length > 0;
-      const hasImpact   = impactMatch && impactMatch[1].trim().length > 0;
+     // const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
+     // const hasBody     = bodyText.length > 0;
+     // const hasImpact   = impactMatch && impactMatch[1].trim().length > 0;
 
       // ⭐ Skip wrapper blocks (no headline, no body, no impact)
-      if (!hasHeadline && !hasBody && !hasImpact) {
-        continue;
-      }
+      //if (!hasHeadline && !hasBody && !hasImpact) {
+     //   continue;
+    //  }
+
+        // Require headline OR timestamp
+        const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
+        const hasTime     = ts !== null;
+
+        if (!hasHeadline && !hasTime) {
+          continue;
+        }
 
       // Push real block
+      //fpItems.push({
+       // player: name,
+       // slug,
+        //source: "FantasyPros",
+        //headline: headlineMatch ? headlineMatch[1].trim() : null,
+        //body: bodyText || null,
+      //  fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+      //  timestamp: ts,
+      //});
       fpItems.push({
-        player: name,
-        slug,
-        source: "FantasyPros",
-        headline: headlineMatch ? headlineMatch[1].trim() : null,
-        body: bodyText || null,
-        fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
-        timestamp: ts,
+      player: name,
+      slug,
+      source: "FantasyPros",
+      headline: headlineMatch ? headlineMatch[1].trim() : null,
+      body: bodyMatch ? bodyMatch[1].trim() : null,
+      fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
+      timestamp: ts,   // ⭐ REQUIRED
       });
       }
     }
