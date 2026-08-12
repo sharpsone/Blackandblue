@@ -135,11 +135,12 @@ if (action === "fantasyProsNewsBulk") {
 
       for (const block of blocks) {
        // --- Extract fields
-      //const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
-      //const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
-      //const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
-      //const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
-// Extract body text safely
+      const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
+      const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
+      const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
+      const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
+
+      // Extract body text safely
 const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
 // ⭐ Determine if this block has ANY meaningful content
