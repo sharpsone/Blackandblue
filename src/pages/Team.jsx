@@ -183,9 +183,15 @@ export default function Team({ leagueInfo }) {
 
       for (const rp of rosterPlayers) {
         try {
-          const single = await fetch(
-            `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(rp.name)}&leagueId=${leagueId}&year=${year}`
-          ).then(r => r.json());
+          //const single = await fetch(
+          //  `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(rp.name)}&leagueId=${leagueId}&year=${year}`
+          //).then(r => r.json());
+          const newsData = await fetch(
+            `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
+          )
+            .then(r => r.json())
+            .catch(() => ({ news: [] }));
+
 
           if (Array.isArray(single.news)) {
             newsList.push(...single.news);
