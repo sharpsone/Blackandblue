@@ -397,7 +397,9 @@ export default function Team({ leagueInfo }) {
         </div>
 
         {/* Column 3 — Rank */}
-        <div className="team-rank">{isEmpty ? "" : `#${p.rank ?? "-"}`}</div>
+        <div className="team-rank">
+          {isEmpty ? "" : (p.rank ? `#${p.rank}` : "NR")}
+        </div>
 
         {/* Column 4 — Projected points */}
         <div className="team-proj">
