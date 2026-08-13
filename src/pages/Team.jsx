@@ -228,13 +228,20 @@ export default function Team({ leagueInfo }) {
         const correctedName = toLastFirst(full.name || rp.name);
         const slug = makeSlug(correctedName);
 
+        // ⭐ NOW filter news using the correct slug
+        const news = newsList
+          .filter(n => n.slug === slug)
+          .map(n => ({
+            ...n,
+            formattedTime: formatNewsTime(n.time)
+          }));
+
         return {
           ...rp,
           ...full,
 
-          name: correctedName,   // "Addison, Jordan"
-          slug,                  // "jordan-addison"
-
+          name: correctedName,
+          slug,
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
