@@ -185,15 +185,6 @@ export default function Team({ leagueInfo }) {
         .then(r => r.json())
         .catch(() => ({ news: [] }));
 
-
-          if (Array.isArray(single.news)) {
-            newsList.push(...single.news);
-          }
-        } catch (err) {
-          console.log("❌ Single-player news fetch failed for:", rp.name, err);
-        }
-      }
-
       const injuriesList = injuriesData?.injuries?.injury || [];
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
