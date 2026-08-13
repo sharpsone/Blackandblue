@@ -151,6 +151,9 @@ export default function Team({ leagueInfo }) {
 
       console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
 
+      // ⭐ FIX — load allPlayers FIRST
+      const allPlayers = playerDataState?.players || [];
+
       // 1. Build rosterPlayers with real names
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
