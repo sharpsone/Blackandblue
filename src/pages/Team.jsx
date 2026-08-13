@@ -203,43 +203,43 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
-        const merged = rosterPlayers.map(rp => {
-          const full = allPlayers.find(p => p.id === rp.id) || {};
+      const merged = rosterPlayers.map(rp => {
+        const full = allPlayers.find(p => p.id === rp.id) || {};
 
-          // Correct name format: "Jordan Addison"
-          const name = full.name || rp.name;
+        // Correct name format: "Jordan Addison"
+        const name = full.name || rp.name;
 
-          // Correct FantasyPros slug: "jordan-addison"
-          const slug = makeSlug(name);
+        // Correct FantasyPros slug: "jordan-addison"
+        const slug = makeSlug(name);
 
-          // Correct news filter
-          const news = newsList
-            .filter(n => n.slug === slug)
-            .map(n => ({
-              ...n,
-              formattedTime: formatNewsTime(n.time)
-            }));
+        // Correct news filter
+        const news = newsList
+          .filter(n => n.slug === slug)
+          .map(n => ({
+            ...n,
+            formattedTime: formatNewsTime(n.time)
+          }));
 
-          return {
-            ...rp,
-            ...full,
+        return {
+          ...rp,
+          ...full,
 
-            name,
-            slug,
+          name,
+          slug,
 
-            pos: full.position || rp.position || "",
-            projected: projMap[String(rp.id)] ?? null,
-            avg: full.avg ?? rp.avg ?? null,
+          pos: full.position || rp.position || "",
+          projected: projMap[String(rp.id)] ?? null,
+          avg: full.avg ?? rp.avg ?? null,
 
-            rank: rankMap[String(rp.id)]?.rank ?? null,
-            posRank: rankMap[String(rp.id)]?.posRank ?? null,
+          rank: rankMap[String(rp.id)]?.rank ?? null,
+          posRank: rankMap[String(rp.id)]?.posRank ?? null,
 
-            matchup: matchupMap[full.team] || null,
-            headshot: `/api/headshot?id=${rp.id}`,
-            healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
-            externalNews: news
-          };
-        });
+          matchup: matchupMap[full.team] || null,
+          headshot: `/api/headshot?id=${rp.id}`,
+          healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
+          externalNews: news
+        };
+      });
 
       console.log("📌 MERGED PLAYER SAMPLE:", merged[0]);
 
