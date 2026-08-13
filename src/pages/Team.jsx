@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-// REMOVE getPlayers import entirely
-import { getRoster } from "../utils/api";
+import { getRoster } from "../utils/api";   // ⭐ REMOVE getPlayers import
 import PlayerModal from "../components/PlayerModal";
 import "../pages/team.css";
 
@@ -17,11 +16,12 @@ export default function Team({ leagueInfo }) {
   const [playerDataState, setPlayerDataState] = useState(null);
 
   // ───────────────────────────────────────────────────────────────
-  // Load ALL PLAYERS (global MFL list)
+  // Load ALL PLAYERS — ⭐ FORCE correct backend route
   // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     async function loadPlayers() {
       try {
+        // ⭐ This calls YOUR correct backend route players.js
         const data = await fetch(`/api/players?year=${year}`).then(r => r.json());
         setPlayerDataState(data);
       } catch (err) {
@@ -91,15 +91,19 @@ export default function Team({ leagueInfo }) {
       }
 
       const allPlayers = playerDataState?.players || [];
+
+      // Debug
       console.log("MASTER PLAYER LIST:", allPlayers.slice(0, 50));
       console.log("FIRST 20 ROSTER IDS:", rosterData.roster.players.map(p => p.id));
 
-      // ⭐ PLACE IT RIGHT HERE
+      // ⭐ If master list is empty, warn
       if (!allPlayers.length) {
         console.warn("⚠️ Player master list empty — getPlayers() may have failed");
       }
 
+      // ───────────────────────────────────────────────────────────────
       // STEP 1 — Build rosterPlayers (old logic)
+      // ───────────────────────────────────────────────────────────────
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => String(p.id) === String(rp.id)) || {};
         return {
@@ -112,7 +116,6 @@ export default function Team({ leagueInfo }) {
         };
       });
 
-
       // ───────────────────────────────────────────────────────────────
       // STEP 2 — Build maps (old logic)
       // ───────────────────────────────────────────────────────────────
@@ -120,8 +123,7 @@ export default function Team({ leagueInfo }) {
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
 
-      // Build news map (old logic)
-      const newsMap = {};
+      // Build news map
       const newsList = await fetch(
         `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
       )
@@ -129,6 +131,7 @@ export default function Team({ leagueInfo }) {
         .then(d => d.news || [])
         .catch(() => []);
 
+      const newsMap = {};
       newsList.forEach(n => {
         if (!newsMap[n.id]) newsMap[n.id] = [];
         newsMap[n.id].push(n);
@@ -138,7 +141,7 @@ export default function Team({ leagueInfo }) {
       // STEP 3 — Merge everything (old logic)
       // ───────────────────────────────────────────────────────────────
       const merged = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
+        const full = allPlayers.find(p => String(p.id) === String(rp.id)) || {};
         const slug = makeSlug(rp.name);
 
         return {
@@ -165,11 +168,13 @@ export default function Team({ leagueInfo }) {
     }
   }
 
-  // ─── Helper functions ───────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────
+  // Helper functions
+  // ───────────────────────────────────────────────────────────────
   function buildMatchupMap(schedData) { /* unchanged */ }
   function buildProjMap(projData) { /* unchanged */ }
 
-  // ⭐ RESTORED OLD SLUG FUNCTION — REQUIRED BY MERGE LOGIC
+  // ⭐ RESTORED OLD SLUG FUNCTION
   function makeSlug(name) {
     if (!name || typeof name !== "string") return null;
 
@@ -189,6 +194,7 @@ export default function Team({ leagueInfo }) {
 
     return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
   }
+}
 
   // ⭐ SECTION 2 — RENDER LOGIC (INSIDE COMPONENT)
 
