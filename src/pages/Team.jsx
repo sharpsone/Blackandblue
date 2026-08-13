@@ -5,6 +5,9 @@ import "../pages/team.css";
 
 const GRID_COLS = "56px 1fr 60px 68px";
 
+// ⭐ MFL position groups for playerRanks
+const POSITIONS = ["QB", "RB", "WR", "TE", "PK", "DL", "LB", "DB", "DT", "DE", "S", "CB"];
+
 export default function Team({ leagueInfo }) {
   const leagueId      = leagueInfo?.leagueId;
   const myFranchiseId = leagueInfo?.franchiseId;
@@ -15,7 +18,7 @@ export default function Team({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // ⭐ NEW — store MFL playerRanks
+  // ⭐ NEW — rank map from MFL playerRanks
   const [rankMap, setRankMap] = useState({});
 
   // ───────────────────────────────────────────────────────────────
@@ -49,23 +52,27 @@ export default function Team({ leagueInfo }) {
   }, [year]);
 
   // ───────────────────────────────────────────────────────────────
-  // ⭐ NEW — Load MFL playerRanks (FantasySharks rankings)
+  // ⭐ NEW — Load MFL playerRanks for ALL POS groups
   // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     async function loadRanks() {
+      const map = {};
+
       try {
-        const res = await fetch(`/api/mfl?action=playerRanks&year=${year}`);
-        const data = await res.json();
+        for (const pos of POSITIONS) {
+          const res = await fetch(`/api/mfl?action=playerRanks&POS=${pos}&year=${year}`);
+          const data = await res.json();
 
-        const list = data?.player_ranks?.player || [];
-        const map = {};
+          const list = data?.player_ranks?.player || [];
 
-        list.forEach(r => {
-          map[r.id] = {
-            rank: Number(r.rank) || null,
-            posRank: Number(r.posRank) || null
-          };
-        });
+          list.forEach(r => {
+            map[r.id] = {
+              rank: Number(r.rank) || null,
+              posRank: Number(r.posRank) || null,
+              pos
+            };
+          });
+        }
 
         setRankMap(map);
       } catch (err) {
@@ -197,7 +204,7 @@ export default function Team({ leagueInfo }) {
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
 
-          // ⭐ NEW — rank + posRank from MFL playerRanks
+          // ⭐ NEW — rank + posRank from POS-based playerRanks
           rank: rankMap[rp.id]?.rank ?? null,
           posRank: rankMap[rp.id]?.posRank ?? null,
 
