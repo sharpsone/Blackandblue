@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getRoster } from "../utils/api";   // ⭐ REMOVE getPlayers import
+import { getRoster } from "../utils/api";   // ⭐ getPlayers removed
 import PlayerModal from "../components/PlayerModal";
 import "../pages/team.css";
 
@@ -16,12 +16,12 @@ export default function Team({ leagueInfo }) {
   const [playerDataState, setPlayerDataState] = useState(null);
 
   // ───────────────────────────────────────────────────────────────
-  // Load ALL PLAYERS — ⭐ FORCE correct backend route
+  // ⭐ RESTORED: Load ALL PLAYERS using your correct backend route
   // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     async function loadPlayers() {
       try {
-        // ⭐ This calls YOUR correct backend route players.js
+        // ⭐ This is the ONLY correct endpoint — your old code used this
         const data = await fetch(`/api/players?year=${year}`).then(r => r.json());
         setPlayerDataState(data);
       } catch (err) {
@@ -33,16 +33,16 @@ export default function Team({ leagueInfo }) {
   }, [year]);
 
   // ───────────────────────────────────────────────────────────────
-  // Refresh roster when Team.jsx mounts OR leagueInfo changes
+  // ⭐ RESTORED: Load roster AFTER players are loaded
   // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!myFranchiseId) return;
-    if (!playerDataState) return;
+    if (!playerDataState) return;   // ⭐ WAIT FOR PLAYERS FIRST
     loadRoster();
   }, [myFranchiseId, playerDataState, leagueInfo]);
 
   // ───────────────────────────────────────────────────────────────
-  // Load roster (RESTORED OLD MERGE LOGIC)
+  // ⭐ RESTORED: Full original merge logic
   // ───────────────────────────────────────────────────────────────
   async function loadRoster() {
     try {
@@ -83,80 +83,72 @@ export default function Team({ leagueInfo }) {
           })
       ]);
 
-      // Validate roster shape
-      if (!rosterData || !rosterData.roster || !Array.isArray(rosterData.roster.players)) {
-        console.log("❌ rosterData.roster.players missing:", rosterData);
+      if (!rosterData || !rosterData.roster) {
+        console.log("❌ No roster data found");
         setPlayers([]);
         return;
       }
 
+      // ⭐ RESTORED: REAL MFL PLAYER UNIVERSE
       const allPlayers = playerDataState?.players || [];
 
-      // Debug
-      console.log("MASTER PLAYER LIST:", allPlayers.slice(0, 50));
-      console.log("FIRST 20 ROSTER IDS:", rosterData.roster.players.map(p => p.id));
-
-      // ⭐ If master list is empty, warn
-      if (!allPlayers.length) {
-        console.warn("⚠️ Player master list empty — getPlayers() may have failed");
-      }
-
-      // ───────────────────────────────────────────────────────────────
-      // STEP 1 — Build rosterPlayers (old logic)
-      // ───────────────────────────────────────────────────────────────
+      // ⭐ RESTORED: ID MATCHING WORKS AGAIN
       const rosterPlayers = rosterData.roster.players.map(rp => {
-        const full = allPlayers.find(p => String(p.id) === String(rp.id)) || {};
+        const full = allPlayers.find(p => p.id === rp.id) || {};
         return {
           id: rp.id,
-          status: rp.status,
-          name: full.name || null,
-          pos: full.position || null,
-          team: full.team || null,
-          avg: full.avg || null
+          name: full.name || rp.name || null,
+          status: rp.status
         };
       });
 
-      // ───────────────────────────────────────────────────────────────
-      // STEP 2 — Build maps (old logic)
-      // ───────────────────────────────────────────────────────────────
+      const newsData = await fetch(
+        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+      )
+        .then(r => r.json())
+        .catch(() => ({ news: [] }));
+
+      const newsList = newsData.news || [];
+
       const injuriesList = injuriesData?.injuries?.injury || [];
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
 
-      // Build news map
-      const newsList = await fetch(
-        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-      )
-        .then(r => r.json())
-        .then(d => d.news || [])
-        .catch(() => []);
+      function makeSlug(name) {
+        if (!name || typeof name !== "string") return null;
+        if (name.includes(",")) {
+          const [lastRaw, firstRaw] = name.split(",");
+          const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          return `${first}-${last}`;
+        }
+        const parts = name.trim().split(" ");
+        if (parts.length >= 2) {
+          const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          return `${first}-${last}`;
+        }
+        return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      }
 
-      const newsMap = {};
-      newsList.forEach(n => {
-        if (!newsMap[n.id]) newsMap[n.id] = [];
-        newsMap[n.id].push(n);
-      });
-
-      // ───────────────────────────────────────────────────────────────
-      // STEP 3 — Merge everything (old logic)
-      // ───────────────────────────────────────────────────────────────
       const merged = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => String(p.id) === String(rp.id)) || {};
+        const full = allPlayers.find(p => p.id === rp.id) || {};
         const slug = makeSlug(rp.name);
+        const news = newsList.filter(n => n.slug === slug);
 
         return {
           ...rp,
           ...full,
-          name: rp.name || full.name || null,
-          pos: full.position || rp.pos || "",
+          name: rp.name,
+          pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
           matchup: matchupMap[full.team] || null,
           posRank: full._posRank ?? null,
           headshot: `/api/headshot?id=${rp.id}`,
           slug,
-          healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
-          externalNews: newsMap[rp.id] || []
+          healthStatus: (injuriesList.find(x => x.id === rp.id)?.status) || null,
+          externalNews: news
         };
       });
 
@@ -169,31 +161,12 @@ export default function Team({ leagueInfo }) {
   }
 
   // ───────────────────────────────────────────────────────────────
-  // Helper functions
+  // Helper functions (unchanged)
   // ───────────────────────────────────────────────────────────────
   function buildMatchupMap(schedData) { /* unchanged */ }
   function buildProjMap(projData) { /* unchanged */ }
+}
 
-  // ⭐ RESTORED OLD SLUG FUNCTION
-  function makeSlug(name) {
-    if (!name || typeof name !== "string") return null;
-
-    if (name.includes(",")) {
-      const [lastRaw, firstRaw] = name.split(",");
-      const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      return `${first}-${last}`;
-    }
-
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) {
-      const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      return `${first}-${last}`;
-    }
-
-    return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  }
 
   // ⭐ SECTION 2 — RENDER LOGIC (INSIDE COMPONENT)
 
