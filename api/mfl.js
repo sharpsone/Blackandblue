@@ -58,62 +58,45 @@ if (action === "playerNewsFeedBulk") {
   return res.status(200).json({ news: sleeperNews });
 }
 
-    // -----------------------------
-    // ⭐ NEW — playerRanks MUST BE HERE
-    // BEFORE leagueId/year validation
-    // -----------------------------
-    if (action === "playerRanks") {
-      const pos = req.query.POS || "";        // QB, RB, WR, etc
-      const leagueId = req.query.leagueId;
-      const year = req.query.year;
-
-      if (!leagueId || !year) {
-        return res.json({ error: "Missing leagueId or year" });
-      }
-
-      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=${pos}&SOURCE=&JSON=1`;
-
-      try {
-        const data = await callMFL(url);
-        return res.json(data);
-      } catch (err) {
-        console.error("playerRanks error:", err);
-        return res.json({ error: "playerRanks fetch failed" });
-      }
-    }
-
-function makeSlug(name) {
-  if (!name || typeof name !== "string") return null;
-
-  // Case 1: "Last, First"
-  if (name.includes(",")) {
-    const [lastRaw, firstRaw] = name.split(",");
-    const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    return `${first}-${last}`;
-  }
-
-  // Case 2: "First Last"
-  const parts = name.trim().split(" ");
-  if (parts.length >= 2) {
-    const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    return `${first}-${last}`;
-  }
-
-  // Case 3: Single word (Defense, Kicker, etc.)
-  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-}
-
 // -----------------------------
 // ACTION: fantasyProsNewsBulk (PlayerModal-style bulk scraper)
 // -----------------------------
 if (action === "fantasyProsNewsBulk") {
   console.log("🔥 fantasyProsNewsBulk HIT");
 
+  // ⭐ NEW — relative time parser
+  function parseRelativeTime(raw) {
+    if (!raw) return null;
+    raw = raw.toLowerCase().trim();
+
+    // weeks ago
+    const weeksMatch = raw.match(/(\d+)\s+weeks?\s+ago/);
+    if (weeksMatch) {
+      const weeks = parseInt(weeksMatch[1], 10);
+      return Math.floor((Date.now() - weeks * 7 * 24 * 3600 * 1000) / 1000);
+    }
+
+    // days ago
+    const daysMatch = raw.match(/(\d+)\s+days?\s+ago/);
+    if (daysMatch) {
+      const days = parseInt(daysMatch[1], 10);
+      return Math.floor((Date.now() - days * 24 * 3600 * 1000) / 1000);
+    }
+
+    // years ago
+    const yearsMatch = raw.match(/(\d+)\s+years?\s+ago/);
+    if (yearsMatch) {
+      const years = parseInt(yearsMatch[1], 10);
+      const d = new Date();
+      d.setFullYear(d.getFullYear() - years);
+      return Math.floor(d.getTime() / 1000);
+    }
+
+    return null;
+  }
+
   try {
     const { players } = req.query;
-
     console.log("📌 RAW players param:", players);
 
     if (!players) {
@@ -194,31 +177,11 @@ if (action === "fantasyProsNewsBulk") {
           continue;
         }
 
-        // Timestamp parser
-        let ts = null;
-        let raw = timestampMatch[1].trim();
+        const raw = timestampMatch[1].trim();
         console.log("📌 Raw timestamp:", raw);
 
-        let parsed = new Date(raw).getTime();
-
-        if (isNaN(parsed)) {
-          raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
-          parsed = new Date(raw).getTime();
-        }
-
-        if (isNaN(parsed)) {
-          raw = `${raw} ${new Date().getFullYear()}`;
-          parsed = new Date(raw).getTime();
-        }
-
-        if (isNaN(parsed)) {
-          parsed = Date.parse(raw);
-        }
-
-        if (!isNaN(parsed)) {
-          ts = Math.floor(parsed / 1000);
-        }
-
+        // ⭐ NEW — relative timestamp parser
+        const ts = parseRelativeTime(raw);
         console.log("📌 Parsed timestamp:", ts);
 
         const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
@@ -273,7 +236,6 @@ if (action === "fantasyProsNewsBulk") {
     return res.status(200).json({ news: [] });
   }
 }
-
 
     // -----------------------------
     // NOW VALIDATE leagueId/year
