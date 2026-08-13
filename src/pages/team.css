@@ -201,13 +201,12 @@ p {
 .health-D { background: #ff6600; color: #000; }   /* Doubtful */
 .health-O { background: #ff0000; color: #fff; }   /* Out */
 
-/* ─── BADGE SYSTEM (Unified) ───────────────────────────────────────── */
 /* ─── UNIFIED BADGE SYSTEM ───────────────────────────────────────── */
 
 .team-badges {
   display: flex;
   align-items: center;
-  gap: 4px;          /* small gap between pill + news icon */
+  gap: 3px;          /* small gap between pill + news icon */
   margin-left: 6px;  /* spacing from player name */
 }
 
@@ -217,8 +216,8 @@ p {
   align-items: center;
   justify-content: center;
 
-  height: 14px;      /* ⭐ identical height */
-  min-width: 14px;   /* ⭐ identical width */
+  height: 14px;      /* identical height */
+  min-width: 14px;   /* identical width */
   line-height: 1;
 }
 
