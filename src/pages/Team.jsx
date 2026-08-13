@@ -409,12 +409,12 @@ export default function Team({ leagueInfo }) {
 
       <div className="team-section">
         <div className="section-label offense-label">Offense</div>
-        {startersOffense.map(renderPlayer)}
+        {offense.map(renderPlayer)}
       </div>
 
       <div className="team-section">
         <div className="section-label defense-label">Defense</div>
-        {startersDefense.map(renderPlayer)}
+        {defense.map(renderPlayer)}
       </div>
 
       {ir.length > 0 && (
