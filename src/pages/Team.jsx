@@ -173,9 +173,9 @@ export default function Team({ leagueInfo }) {
 
       // 3. Build playersPayload AFTER rosterPlayers exists
       const playersPayload = rosterPlayers.map(rp => ({
-        id: rp.id,
+   //     id: rp.id,
         name: rp.name,   // now First Last
-        status: rp.status
+   //     status: rp.status
       }));
 
       // Fetch news for each player individually (same as FreeAgents.jsx)
