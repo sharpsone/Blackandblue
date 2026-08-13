@@ -5,7 +5,7 @@ import "../pages/team.css";
 
 const GRID_COLS = "56px 1fr 60px 68px";
 
-// ⭐ Valid MFL POS groups for rank loading
+// ⭐ ONLY valid MFL POS groups
 const POSITIONS = [
   "QB", "RB", "WR", "TE", "PK",
   "DL", "LB", "DB",
@@ -17,22 +17,31 @@ export default function Team({ leagueInfo }) {
   const myFranchiseId = leagueInfo?.franchiseId;
   const year          = leagueInfo?.year || 2026;
 
-  const [players, setPlayers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [players,        setPlayers]        = useState([]);
+  const [loading,        setLoading]        = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-
   const [playerDataState, setPlayerDataState] = useState(null);
 
   // ⭐ rank map from MFL playerRanks
   const [rankMap, setRankMap] = useState({});
 
-  // ───────────────────────────────────────────────
+  function formatNewsTime(unix) {
+    if (!unix) return null;
+    const d = new Date(unix * 1000);
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
   // Load ALL PLAYERS
-  // ───────────────────────────────────────────────
   useEffect(() => {
     async function loadPlayers() {
       try {
         const data = await getPlayers(year);
+        console.log("📌 PLAYERS LOADED:", data?.players?.length);
         setPlayerDataState(data);
       } catch (err) {
         console.error("❌ getPlayers failed:", err);
@@ -42,12 +51,12 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ───────────────────────────────────────────────
-  // Load MFL playerRanks for ALL POS groups
-  // ───────────────────────────────────────────────
+  // ⭐ Load MFL playerRanks for ALL POS groups (Promise.all + ID normalization + LOGGING)
   useEffect(() => {
     async function loadRanks() {
       try {
+        console.log("📌 LOADING RANKS for POSITIONS:", POSITIONS);
+
         const results = await Promise.all(
           POSITIONS.map(pos =>
             fetch(`/api/mfl?action=playerRanks&POS=${pos}&leagueId=${leagueId}&year=${year}`)
@@ -61,7 +70,15 @@ export default function Team({ leagueInfo }) {
           const pos = POSITIONS[i];
           const list = data?.player_ranks?.player || [];
 
+          console.log(`📌 POS ${pos} → ${list.length} players`);
+
           list.forEach(r => {
+            console.log("📌 RANK ENTRY:", {
+              pos,
+              id: r.id,
+              rank: r.rank
+            });
+
             map[String(r.id)] = {
               rank: Number(r.rank) || null,
               pos,
@@ -69,6 +86,9 @@ export default function Team({ leagueInfo }) {
             };
           });
         });
+
+        console.log("📌 FINAL rankMap keys:", Object.keys(map).slice(0, 50));
+        console.log("📌 FINAL rankMap sample:", map[Object.keys(map)[0]]);
 
         setRankMap(map);
       } catch (err) {
@@ -80,29 +100,31 @@ export default function Team({ leagueInfo }) {
     if (leagueId && year) loadRanks();
   }, [leagueId, year]);
 
-  // ───────────────────────────────────────────────
   // Load roster AFTER players + ranks are loaded
-  // ───────────────────────────────────────────────
   useEffect(() => {
     if (!myFranchiseId) return;
     if (!playerDataState) return;
     if (!rankMap) return;
 
+    console.log("📌 TRIGGER loadRoster()");
     loadRoster();
   }, [myFranchiseId, playerDataState, rankMap]);
 
-  // ───────────────────────────────────────────────
-  // Load roster + merge everything
-  // ───────────────────────────────────────────────
+  // Load roster + merge everything (LOGGING ADDED)
   async function loadRoster() {
     try {
+      console.log("📌 LOADING ROSTER…");
+
       const [
         rosterData,
         schedData,
         projData,
         injuriesData
       ] = await Promise.all([
-        getRoster(leagueId, myFranchiseId, year).catch(() => null),
+        getRoster(leagueId, myFranchiseId, year).catch(err => {
+          console.log("❌ getRoster failed:", err);
+          return null;
+        }),
 
         fetch(`/data/nflScheduleWeek1.json`)
           .then(r => r.json())
@@ -122,32 +144,47 @@ export default function Team({ leagueInfo }) {
       ]);
 
       if (!rosterData || !rosterData.roster) {
+        console.log("❌ No roster data found");
         setPlayers([]);
         return;
       }
 
+      console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
+
+      // 1. Load allPlayers FIRST
       const allPlayers = playerDataState?.players || [];
 
-      // ⭐ Build rosterPlayers with real names
+      // 2. Build rosterPlayers
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
+
+        let name = full.name || rp.name || "";
+        if (name.includes(",")) {
+          const [last, first] = name.split(",");
+          name = `${first.trim()} ${last.trim()}`;
+        }
+
         return {
           id: rp.id,
-          name: full.name || rp.name || null,
+          name,
           status: rp.status
         };
       });
 
-      // ⭐ Fetch news (unchanged rollback behavior)
+      // 3. Build playersPayload AFTER rosterPlayers exists
+      const playersPayload = rosterPlayers.map(rp => ({
+        id: rp.id,
+        name: rp.name,
+        status: rp.status
+      }));
+
+      // 4. Correct fetch URL
       const newsData = await fetch(
-        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
       )
         .then(r => r.json())
         .catch(() => ({ news: [] }));
 
-      const newsList = newsData.news || [];
-
-      // ⭐ Merge everything
       const injuriesList = injuriesData?.injuries?.injury || [];
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
@@ -169,16 +206,26 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-      const merged = rosterPlayers.map(rp => {
+        const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
-        const slug = makeSlug(rp.name);
 
-        const news = newsList.filter(n => n.slug === slug);
+        // ALWAYS use full.name (FantasyPros format)
+        const name = full.name;
+
+        const slug = makeSlug(name);
+
+        const news = newsList
+          .filter(n => n.slug === slug)
+          .map(n => ({
+            ...n,
+            formattedTime: formatNewsTime(n.time)
+          }));
 
         return {
           ...rp,
           ...full,
-          name: rp.name,
+          name,
+          slug,
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
@@ -186,11 +233,11 @@ export default function Team({ leagueInfo }) {
           posRank: rankMap[String(rp.id)]?.posRank ?? null,
           matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
-          slug,
           healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
           externalNews: news
         };
       });
+      console.log("📌 MERGED PLAYER SAMPLE:", merged[0]);
 
       setPlayers(merged);
     } catch (err) {
@@ -200,9 +247,6 @@ export default function Team({ leagueInfo }) {
     }
   }
 
-  // ───────────────────────────────────────────────
-  // Helpers
-  // ───────────────────────────────────────────────
   function buildMatchupMap(schedData) {
     const map = {};
     const matchups = schedData?.nflSchedule?.matchup;
@@ -227,8 +271,6 @@ export default function Team({ leagueInfo }) {
     });
     return map;
   }
-
-
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
@@ -264,30 +306,16 @@ export default function Team({ leagueInfo }) {
   if (loading)         return <p>Loading team...</p>;
   if (!players.length) return <p>No roster data found.</p>;
 
-  // ─── Slot definitions ─────────────────────────────────────────────────────
-  const offenseSlots = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
-  const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "DB/S", "DB/S"];
+    // ─── Position groups ────────────────────────────────────────────────
+    const offensePositions = ["QB", "RB", "WR", "TE", "PK"];
+    const defensePositions = ["DL", "LB", "DB", "DT", "DE", "CB", "S"];
 
-  // ─── Consume-as-you-assign: fills slots left-to-right, no double-dipping ──
-  function assignSlots(slots, candidates) {
-    const used = new Set();
-    return slots.map(slot => {
-      const match = candidates.find(p => {
-        if (used.has(p.id)) return false;
-        if (slot === "DT/DL") return ["DT", "DL", "DE"].includes(p.pos);
-        if (slot === "DB/S")  return ["CB", "DB", "S"].includes(p.pos);
-        if (slot === "W/R/T") return ["WR", "RB", "TE"].includes(p.pos);
-        return p.pos === slot;
-      });
-      if (match) { used.add(match.id); return { ...match, slot }; }
-      return { empty: true, slot };
-    });
-  }
+    // ─── Group players by position only ─────────────────────────────────
+    const offense = players.filter(p => offensePositions.includes(p.pos));
+    const defense = players.filter(p => defensePositions.includes(p.pos));
 
-  const startersOffense = assignSlots(offenseSlots, players);
-  const startersDefense = assignSlots(defenseSlots, players);
-  const bench           = players.filter(p => ["R", "RES", "TAXI", "BENCH"].includes(p.status));
-  const ir              = players.filter(p => p.status === "IR");
+    // ─── IR stays separate ──────────────────────────────────────────────
+    const ir = players.filter(p => p.status === "IR");
 
   // ─── Row renderer ─────────────────────────────────────────────────────────
   function renderPlayer(p, idx) {
@@ -316,20 +344,25 @@ export default function Team({ leagueInfo }) {
 
               {!isEmpty && (
                 <span className="team-badges">
-                  {/* HEALTH BADGE */}
-                  {p.healthStatus !== "Healthy" && (
-                    <span className={`health-badge health-${p.healthStatus}`}>
-                      {p.healthStatus === "Questionable" && "Q"}
-                      {p.healthStatus === "Doubtful" && "D"}
+
+                  {/* INJURY PILL */}
+                  {p.healthStatus && p.healthStatus !== "Healthy" && (
+                    <span className={`injury-pill ${
+                      p.healthStatus === "Out" ? "O" :
+                      p.healthStatus === "Doubtful" ? "D" :
+                      p.healthStatus === "Questionable" ? "Q" : ""
+                    }`}>
                       {p.healthStatus === "Out" && "O"}
+                      {p.healthStatus === "Doubtful" && "D"}
+                      {p.healthStatus === "Questionable" && "Q"}
                     </span>
                   )}
 
                   {/* NEWS BADGE */}
-                  {p.externalNews && p.externalNews.length > 0 && (
+                  {p.newsTimestamp && (
                     <span
                       className={`news-badge ${
-                        Date.now() / 1000 - p.externalNews[0].date < 7 * 24 * 3600
+                        Date.now() - p.newsTimestamp < 10 * 24 * 60 * 60 * 1000
                           ? "news-recent"
                           : "news-old"
                       }`}
@@ -361,7 +394,9 @@ export default function Team({ leagueInfo }) {
         </div>
 
         {/* Column 3 — Rank */}
-        <div className="team-rank">{isEmpty ? "" : `#${p.posRank}`}</div>
+        <div className="team-rank">
+          {isEmpty ? "" : (p.rank ? `#${p.rank}` : "NR")}
+        </div>
 
         {/* Column 4 — Projected points */}
         <div className="team-proj">
@@ -385,20 +420,13 @@ export default function Team({ leagueInfo }) {
 
       <div className="team-section">
         <div className="section-label offense-label">Offense</div>
-        {startersOffense.map(renderPlayer)}
+        {offense.map(renderPlayer)}
       </div>
 
       <div className="team-section">
         <div className="section-label defense-label">Defense</div>
-        {startersDefense.map(renderPlayer)}
+        {defense.map(renderPlayer)}
       </div>
-
-      {bench.length > 0 && (
-        <div className="team-section">
-          <div className="section-label bench-label">Bench</div>
-          {bench.map(renderPlayer)}
-        </div>
-      )}
 
       {ir.length > 0 && (
         <div className="team-section">
