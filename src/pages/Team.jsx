@@ -5,7 +5,7 @@ import "../pages/team.css";
 
 const GRID_COLS = "56px 1fr 60px 68px";
 
-// ⭐ MFL position groups for playerRanks
+// MFL position groups for playerRanks
 const POSITIONS = ["QB", "RB", "WR", "TE", "PK", "DL", "LB", "DB", "DT", "DE", "S", "CB"];
 
 export default function Team({ leagueInfo }) {
@@ -18,12 +18,10 @@ export default function Team({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // ⭐ NEW — rank map from MFL playerRanks
+  // Rank map from MFL playerRanks
   const [rankMap, setRankMap] = useState({});
 
-  // ───────────────────────────────────────────────────────────────
   // Format FantasyPros/Sleeper UNIX timestamps
-  // ───────────────────────────────────────────────────────────────
   function formatNewsTime(unix) {
     if (!unix) return null;
     const d = new Date(unix * 1000);
@@ -35,9 +33,7 @@ export default function Team({ leagueInfo }) {
     });
   }
 
-  // ───────────────────────────────────────────────────────────────
   // Load ALL PLAYERS (your original working flow)
-  // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     async function loadPlayers() {
       try {
@@ -51,18 +47,18 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ───────────────────────────────────────────────────────────────
-  // ⭐ NEW — Load MFL playerRanks for ALL POS groups
-  // ───────────────────────────────────────────────────────────────
+  // ⭐ Load MFL playerRanks for ALL POS groups (with leagueId + year)
   useEffect(() => {
     async function loadRanks() {
       const map = {};
 
       try {
         for (const pos of POSITIONS) {
-          const res = await fetch(`/api/mfl?action=playerRanks&POS=${pos}&year=${year}`);
-          const data = await res.json();
+          const res = await fetch(
+            `/api/mfl?action=playerRanks&POS=${pos}&leagueId=${leagueId}&year=${year}`
+          );
 
+          const data = await res.json();
           const list = data?.player_ranks?.player || [];
 
           list.forEach(r => {
@@ -81,12 +77,10 @@ export default function Team({ leagueInfo }) {
       }
     }
 
-    loadRanks();
-  }, [year]);
+    if (leagueId && year) loadRanks();
+  }, [leagueId, year]);
 
-  // ───────────────────────────────────────────────────────────────
   // Load roster AFTER players + ranks are loaded
-  // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!myFranchiseId) return;
     if (!playerDataState) return;
@@ -94,9 +88,7 @@ export default function Team({ leagueInfo }) {
     loadRoster();
   }, [myFranchiseId, playerDataState, rankMap]);
 
-  // ───────────────────────────────────────────────────────────────
   // Load roster + merge everything
-  // ───────────────────────────────────────────────────────────────
   async function loadRoster() {
     try {
       const [
@@ -135,9 +127,7 @@ export default function Team({ leagueInfo }) {
 
       const allPlayers = playerDataState?.players || [];
 
-      // ───────────────────────────────────────────────────────────────
       // Build rosterPlayers with real names
-      // ───────────────────────────────────────────────────────────────
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         return {
@@ -147,9 +137,7 @@ export default function Team({ leagueInfo }) {
         };
       });
 
-      // ───────────────────────────────────────────────────────────────
       // Fetch FantasyPros/Sleeper news
-      // ───────────────────────────────────────────────────────────────
       const newsData = await fetch(
         `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
       )
@@ -162,9 +150,7 @@ export default function Team({ leagueInfo }) {
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
 
-      // ───────────────────────────────────────────────────────────────
       // Slug generator (unchanged)
-      // ───────────────────────────────────────────────────────────────
       function makeSlug(name) {
         if (!name || typeof name !== "string") return null;
         if (name.includes(",")) {
@@ -182,9 +168,7 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-      // ───────────────────────────────────────────────────────────────
       // Merge everything + attach rank + posRank + formatted news time
-      // ───────────────────────────────────────────────────────────────
       const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         const slug = makeSlug(rp.name);
@@ -204,7 +188,7 @@ export default function Team({ leagueInfo }) {
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
 
-          // ⭐ NEW — rank + posRank from POS-based playerRanks
+          // ⭐ rank + posRank from POS-based playerRanks
           rank: rankMap[rp.id]?.rank ?? null,
           posRank: rankMap[rp.id]?.posRank ?? null,
 
@@ -224,9 +208,7 @@ export default function Team({ leagueInfo }) {
     }
   }
 
-  // ───────────────────────────────────────────────────────────────
   // Helper functions (unchanged)
-  // ───────────────────────────────────────────────────────────────
   function buildMatchupMap(schedData) {
     const map = {};
     const matchups = schedData?.nflSchedule?.matchup;
