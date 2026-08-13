@@ -211,15 +211,30 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
+        function toLastFirst(name) {
+          if (!name) return null;
+          if (name.includes(",")) return name; // already correct
+
+          const parts = name.trim().split(" ");
+          if (parts.length < 2) return name;
+
+          const first = parts[0];
+          const last  = parts[parts.length - 1];
+
+          return `${last}, ${first}`;
+        }
+
         return {
           ...rp,
           ...full,
-          name: rp.name,
+
+          // FIXED: convert "Jordan Addison" → "Addison, Jordan"
+          name: toLastFirst(full.name || rp.name),
+
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
 
-          // ⭐ rank now works
           rank: rankMap[String(rp.id)]?.rank ?? null,
           posRank: rankMap[String(rp.id)]?.posRank ?? null,
 
