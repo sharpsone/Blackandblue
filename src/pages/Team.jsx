@@ -335,6 +335,7 @@ export default function Team({ leagueInfo }) {
                   <div className="team-info">
             <div className="team-name-row">
               <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
+
               {!isEmpty && (
                 <span className="team-badges">
 
@@ -351,11 +352,18 @@ export default function Team({ leagueInfo }) {
                     </span>
                   )}
 
-                  {/* NEWS ICON */}
-                  {p.newsTimestamp && (Date.now() - p.newsTimestamp) < 10 * 24 * 60 * 60 * 1000 && (
-                    <span className="news-icon">📰</span>
+                  {/* NEWS BADGE */}
+                  {p.newsTimestamp && (
+                    <span
+                      className={`news-badge ${
+                        Date.now() - p.newsTimestamp < 10 * 24 * 60 * 60 * 1000
+                          ? "news-recent"
+                          : "news-old"
+                      }`}
+                    >
+                      📰
+                    </span>
                   )}
-
                 </span>
               )}
             </div>

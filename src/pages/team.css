@@ -207,11 +207,18 @@ p {
 .health-D { background: #ff6600; color: #000; }   /* Doubtful */
 .health-O { background: #ff0000; color: #fff; }   /* Out */
 
-.news-icon {
-  margin-left: 6px;
-  font-size: 12px;
-  opacity: 0.55;
-  filter: grayscale(100%);
+.news-badge {
+  font-size: 0.9rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.news-recent {
+  color: purple;
+}
+
+.news-old {
+  color: grey;
 }
 
 .injury-pill {
