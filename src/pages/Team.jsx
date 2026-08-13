@@ -232,8 +232,8 @@ export default function Team({ leagueInfo }) {
           ...rp,
           ...full,
 
-          name: correctedName,   // FIXED
-          slug,                  // FIXED
+          name: correctedName,   // "Addison, Jordan"
+          slug,                  // "jordan-addison"
 
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
