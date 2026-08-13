@@ -300,30 +300,16 @@ export default function Team({ leagueInfo }) {
   if (loading)         return <p>Loading team...</p>;
   if (!players.length) return <p>No roster data found.</p>;
 
-  // ─── Slot definitions ─────────────────────────────────────────────────────
-  const offenseSlots = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
-  const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "DB/S", "DB/S"];
+    // ─── Position groups ────────────────────────────────────────────────
+    const offensePositions = ["QB", "RB", "WR", "TE", "PK"];
+    const defensePositions = ["DL", "LB", "DB", "DT", "DE", "CB", "S"];
 
-  // ─── Consume-as-you-assign: fills slots left-to-right, no double-dipping ──
-  function assignSlots(slots, candidates) {
-    const used = new Set();
-    return slots.map(slot => {
-      const match = candidates.find(p => {
-        if (used.has(p.id)) return false;
-        if (slot === "DT/DL") return ["DT", "DL", "DE"].includes(p.pos);
-        if (slot === "DB/S")  return ["CB", "DB", "S"].includes(p.pos);
-        if (slot === "W/R/T") return ["WR", "RB", "TE"].includes(p.pos);
-        return p.pos === slot;
-      });
-      if (match) { used.add(match.id); return { ...match, slot }; }
-      return { empty: true, slot };
-    });
-  }
+    // ─── Group players by position only ─────────────────────────────────
+    const offense = players.filter(p => offensePositions.includes(p.pos));
+    const defense = players.filter(p => defensePositions.includes(p.pos));
 
-  const startersOffense = assignSlots(offenseSlots, players);
-  const startersDefense = assignSlots(defenseSlots, players);
-  const bench           = players.filter(p => ["R", "RES", "TAXI", "BENCH"].includes(p.status));
-  const ir              = players.filter(p => p.status === "IR");
+    // ─── IR stays separate ──────────────────────────────────────────────
+    const ir = players.filter(p => p.status === "IR");
 
   // ─── Row renderer ─────────────────────────────────────────────────────────
   function renderPlayer(p, idx) {
@@ -430,13 +416,6 @@ export default function Team({ leagueInfo }) {
         <div className="section-label defense-label">Defense</div>
         {startersDefense.map(renderPlayer)}
       </div>
-
-      {bench.length > 0 && (
-        <div className="team-section">
-          <div className="section-label bench-label">Bench</div>
-          {bench.map(renderPlayer)}
-        </div>
-      )}
 
       {ir.length > 0 && (
         <div className="team-section">
