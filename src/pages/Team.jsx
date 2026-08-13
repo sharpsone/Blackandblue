@@ -3,23 +3,206 @@ import { getRoster, getPlayers } from "../utils/api";
 import PlayerModal from "../components/PlayerModal";
 import "../pages/team.css";
 
-// ─── Shared column template ───────────────────────────────────────────────────
-// Applied via inline style= on BOTH .team-header and every .team-row so they
-// are guaranteed to always be in sync — one constant, zero drift.
 const GRID_COLS = "56px 1fr 60px 68px";
+
+// ⭐ Valid MFL POS groups for rank loading
+const POSITIONS = [
+  "QB", "RB", "WR", "TE", "PK",
+  "DL", "LB", "DB",
+  "DT", "DE", "CB", "S"
+];
 
 export default function Team({ leagueInfo }) {
   const leagueId      = leagueInfo?.leagueId;
   const myFranchiseId = leagueInfo?.franchiseId;
   const year          = leagueInfo?.year || 2026;
 
-  const [players,        setPlayers]        = useState([]);
-  const [loading,        setLoading]        = useState(true);
+  const [players, setPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // ─── Build { "KC": "vs LAR", "LAR": "@ KC", … } from MFL nflSchedule ──────
+  // ⭐ rank map from MFL playerRanks
+  const [rankMap, setRankMap] = useState({});
+
+  // ───────────────────────────────────────────────
+  // Load ALL PLAYERS
+  // ───────────────────────────────────────────────
+  useEffect(() => {
+    async function loadPlayers() {
+      try {
+        const data = await getPlayers(year);
+        setPlayerDataState(data);
+      } catch (err) {
+        console.error("❌ getPlayers failed:", err);
+        setPlayerDataState({ players: [] });
+      }
+    }
+    loadPlayers();
+  }, [year]);
+
+  // ───────────────────────────────────────────────
+  // Load MFL playerRanks for ALL POS groups
+  // ───────────────────────────────────────────────
+  useEffect(() => {
+    async function loadRanks() {
+      try {
+        const results = await Promise.all(
+          POSITIONS.map(pos =>
+            fetch(`/api/mfl?action=playerRanks&POS=${pos}&leagueId=${leagueId}&year=${year}`)
+              .then(r => r.json())
+          )
+        );
+
+        const map = {};
+
+        results.forEach((data, i) => {
+          const pos = POSITIONS[i];
+          const list = data?.player_ranks?.player || [];
+
+          list.forEach(r => {
+            map[String(r.id)] = {
+              rank: Number(r.rank) || null,
+              pos,
+              posRank: null
+            };
+          });
+        });
+
+        setRankMap(map);
+      } catch (err) {
+        console.error("❌ playerRanks failed:", err);
+        setRankMap({});
+      }
+    }
+
+    if (leagueId && year) loadRanks();
+  }, [leagueId, year]);
+
+  // ───────────────────────────────────────────────
+  // Load roster AFTER players + ranks are loaded
+  // ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!myFranchiseId) return;
+    if (!playerDataState) return;
+    if (!rankMap) return;
+
+    loadRoster();
+  }, [myFranchiseId, playerDataState, rankMap]);
+
+  // ───────────────────────────────────────────────
+  // Load roster + merge everything
+  // ───────────────────────────────────────────────
+  async function loadRoster() {
+    try {
+      const [
+        rosterData,
+        schedData,
+        projData,
+        injuriesData
+      ] = await Promise.all([
+        getRoster(leagueId, myFranchiseId, year).catch(() => null),
+
+        fetch(`/data/nflScheduleWeek1.json`)
+          .then(r => r.json())
+          .catch(() => ({ nflSchedule: { matchup: [] } })),
+
+        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
+          .then(r => r.text())
+          .then(t => {
+            try { return JSON.parse(t); }
+            catch { return { projectedScores: { playerScore: [] } }; }
+          })
+          .catch(() => ({ projectedScores: { playerScore: [] } })),
+
+        fetch(`/api/mfl?action=injuries&year=${year}`)
+          .then(r => r.json())
+          .catch(() => ({ injuries: { injury: [] } }))
+      ]);
+
+      if (!rosterData || !rosterData.roster) {
+        setPlayers([]);
+        return;
+      }
+
+      const allPlayers = playerDataState?.players || [];
+
+      // ⭐ Build rosterPlayers with real names
+      const rosterPlayers = rosterData.roster.players.map(rp => {
+        const full = allPlayers.find(p => p.id === rp.id) || {};
+        return {
+          id: rp.id,
+          name: full.name || rp.name || null,
+          status: rp.status
+        };
+      });
+
+      // ⭐ Fetch news (unchanged rollback behavior)
+      const newsData = await fetch(
+        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+      )
+        .then(r => r.json())
+        .catch(() => ({ news: [] }));
+
+      const newsList = newsData.news || [];
+
+      // ⭐ Merge everything
+      const injuriesList = injuriesData?.injuries?.injury || [];
+      const matchupMap = buildMatchupMap(schedData);
+      const projMap = buildProjMap(projData);
+
+      function makeSlug(name) {
+        if (!name || typeof name !== "string") return null;
+        if (name.includes(",")) {
+          const [lastRaw, firstRaw] = name.split(",");
+          const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          return `${first}-${last}`;
+        }
+        const parts = name.trim().split(" ");
+        if (parts.length >= 2) {
+          const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          return `${first}-${last}`;
+        }
+        return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      }
+
+      const merged = rosterPlayers.map(rp => {
+        const full = allPlayers.find(p => p.id === rp.id) || {};
+        const slug = makeSlug(rp.name);
+
+        const news = newsList.filter(n => n.slug === slug);
+
+        return {
+          ...rp,
+          ...full,
+          name: rp.name,
+          pos: full.position || rp.position || "",
+          projected: projMap[String(rp.id)] ?? null,
+          avg: full.avg ?? rp.avg ?? null,
+          rank: rankMap[String(rp.id)]?.rank ?? null,
+          posRank: rankMap[String(rp.id)]?.posRank ?? null,
+          matchup: matchupMap[full.team] || null,
+          headshot: `/api/headshot?id=${rp.id}`,
+          slug,
+          healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
+          externalNews: news
+        };
+      });
+
+      setPlayers(merged);
+    } catch (err) {
+      console.error("TEAM LOAD ERROR:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // Helpers
+  // ───────────────────────────────────────────────
   function buildMatchupMap(schedData) {
     const map = {};
     const matchups = schedData?.nflSchedule?.matchup;
@@ -35,7 +218,6 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
-  // Build { playerId: projectedScore } from MFL projectedScores response
   function buildProjMap(projData) {
     const map = {};
     const scores = projData?.projectedScores?.playerScore;
@@ -45,165 +227,7 @@ export default function Team({ leagueInfo }) {
     });
     return map;
   }
-
-useEffect(() => {
-  async function loadPlayers() {
-    try {
-      const data = await getPlayers(year);
-      setPlayerDataState(data);
-    } catch (err) {
-      console.error("❌ getPlayers failed:", err);
-      setPlayerDataState({ players: [] });
-    }
-  }
-
-  loadPlayers();
-}, [year]);
-
-async function loadRoster() {
-  try {
-    //
-    // STEP 1 — SAFE PARALLEL LOAD (NO THROWING)
-    //
-    const [
-      rosterData,
-      schedData,
-      projData,
-      injuriesData
-    ] = await Promise.all([
-      getRoster(leagueId, myFranchiseId, year).catch(err => {
-        console.log("❌ getRoster failed:", err);
-        return null;
-      }),
-
-      fetch(`/data/nflScheduleWeek1.json`)
-        .then(r => r.json())
-        .catch(err => {
-          console.log("❌ schedule JSON failed:", err);
-          return { nflSchedule: { matchup: [] } };
-        }),
-
-      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
-        .then(r => r.text())
-        .then(t => {
-          try {
-            return JSON.parse(t);
-          } catch {
-            console.log("❌ projectedScores JSON parse failed");
-            return { projectedScores: { playerScore: [] } };
-          }
-        })
-        .catch(err => {
-          console.log("❌ projectedScores fetch failed:", err);
-          return { projectedScores: { playerScore: [] } };
-        }),
-
-      fetch(`/api/mfl?action=injuries&year=${year}`)
-        .then(r => r.json())
-        .catch(err => {
-          console.log("❌ injuries JSON failed:", err);
-          return { injuries: { injury: [] } };
-        })
-    ]);
-
-    //
-    // STEP 2 — ROSTER MUST EXIST
-    //
-    if (!rosterData || !rosterData.roster) {
-      console.log("❌ No roster data found");
-      setRoster([]);
-      return;
-    }
-
-    //
-    // ⭐ USE playerDataState (guaranteed loaded)
-    //
-    const allPlayers = playerDataState?.players || [];
-
-    //
-    // STEP 3 — BUILD rosterPlayers WITH REAL NAMES
-    //
-    const rosterPlayers = rosterData.roster.players.map(rp => {
-      const full = allPlayers.find(p => p.id === rp.id) || {};
-      return {
-        id: rp.id,
-        name: full.name || rp.name || null,   // ⭐ NOW ALWAYS HAS NAME
-        status: rp.status
-      };
-    });
-
-    //
-    // STEP 4 — FETCH NEWS USING REAL NAMES
-    //
-    const newsData = await fetch(
-      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-    )
-      .then(r => r.json())
-      .catch(err => {
-        console.log("❌ fantasyProsNewsBulk failed:", err);
-        return { news: [] };
-      });
-
-    const newsList = newsData.news || [];
-
-    //
-    // STEP 5 — MERGE EVERYTHING (unchanged)
-    //
-    const injuriesList = injuriesData?.injuries?.injury || [];
-    const matchupMap = buildMatchupMap(schedData);
-    const projMap = buildProjMap(projData);
-
-    function makeSlug(name) {
-      if (!name || typeof name !== "string") return null;
-      if (name.includes(",")) {
-        const [lastRaw, firstRaw] = name.split(",");
-        const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        return `${first}-${last}`;
-      }
-      const parts = name.trim().split(" ");
-      if (parts.length >= 2) {
-        const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        return `${first}-${last}`;
-      }
-      return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    }
-
-    const merged = rosterPlayers.map(rp => {
-      const full = allPlayers.find(p => p.id === rp.id) || {};
-      const slug = makeSlug(rp.name);
-      const news = newsList.filter(n => n.slug === slug);
-
-      return {
-        ...rp,
-        ...full,
-        name: rp.name,
-        pos: full.position || rp.position || "",
-        projected: projMap[String(rp.id)] ?? null,
-        avg: full.avg ?? rp.avg ?? null,
-        matchup: matchupMap[full.team] || null,
-        posRank: full._posRank ?? null,
-        headshot: `/api/headshot?id=${rp.id}`,
-        slug,
-        healthStatus: (injuriesList.find(x => x.id === rp.id)?.status) || null,
-        externalNews: news
-      };
-    });
-
-    setPlayers(merged);
-  } catch (err) {
-    console.error("TEAM LOAD ERROR:", err);
-  } finally {
-    setLoading(false);
-  }
 }
-
-useEffect(() => {
-  if (!myFranchiseId) return;
-  if (!playerDataState) return;   // ⭐ WAIT FOR PLAYERS FIRST
-  loadRoster();
-}, [myFranchiseId, playerDataState]);
 
 
   // ─── Player modal ─────────────────────────────────────────────────────────
