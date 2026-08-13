@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { getRoster } from "../utils/api";   // ⭐ getPlayers removed
+import { getRoster, getPlayers } from "../utils/api";
 import PlayerModal from "../components/PlayerModal";
 import "../pages/team.css";
 
+// ─── Shared column template ───────────────────────────────────────────────────
+// Applied via inline style= on BOTH .team-header and every .team-row so they
+// are guaranteed to always be in sync — one constant, zero drift.
 const GRID_COLS = "56px 1fr 60px 68px";
 
 export default function Team({ leagueInfo }) {
@@ -13,162 +16,197 @@ export default function Team({ leagueInfo }) {
   const [players,        setPlayers]        = useState([]);
   const [loading,        setLoading]        = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // ───────────────────────────────────────────────────────────────
-  // ⭐ RESTORED: Load ALL PLAYERS using your correct backend route
-  // ───────────────────────────────────────────────────────────────
-  useEffect(() => {
-    async function loadPlayers() {
-      try {
-        // ⭐ This is the ONLY correct endpoint — your old code used this
-        const data = await fetch(`/api/players?year=${year}`).then(r => r.json());
-        setPlayerDataState(data);
-      } catch (err) {
-        console.error("❌ getPlayers failed:", err);
-        setPlayerDataState({ players: [] });
+  // ─── Build { "KC": "vs LAR", "LAR": "@ KC", … } from MFL nflSchedule ──────
+  function buildMatchupMap(schedData) {
+    const map = {};
+    const matchups = schedData?.nflSchedule?.matchup;
+    if (!Array.isArray(matchups)) return map;
+    matchups.forEach(game => {
+      const home = game.homeTeam?.abbrev || game.home || "";
+      const away = game.awayTeam?.abbrev || game.away || "";
+      if (home && away) {
+        map[home] = `vs ${away}`;
+        map[away] = `@ ${home}`;
       }
-    }
-    loadPlayers();
-  }, [year]);
+    });
+    return map;
+  }
 
-  // ───────────────────────────────────────────────────────────────
-  // ⭐ RESTORED: Load roster AFTER players are loaded
-  // ───────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!myFranchiseId) return;
-    if (!playerDataState) return;   // ⭐ WAIT FOR PLAYERS FIRST
-    loadRoster();
-  }, [myFranchiseId, playerDataState, leagueInfo]);
+  // Build { playerId: projectedScore } from MFL projectedScores response
+  function buildProjMap(projData) {
+    const map = {};
+    const scores = projData?.projectedScores?.playerScore;
+    if (!Array.isArray(scores)) return map;
+    scores.forEach(s => {
+      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
+    });
+    return map;
+  }
 
-  // ───────────────────────────────────────────────────────────────
-  // ⭐ RESTORED: Full original merge logic
-  // ───────────────────────────────────────────────────────────────
-  async function loadRoster() {
+useEffect(() => {
+  async function loadPlayers() {
     try {
-      const [
-        rosterData,
-        schedData,
-        projData,
-        injuriesData
-      ] = await Promise.all([
-        getRoster(leagueId, myFranchiseId, year).catch(err => {
-          console.log("❌ getRoster failed:", err);
-          return null;
-        }),
-
-        fetch(`/data/nflScheduleWeek1.json`)
-          .then(r => r.json())
-          .catch(err => {
-            console.log("❌ schedule JSON failed:", err);
-            return { nflSchedule: { matchup: [] } };
-          }),
-
-        fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
-          .then(r => r.text())
-          .then(t => {
-            try { return JSON.parse(t); }
-            catch { return { projectedScores: { playerScore: [] } }; }
-          })
-          .catch(err => {
-            console.log("❌ projectedScores fetch failed:", err);
-            return { projectedScores: { playerScore: [] } };
-          }),
-
-        fetch(`/api/mfl?action=injuries&year=${year}`)
-          .then(r => r.json())
-          .catch(err => {
-            console.log("❌ injuries JSON failed:", err);
-            return { injuries: { injury: [] } };
-          })
-      ]);
-
-      if (!rosterData || !rosterData.roster) {
-        console.log("❌ No roster data found");
-        setPlayers([]);
-        return;
-      }
-
-      // ⭐ RESTORED: REAL MFL PLAYER UNIVERSE
-      const allPlayers = playerDataState?.players || [];
-
-      // ⭐ RESTORED: ID MATCHING WORKS AGAIN
-      const rosterPlayers = rosterData.roster.players.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
-        return {
-          id: rp.id,
-          name: full.name || rp.name || null,
-          status: rp.status
-        };
-      });
-
-      const newsData = await fetch(
-        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-      )
-        .then(r => r.json())
-        .catch(() => ({ news: [] }));
-
-      const newsList = newsData.news || [];
-
-      const injuriesList = injuriesData?.injuries?.injury || [];
-      const matchupMap = buildMatchupMap(schedData);
-      const projMap = buildProjMap(projData);
-
-      function makeSlug(name) {
-        if (!name || typeof name !== "string") return null;
-        if (name.includes(",")) {
-          const [lastRaw, firstRaw] = name.split(",");
-          const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          return `${first}-${last}`;
-        }
-        const parts = name.trim().split(" ");
-        if (parts.length >= 2) {
-          const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          return `${first}-${last}`;
-        }
-        return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      }
-
-      const merged = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
-        const slug = makeSlug(rp.name);
-        const news = newsList.filter(n => n.slug === slug);
-
-        return {
-          ...rp,
-          ...full,
-          name: rp.name,
-          pos: full.position || rp.position || "",
-          projected: projMap[String(rp.id)] ?? null,
-          avg: full.avg ?? rp.avg ?? null,
-          matchup: matchupMap[full.team] || null,
-          posRank: full._posRank ?? null,
-          headshot: `/api/headshot?id=${rp.id}`,
-          slug,
-          healthStatus: (injuriesList.find(x => x.id === rp.id)?.status) || null,
-          externalNews: news
-        };
-      });
-
-      setPlayers(merged);
+      const data = await getPlayers(year);
+      setPlayerDataState(data);
     } catch (err) {
-      console.error("TEAM LOAD ERROR:", err);
-    } finally {
-      setLoading(false);
+      console.error("❌ getPlayers failed:", err);
+      setPlayerDataState({ players: [] });
     }
   }
 
-  // ───────────────────────────────────────────────────────────────
-  // Helper functions (unchanged)
-  // ───────────────────────────────────────────────────────────────
-  function buildMatchupMap(schedData) { /* unchanged */ }
-  function buildProjMap(projData) { /* unchanged */ }
+  loadPlayers();
+}, [year]);
+
+async function loadRoster() {
+  try {
+    //
+    // STEP 1 — SAFE PARALLEL LOAD (NO THROWING)
+    //
+    const [
+      rosterData,
+      schedData,
+      projData,
+      injuriesData
+    ] = await Promise.all([
+      getRoster(leagueId, myFranchiseId, year).catch(err => {
+        console.log("❌ getRoster failed:", err);
+        return null;
+      }),
+
+      fetch(`/data/nflScheduleWeek1.json`)
+        .then(r => r.json())
+        .catch(err => {
+          console.log("❌ schedule JSON failed:", err);
+          return { nflSchedule: { matchup: [] } };
+        }),
+
+      fetch(`/api/mfl?action=projectedScores&leagueId=${leagueId}&year=${year}`)
+        .then(r => r.text())
+        .then(t => {
+          try {
+            return JSON.parse(t);
+          } catch {
+            console.log("❌ projectedScores JSON parse failed");
+            return { projectedScores: { playerScore: [] } };
+          }
+        })
+        .catch(err => {
+          console.log("❌ projectedScores fetch failed:", err);
+          return { projectedScores: { playerScore: [] } };
+        }),
+
+      fetch(`/api/mfl?action=injuries&year=${year}`)
+        .then(r => r.json())
+        .catch(err => {
+          console.log("❌ injuries JSON failed:", err);
+          return { injuries: { injury: [] } };
+        })
+    ]);
+
+    //
+    // STEP 2 — ROSTER MUST EXIST
+    //
+    if (!rosterData || !rosterData.roster) {
+      console.log("❌ No roster data found");
+      setRoster([]);
+      return;
+    }
+
+    //
+    // ⭐ USE playerDataState (guaranteed loaded)
+    //
+    const allPlayers = playerDataState?.players || [];
+
+    //
+    // STEP 3 — BUILD rosterPlayers WITH REAL NAMES
+    //
+    const rosterPlayers = rosterData.roster.players.map(rp => {
+      const full = allPlayers.find(p => p.id === rp.id) || {};
+      return {
+        id: rp.id,
+        name: full.name || rp.name || null,   // ⭐ NOW ALWAYS HAS NAME
+        status: rp.status
+      };
+    });
+
+    //
+    // STEP 4 — FETCH NEWS USING REAL NAMES
+    //
+    const newsData = await fetch(
+      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+    )
+      .then(r => r.json())
+      .catch(err => {
+        console.log("❌ fantasyProsNewsBulk failed:", err);
+        return { news: [] };
+      });
+
+    const newsList = newsData.news || [];
+
+    //
+    // STEP 5 — MERGE EVERYTHING (unchanged)
+    //
+    const injuriesList = injuriesData?.injuries?.injury || [];
+    const matchupMap = buildMatchupMap(schedData);
+    const projMap = buildProjMap(projData);
+
+    function makeSlug(name) {
+      if (!name || typeof name !== "string") return null;
+      if (name.includes(",")) {
+        const [lastRaw, firstRaw] = name.split(",");
+        const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        return `${first}-${last}`;
+      }
+      const parts = name.trim().split(" ");
+      if (parts.length >= 2) {
+        const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        return `${first}-${last}`;
+      }
+      return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    }
+
+    const merged = rosterPlayers.map(rp => {
+      const full = allPlayers.find(p => p.id === rp.id) || {};
+      const slug = makeSlug(rp.name);
+      const news = newsList.filter(n => n.slug === slug);
+
+      return {
+        ...rp,
+        ...full,
+        name: rp.name,
+        pos: full.position || rp.position || "",
+        projected: projMap[String(rp.id)] ?? null,
+        avg: full.avg ?? rp.avg ?? null,
+        matchup: matchupMap[full.team] || null,
+        posRank: full._posRank ?? null,
+        headshot: `/api/headshot?id=${rp.id}`,
+        slug,
+        healthStatus: (injuriesList.find(x => x.id === rp.id)?.status) || null,
+        externalNews: news
+      };
+    });
+
+    setPlayers(merged);
+  } catch (err) {
+    console.error("TEAM LOAD ERROR:", err);
+  } finally {
+    setLoading(false);
+  }
+}
+
+useEffect(() => {
+  if (!myFranchiseId) return;
+  if (!playerDataState) return;   // ⭐ WAIT FOR PLAYERS FIRST
+  loadRoster();
+}, [myFranchiseId, playerDataState]);
 
 
-  // ⭐ SECTION 2 — RENDER LOGIC (INSIDE COMPONENT)
-
+  // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
     setSelectedPlayer({ loading: true });
     try {
@@ -202,9 +240,11 @@ export default function Team({ leagueInfo }) {
   if (loading)         return <p>Loading team...</p>;
   if (!players.length) return <p>No roster data found.</p>;
 
+  // ─── Slot definitions ─────────────────────────────────────────────────────
   const offenseSlots = ["QB", "RB", "RB", "WR", "WR", "TE", "W/R/T", "PK"];
   const defenseSlots = ["DT/DL", "DT/DL", "LB", "LB", "DB/S", "DB/S"];
 
+  // ─── Consume-as-you-assign: fills slots left-to-right, no double-dipping ──
   function assignSlots(slots, candidates) {
     const used = new Set();
     return slots.map(slot => {
@@ -225,17 +265,20 @@ export default function Team({ leagueInfo }) {
   const bench           = players.filter(p => ["R", "RES", "TAXI", "BENCH"].includes(p.status));
   const ir              = players.filter(p => p.status === "IR");
 
+  // ─── Row renderer ─────────────────────────────────────────────────────────
   function renderPlayer(p, idx) {
     const isEmpty = p.empty;
     return (
       <div
         key={p.id || `empty-${p.slot}-${idx}`}
         className={`team-row${isEmpty ? " team-row--empty" : ""}`}
-        style={{ gridTemplateColumns: GRID_COLS }}
+        style={{ gridTemplateColumns: GRID_COLS }}   // ← matches header exactly
         onClick={() => !isEmpty && openPlayer(p)}
       >
+        {/* Column 1 — Slot */}
         <div className="team-slot">{p.slot}</div>
 
+        {/* Column 2 — Player */}
         <div className="team-player">
           <img
             src={isEmpty ? "/silhouettes/player.png" : p.headshot}
@@ -243,12 +286,13 @@ export default function Team({ leagueInfo }) {
             alt={isEmpty ? "Empty slot" : p.name}
             onError={e => { e.target.src = "/silhouettes/player.png"; }}
           />
-          <div className="team-info">
+                  <div className="team-info">
             <div className="team-name-row">
               <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
 
               {!isEmpty && (
                 <span className="team-badges">
+                  {/* HEALTH BADGE */}
                   {p.healthStatus !== "Healthy" && (
                     <span className={`health-badge health-${p.healthStatus}`}>
                       {p.healthStatus === "Questionable" && "Q"}
@@ -257,6 +301,7 @@ export default function Team({ leagueInfo }) {
                     </span>
                   )}
 
+                  {/* NEWS BADGE */}
                   {p.externalNews && p.externalNews.length > 0 && (
                     <span
                       className={`news-badge ${
@@ -273,24 +318,28 @@ export default function Team({ leagueInfo }) {
             </div>
 
             {!isEmpty && (
-              <div className="team-meta">
-                <span className="meta-team">{p.team}</span>
-                <span className="meta-pos">{p.pos}</span>
+            <div className="team-meta">
+              <span className="meta-team">{p.team}</span>
+              <span className="meta-pos">{p.pos}</span>
 
-                {p.matchup && (
-                  <span className="meta-matchup">
-                    {p.matchup.home ? "v" : "@"} {p.matchup.opponent} · {p.matchup.kickoff}
-                  </span>
-                )}
+              {/* Opponent + kickoff */}
+              {p.matchup && (
+                <span className="meta-matchup">
+                  {p.matchup.home ? "v" : "@"} {p.matchup.opponent} · {p.matchup.kickoff}
+                </span>
+              )}
 
-                {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
-              </div>
+              {/* Bye week */}
+              {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
+            </div>
             )}
           </div>
         </div>
 
+        {/* Column 3 — Rank */}
         <div className="team-rank">{isEmpty ? "" : `#${p.posRank}`}</div>
 
+        {/* Column 4 — Projected points */}
         <div className="team-proj">
           {isEmpty ? "" : (p.projected ?? p.avg ?? "–")}
         </div>
@@ -302,6 +351,7 @@ export default function Team({ leagueInfo }) {
     <div className="team-container">
       <h1 className="team-title">My Team</h1>
 
+      {/* Sticky header — same GRID_COLS as every team-row */}
       <div className="team-header" style={{ gridTemplateColumns: GRID_COLS }}>
         <div className="col-pos">POS</div>
         <div className="col-player">Player</div>
