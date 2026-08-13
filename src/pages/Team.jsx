@@ -203,46 +203,43 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
-        function toLastFirst(name) {
-          if (!name) return null;
-          if (name.includes(",")) return name;
+        const merged = rosterPlayers.map(rp => {
+          const full = allPlayers.find(p => p.id === rp.id) || {};
 
-          const parts = name.trim().split(" ");
-          if (parts.length < 2) return name;
+          // Correct name format: "Jordan Addison"
+          const name = full.name || rp.name;
 
-          const first = parts[0];
-          const last  = parts[parts.length - 1];
+          // Correct FantasyPros slug: "jordan-addison"
+          const slug = makeSlug(name);
 
-          return `${last}, ${first}`;
-        }
+          // Correct news filter
+          const news = newsList
+            .filter(n => n.slug === slug)
+            .map(n => ({
+              ...n,
+              formattedTime: formatNewsTime(n.time)
+            }));
 
-        const correctedName = toLastFirst(full.name || rp.name);
-        const slug = makeSlug(correctedName);
+          return {
+            ...rp,
+            ...full,
 
-        // ⭐ KEEP ONLY THIS NEWS BLOCK
-        const news = newsList
-          .filter(n => n.slug === slug)
-          .map(n => ({
-            ...n,
-            formattedTime: formatNewsTime(n.time)
-          }));
+            name,
+            slug,
 
-        return {
-          ...rp,
-          ...full,
-          name: correctedName,
-          slug,
-          pos: full.position || rp.position || "",
-          projected: projMap[String(rp.id)] ?? null,
-          avg: full.avg ?? rp.avg ?? null,
-          rank: rankMap[String(rp.id)]?.rank ?? null,
-          posRank: rankMap[String(rp.id)]?.posRank ?? null,
-          matchup: matchupMap[full.team] || null,
-          headshot: `/api/headshot?id=${rp.id}`,
-          healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
-          externalNews: news
-        };
-      });
+            pos: full.position || rp.position || "",
+            projected: projMap[String(rp.id)] ?? null,
+            avg: full.avg ?? rp.avg ?? null,
+
+            rank: rankMap[String(rp.id)]?.rank ?? null,
+            posRank: rankMap[String(rp.id)]?.posRank ?? null,
+
+            matchup: matchupMap[full.team] || null,
+            headshot: `/api/headshot?id=${rp.id}`,
+            healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
+            externalNews: news
+          };
+        });
 
       console.log("📌 MERGED PLAYER SAMPLE:", merged[0]);
 
