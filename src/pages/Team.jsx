@@ -215,12 +215,11 @@ export default function Team({ leagueInfo }) {
         const name = full.name; // ALWAYS FantasyPros format
         const slug = makeSlug(name);
 
-
         const news = newsList
           .filter(n => n.slug === slug)
           .map(n => ({
             ...n,
-            formattedTime: formatNewsTime(n.time)
+            formattedTime: formatNewsTime(n.timestamp)
           }));
 
         return {
