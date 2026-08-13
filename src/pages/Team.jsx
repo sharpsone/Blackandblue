@@ -15,6 +15,9 @@ export default function Team({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerDataState, setPlayerDataState] = useState(null);
 
+  // ⭐ NEW — store MFL playerRanks
+  const [rankMap, setRankMap] = useState({});
+
   // ───────────────────────────────────────────────────────────────
   // Format FantasyPros/Sleeper UNIX timestamps
   // ───────────────────────────────────────────────────────────────
@@ -27,37 +30,6 @@ export default function Team({ leagueInfo }) {
       hour: "numeric",
       minute: "2-digit"
     });
-  }
-
-  // ───────────────────────────────────────────────────────────────
-  // Build matchup map
-  // ───────────────────────────────────────────────────────────────
-  function buildMatchupMap(schedData) {
-    const map = {};
-    const matchups = schedData?.nflSchedule?.matchup;
-    if (!Array.isArray(matchups)) return map;
-    matchups.forEach(game => {
-      const home = game.homeTeam?.abbrev || game.home || "";
-      const away = game.awayTeam?.abbrev || game.away || "";
-      if (home && away) {
-        map[home] = `vs ${away}`;
-        map[away] = `@ ${home}`;
-      }
-    });
-    return map;
-  }
-
-  // ───────────────────────────────────────────────────────────────
-  // Build projected score map
-  // ───────────────────────────────────────────────────────────────
-  function buildProjMap(projData) {
-    const map = {};
-    const scores = projData?.projectedScores?.playerScore;
-    if (!Array.isArray(scores)) return map;
-    scores.forEach(s => {
-      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
-    });
-    return map;
   }
 
   // ───────────────────────────────────────────────────────────────
@@ -77,13 +49,43 @@ export default function Team({ leagueInfo }) {
   }, [year]);
 
   // ───────────────────────────────────────────────────────────────
-  // Load roster AFTER players are loaded
+  // ⭐ NEW — Load MFL playerRanks (FantasySharks rankings)
+  // ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    async function loadRanks() {
+      try {
+        const res = await fetch(`/api/mfl?action=playerRanks&year=${year}`);
+        const data = await res.json();
+
+        const list = data?.player_ranks?.player || [];
+        const map = {};
+
+        list.forEach(r => {
+          map[r.id] = {
+            rank: Number(r.rank) || null,
+            posRank: Number(r.posRank) || null
+          };
+        });
+
+        setRankMap(map);
+      } catch (err) {
+        console.error("❌ playerRanks failed:", err);
+        setRankMap({});
+      }
+    }
+
+    loadRanks();
+  }, [year]);
+
+  // ───────────────────────────────────────────────────────────────
+  // Load roster AFTER players + ranks are loaded
   // ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!myFranchiseId) return;
     if (!playerDataState) return;
+    if (!rankMap) return;
     loadRoster();
-  }, [myFranchiseId, playerDataState]);
+  }, [myFranchiseId, playerDataState, rankMap]);
 
   // ───────────────────────────────────────────────────────────────
   // Load roster + merge everything
@@ -174,7 +176,7 @@ export default function Team({ leagueInfo }) {
       }
 
       // ───────────────────────────────────────────────────────────────
-      // Merge everything + attach formatted news time
+      // Merge everything + attach rank + posRank + formatted news time
       // ───────────────────────────────────────────────────────────────
       const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
@@ -187,7 +189,7 @@ export default function Team({ leagueInfo }) {
             formattedTime: formatNewsTime(n.time)
           }));
 
-            return {
+        return {
           ...rp,
           ...full,
           name: rp.name,
@@ -195,9 +197,9 @@ export default function Team({ leagueInfo }) {
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
 
-          // ⭐ NEW — rank fields restored
-          rank: full.rank ?? null,
-          posRank: full._posRank ?? null,
+          // ⭐ NEW — rank + posRank from MFL playerRanks
+          rank: rankMap[rp.id]?.rank ?? null,
+          posRank: rankMap[rp.id]?.posRank ?? null,
 
           matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
@@ -215,6 +217,33 @@ export default function Team({ leagueInfo }) {
     }
   }
 
+  // ───────────────────────────────────────────────────────────────
+  // Helper functions (unchanged)
+  // ───────────────────────────────────────────────────────────────
+  function buildMatchupMap(schedData) {
+    const map = {};
+    const matchups = schedData?.nflSchedule?.matchup;
+    if (!Array.isArray(matchups)) return map;
+    matchups.forEach(game => {
+      const home = game.homeTeam?.abbrev || game.home || "";
+      const away = game.awayTeam?.abbrev || game.away || "";
+      if (home && away) {
+        map[home] = `vs ${away}`;
+        map[away] = `@ ${home}`;
+      }
+    });
+    return map;
+  }
+
+  function buildProjMap(projData) {
+    const map = {};
+    const scores = projData?.projectedScores?.playerScore;
+    if (!Array.isArray(scores)) return map;
+    scores.forEach(s => {
+      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
+    });
+    return map;
+  }
 
   // ─── Player modal ─────────────────────────────────────────────────────────
   const openPlayer = async (player) => {
