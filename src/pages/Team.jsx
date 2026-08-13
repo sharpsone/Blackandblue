@@ -204,7 +204,7 @@ export default function Team({ leagueInfo }) {
         });
 
      // const merged = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
+   //     const full = allPlayers.find(p => p.id === rp.id) || {};
 
         // Correct name format: "Jordan Addison"
         const name = full.name || rp.name;
