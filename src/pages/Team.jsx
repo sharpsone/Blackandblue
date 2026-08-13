@@ -161,12 +161,28 @@ export default function Team({ leagueInfo }) {
           status: rp.status
         };
       });
+//test fix code
+        const playersPayload = rosterPlayers.map(rp => {
+        const full = allPlayers.find(p => p.id === rp.id) || {};
+        return {
+          id: rp.id,
+          name: full.name,   // ⭐ ALWAYS use First Last
+          status: rp.status
+        };
+      });
+
+ //     const newsData = await fetch(
+ //       `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
+ //     )
+ //       .then(r => r.json())
+  //      .catch(() => ({ news: [] }));
 
       const newsData = await fetch(
-        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
-      )
-        .then(r => r.json())
-        .catch(() => ({ news: [] }));
+      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
+    )
+      .then(r => r.json())
+      .catch(() => ({ news: [] }));
+
 
       const newsList = newsData.news || [];
 
