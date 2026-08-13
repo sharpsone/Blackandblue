@@ -194,7 +194,7 @@ export default function Team({ leagueInfo }) {
       // ⭐ Merge everything + attach rank (ID normalized)
       const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
-        const slug = makeSlug(rp.name);
+       // const slug = makeSlug(rp.name);
 
         const news = newsList
           .filter(n => n.slug === slug)
