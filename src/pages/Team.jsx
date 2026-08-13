@@ -18,7 +18,7 @@ export default function Team({ leagueInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerDataState, setPlayerDataState] = useState(null);
 
-  // Rank map from MFL playerRanks
+  // ⭐ rank map from MFL playerRanks
   const [rankMap, setRankMap] = useState({});
 
   // Format FantasyPros/Sleeper UNIX timestamps
@@ -33,7 +33,7 @@ export default function Team({ leagueInfo }) {
     });
   }
 
-  // Load ALL PLAYERS (your original working flow)
+  // Load ALL PLAYERS
   useEffect(() => {
     async function loadPlayers() {
       try {
@@ -47,7 +47,7 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ⭐ Load MFL playerRanks for ALL POS groups (with leagueId + year)
+  // ⭐ Load MFL playerRanks for ALL POS groups (with ID normalization)
   useEffect(() => {
     async function loadRanks() {
       const map = {};
@@ -62,9 +62,9 @@ export default function Team({ leagueInfo }) {
           const list = data?.player_ranks?.player || [];
 
           list.forEach(r => {
-            map[r.id] = {
+            map[String(r.id)] = {
               rank: Number(r.rank) || null,
-              posRank: Number(r.posRank) || null,
+              posRank: null,   // MFL does NOT return posRank
               pos
             };
           });
@@ -150,7 +150,7 @@ export default function Team({ leagueInfo }) {
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
 
-      // Slug generator (unchanged)
+      // Slug generator
       function makeSlug(name) {
         if (!name || typeof name !== "string") return null;
         if (name.includes(",")) {
@@ -168,7 +168,7 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-      // Merge everything + attach rank + posRank + formatted news time
+      // Merge everything + attach rank + formatted news time
       const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         const slug = makeSlug(rp.name);
@@ -188,9 +188,9 @@ export default function Team({ leagueInfo }) {
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
 
-          // ⭐ rank + posRank from POS-based playerRanks
-          rank: rankMap[rp.id]?.rank ?? null,
-          posRank: rankMap[rp.id]?.posRank ?? null,
+          // ⭐ rank + posRank with ID normalization
+          rank: rankMap[String(rp.id)]?.rank ?? null,
+          posRank: rankMap[String(rp.id)]?.posRank ?? null,
 
           matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
@@ -208,7 +208,7 @@ export default function Team({ leagueInfo }) {
     }
   }
 
-  // Helper functions (unchanged)
+  // Helper functions
   function buildMatchupMap(schedData) {
     const map = {};
     const matchups = schedData?.nflSchedule?.matchup;
