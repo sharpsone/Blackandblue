@@ -151,10 +151,7 @@ export default function Team({ leagueInfo }) {
 
       console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
 
-      // 1. Load allPlayers FIRST
-      const allPlayers = playerDataState?.players || [];
-
-          // 1. Build rosterPlayers with real names
+      // 1. Build rosterPlayers with real names
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         return {
@@ -179,26 +176,6 @@ export default function Team({ leagueInfo }) {
         .catch(() => ({ news: [] }));
 
       const newsList = newsData.news || [];
-
-      for (const rp of rosterPlayers) {
-        try {
-          //const single = await fetch(
-          //  `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(rp.name)}&leagueId=${leagueId}&year=${year}`
-          //).then(r => r.json());
-          const newsData = await fetch(
-            `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
-          )
-            .then(r => r.json())
-            .catch(() => ({ news: [] }));
-
-
-          if (Array.isArray(single.news)) {
-            newsList.push(...single.news);
-          }
-        } catch (err) {
-          console.log("❌ Single-player news fetch failed for:", rp.name, err);
-        }
-      }
 
       const injuriesList = injuriesData?.injuries?.injury || [];
       const matchupMap = buildMatchupMap(schedData);
