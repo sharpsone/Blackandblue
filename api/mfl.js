@@ -261,6 +261,27 @@ if (action === "fantasyProsNewsBulk") {
       return JSON.parse(fs.readFileSync(filePath, "utf8"));
     };
 
+    case "playerRanks": {
+      const pos = req.query.POS || "";        // QB, RB, WR, etc
+      const leagueId = req.query.leagueId;
+      const year = req.query.year;
+
+      if (!leagueId || !year) {
+        return res.json({ error: "Missing leagueId or year" });
+      }
+
+      // MFL playerRanks endpoint
+      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=playerRanks&POS=${pos}&SOURCE=&JSON=1`;
+
+      try {
+        const data = await callMFL(url);
+        return res.json(data);
+      } catch (err) {
+        console.error("playerRanks error:", err);
+        return res.json({ error: "playerRanks fetch failed" });
+      }
+    }
+
     // -----------------------------
     // ACTION: freeAgents
     // -----------------------------
