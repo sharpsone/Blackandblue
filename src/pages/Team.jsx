@@ -187,15 +187,19 @@ export default function Team({ leagueInfo }) {
             formattedTime: formatNewsTime(n.time)
           }));
 
-        return {
+            return {
           ...rp,
           ...full,
           name: rp.name,
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
-          matchup: matchupMap[full.team] || null,
+
+          // ⭐ NEW — rank fields restored
+          rank: full.rank ?? null,
           posRank: full._posRank ?? null,
+
+          matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
           slug,
           healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
