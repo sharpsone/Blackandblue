@@ -151,20 +151,13 @@ export default function Team({ leagueInfo }) {
 
       console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
 
-//test fix code
-       const playersPayload = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
-       return {
-         id: rp.id,
-          name: full.name,   // ⭐ ALWAYS use First Last
-          status: rp.status
-        };
-      });
+      // 1. Load allPlayers FIRST
+      const allPlayers = playerDataState?.players || [];
 
+      // 2. Build rosterPlayers (convert Last, First → First Last)
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
 
-        // Convert "Last, First" → "First Last"
         let name = full.name || rp.name || "";
         if (name.includes(",")) {
           const [last, first] = name.split(",");
@@ -178,18 +171,19 @@ export default function Team({ leagueInfo }) {
         };
       });
 
- //     const newsData = await fetch(
- //       `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
- //     )
- //       .then(r => r.json())
-  //      .catch(() => ({ news: [] }));
+      // 3. Build playersPayload AFTER rosterPlayers exists
+      const playersPayload = rosterPlayers.map(rp => ({
+        id: rp.id,
+        name: rp.name,   // now First Last
+        status: rp.status
+      }));
 
+      // 4. Fetch news
       const newsData = await fetch(
-      `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
-    )
-      .then(r => r.json())
-      .catch(() => ({ news: [] }));
-
+        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
+      )
+        .then(r => r.json())
+        .catch(() => ({ news: [] }));
 
       const newsList = newsData.news || [];
 
