@@ -37,6 +37,7 @@ export default function Team({ leagueInfo }) {
     async function loadPlayers() {
       try {
         const data = await getPlayers(year);
+        console.log("📌 PLAYERS LOADED:", data?.players?.length);
         setPlayerDataState(data);
       } catch (err) {
         console.error("❌ getPlayers failed:", err);
@@ -46,10 +47,12 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ⭐ Load MFL playerRanks for ALL POS groups (Promise.all + ID normalization)
+  // ⭐ Load MFL playerRanks for ALL POS groups (Promise.all + ID normalization + LOGGING)
   useEffect(() => {
     async function loadRanks() {
       try {
+        console.log("📌 LOADING RANKS for POSITIONS:", POSITIONS);
+
         const results = await Promise.all(
           POSITIONS.map(pos =>
             fetch(`/api/mfl?action=playerRanks&POS=${pos}&leagueId=${leagueId}&year=${year}`)
@@ -63,7 +66,15 @@ export default function Team({ leagueInfo }) {
           const pos = POSITIONS[i];
           const list = data?.player_ranks?.player || [];
 
+          console.log(`📌 POS ${pos} → ${list.length} players`);
+
           list.forEach(r => {
+            console.log("📌 RANK ENTRY:", {
+              pos,
+              id: r.id,
+              rank: r.rank
+            });
+
             map[String(r.id)] = {
               rank: Number(r.rank) || null,
               pos,
@@ -71,6 +82,9 @@ export default function Team({ leagueInfo }) {
             };
           });
         });
+
+        console.log("📌 FINAL rankMap keys:", Object.keys(map).slice(0, 50));
+        console.log("📌 FINAL rankMap sample:", map[Object.keys(map)[0]]);
 
         setRankMap(map);
       } catch (err) {
@@ -87,12 +101,16 @@ export default function Team({ leagueInfo }) {
     if (!myFranchiseId) return;
     if (!playerDataState) return;
     if (!rankMap) return;
+
+    console.log("📌 TRIGGER loadRoster()");
     loadRoster();
   }, [myFranchiseId, playerDataState, rankMap]);
 
-  // Load roster + merge everything
+  // Load roster + merge everything (LOGGING ADDED)
   async function loadRoster() {
     try {
+      console.log("📌 LOADING ROSTER…");
+
       const [
         rosterData,
         schedData,
@@ -126,6 +144,8 @@ export default function Team({ leagueInfo }) {
         setPlayers([]);
         return;
       }
+
+      console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
 
       const allPlayers = playerDataState?.players || [];
 
@@ -179,6 +199,14 @@ export default function Team({ leagueInfo }) {
             formattedTime: formatNewsTime(n.time)
           }));
 
+        // ⭐ MERGE LOGGING
+        console.log("📌 MERGE PLAYER:", {
+          rpId: rp.id,
+          rpIdString: String(rp.id),
+          rankLookup: rankMap[String(rp.id)],
+          rankValue: rankMap[String(rp.id)]?.rank
+        });
+
         return {
           ...rp,
           ...full,
@@ -199,6 +227,8 @@ export default function Team({ leagueInfo }) {
         };
       });
 
+      console.log("📌 MERGED PLAYER SAMPLE:", merged[0]);
+
       setPlayers(merged);
     } catch (err) {
       console.error("TEAM LOAD ERROR:", err);
@@ -207,32 +237,6 @@ export default function Team({ leagueInfo }) {
     }
   }
 
-  function buildMatchupMap(schedData) {
-    const map = {};
-    const matchups = schedData?.nflSchedule?.matchup;
-    if (!Array.isArray(matchups)) return map;
-    matchups.forEach(game => {
-      const home = game.homeTeam?.abbrev || game.home || "";
-      const away = game.awayTeam?.abbrev || game.away || "";
-      if (home && away) {
-        map[home] = `vs ${away}`;
-        map[away] = `@ ${home}`;
-      }
-    });
-    return map;
-  }
-
-  function buildProjMap(projData) {
-    const map = {};
-    const scores = projData?.projectedScores?.playerScore;
-    if (!Array.isArray(scores)) return map;
-    scores.forEach(s => {
-      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
-    });
-    return map;
-  }
-
-  // Helper functions
   function buildMatchupMap(schedData) {
     const map = {};
     const matchups = schedData?.nflSchedule?.matchup;
