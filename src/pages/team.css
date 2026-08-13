@@ -188,12 +188,6 @@ p {
   justify-content: space-between;
 }
 
-/* Badge container */
-.team-badges {
-  display: flex;
-  gap: 6px;
-}
-
 /* HEALTH BADGES */
 .health-badge {
   padding: 2px 6px;
@@ -207,95 +201,54 @@ p {
 .health-D { background: #ff6600; color: #000; }   /* Doubtful */
 .health-O { background: #ff0000; color: #fff; }   /* Out */
 
-.news-badge {
-  font-size: 0.9rem;
-  padding: 2px 4px;
-  border-radius: 4px;
+/* ─── BADGE SYSTEM (Unified) ───────────────────────────────────────── */
+
+.team-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.news-recent {
-  color: purple;
-}
-
-.news-old {
-  color: grey;
-}
-
-.injury-pill {
+/* Shared wrapper for both badges */
+.badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0px 4px;        /* smaller padding */
-  margin-left: 6px;
+
+  height: 16px;        /* identical height */
+  min-width: 16px;     /* identical width */
+  line-height: 1;
+}
+
+/* Injury pill */
+.injury-pill {
+  padding: 0 4px;
   border-radius: 4px;
-  font-size: 10px;         /* slightly smaller font */
+  font-size: 10px;
   font-weight: 700;
-  line-height: 1;          /* critical: keeps pill height tight */
-  height: 14px;            /* forces pill to match text height */
   text-transform: uppercase;
 }
 
-/* Out (O) and Doubtful (D) = Red */
+/* Injury colors */
 .injury-pill.O,
 .injury-pill.D {
   background-color: #ff4d4f;
   color: white;
 }
 
-/* Questionable (Q) = Yellow */
 .injury-pill.Q {
   background-color: #ffd666;
   color: #333;
 }
 
-.team-badges {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.badge {
-  display: flex;
-  align-items: center;
-}
-
-.team-badges {
-  display: flex;
-  align-items: center;     /* ⭐ forces vertical alignment */
-  gap: 4px;
-}
-
-.badge {
-  display: flex;           /* ⭐ makes each badge a flex box */
-  align-items: center;     /* ⭐ centers the pill or icon inside */
-  line-height: 1;          /* ⭐ removes baseline weirdness */
-}
-
-.injury-pill {
-  display: inline-flex;    /* ⭐ makes the pill match the news icon */
-  align-items: center;
-  justify-content: center;
-  height: 16px;            /* ⭐ consistent height */
-  padding: 0 4px;          /* keep your pill shape */
-}
-
+/* News badge */
 .news-badge {
-  display: inline-flex;    /* ⭐ makes the emoji align like the pill */
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;         /* tweak if needed */
-  height: 16px;            /* same height as pill */
+  font-size: 12px;     /* slightly larger emoji */
+  padding: 0 4px;
+  border-radius: 4px;
 }
 
-.injury-pill,
-.news-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* News colors */
+.news-recent { color: purple; }
+.news-old    { color: grey; }
 
-  height: 16px;        /* ⭐ SAME HEIGHT */
-  min-width: 16px;     /* ⭐ SAME WIDTH */
-  line-height: 1;      /* ⭐ removes baseline weirdness */
-  padding: 0 4px;      /* pill needs horizontal padding */
-  font-size: 10px;     /* pill font size */
-}
