@@ -191,17 +191,12 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-      const merged = rosterPlayers.map(rp => {
+        const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
 
-        console.log("📌 MERGE PLAYER:", {
-          rpId: rp.id,
-          rpIdString: String(rp.id),
-          rankLookup: rankMap[String(rp.id)],
-          rankValue: rankMap[String(rp.id)]?.rank
-        });
+        // ALWAYS use full.name (FantasyPros format)
+        const name = full.name;
 
-        const name = full.name || rp.name;
         const slug = makeSlug(name);
 
         const news = newsList
@@ -227,7 +222,6 @@ export default function Team({ leagueInfo }) {
           externalNews: news
         };
       });
-
       console.log("📌 MERGED PLAYER SAMPLE:", merged[0]);
 
       setPlayers(merged);
