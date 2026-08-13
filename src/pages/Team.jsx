@@ -5,8 +5,8 @@ import "../pages/team.css";
 
 const GRID_COLS = "56px 1fr 60px 68px";
 
-// MFL position groups for playerRanks
-const POSITIONS = ["QB", "RB", "WR", "TE", "PK", "DL", "LB", "DB", "DT", "DE", "S", "CB"];
+// ⭐ ONLY valid MFL POS groups
+const POSITIONS = ["QB", "RB", "WR", "TE", "PK", "DL", "LB", "DB"];
 
 export default function Team({ leagueInfo }) {
   const leagueId      = leagueInfo?.leagueId;
@@ -21,7 +21,6 @@ export default function Team({ leagueInfo }) {
   // ⭐ rank map from MFL playerRanks
   const [rankMap, setRankMap] = useState({});
 
-  // Format FantasyPros/Sleeper UNIX timestamps
   function formatNewsTime(unix) {
     if (!unix) return null;
     const d = new Date(unix * 1000);
@@ -47,28 +46,31 @@ export default function Team({ leagueInfo }) {
     loadPlayers();
   }, [year]);
 
-  // ⭐ Load MFL playerRanks for ALL POS groups (with ID normalization)
+  // ⭐ Load MFL playerRanks for ALL POS groups (Promise.all + ID normalization)
   useEffect(() => {
     async function loadRanks() {
-      const map = {};
-
       try {
-        for (const pos of POSITIONS) {
-          const res = await fetch(
-            `/api/mfl?action=playerRanks&POS=${pos}&leagueId=${leagueId}&year=${year}`
-          );
+        const results = await Promise.all(
+          POSITIONS.map(pos =>
+            fetch(`/api/mfl?action=playerRanks&POS=${pos}&leagueId=${leagueId}&year=${year}`)
+              .then(r => r.json())
+          )
+        );
 
-          const data = await res.json();
+        const map = {};
+
+        results.forEach((data, i) => {
+          const pos = POSITIONS[i];
           const list = data?.player_ranks?.player || [];
 
           list.forEach(r => {
             map[String(r.id)] = {
               rank: Number(r.rank) || null,
-              posRank: null,   // MFL does NOT return posRank
-              pos
+              pos,
+              posRank: null
             };
           });
-        }
+        });
 
         setRankMap(map);
       } catch (err) {
@@ -127,7 +129,6 @@ export default function Team({ leagueInfo }) {
 
       const allPlayers = playerDataState?.players || [];
 
-      // Build rosterPlayers with real names
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         return {
@@ -137,7 +138,6 @@ export default function Team({ leagueInfo }) {
         };
       });
 
-      // Fetch FantasyPros/Sleeper news
       const newsData = await fetch(
         `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
       )
@@ -150,7 +150,6 @@ export default function Team({ leagueInfo }) {
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
 
-      // Slug generator
       function makeSlug(name) {
         if (!name || typeof name !== "string") return null;
         if (name.includes(",")) {
@@ -168,7 +167,7 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-      // Merge everything + attach rank + formatted news time
+      // ⭐ Merge everything + attach rank (ID normalized)
       const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
         const slug = makeSlug(rp.name);
@@ -188,7 +187,7 @@ export default function Team({ leagueInfo }) {
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
 
-          // ⭐ rank + posRank with ID normalization
+          // ⭐ rank now works
           rank: rankMap[String(rp.id)]?.rank ?? null,
           posRank: rankMap[String(rp.id)]?.posRank ?? null,
 
@@ -206,6 +205,31 @@ export default function Team({ leagueInfo }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function buildMatchupMap(schedData) {
+    const map = {};
+    const matchups = schedData?.nflSchedule?.matchup;
+    if (!Array.isArray(matchups)) return map;
+    matchups.forEach(game => {
+      const home = game.homeTeam?.abbrev || game.home || "";
+      const away = game.awayTeam?.abbrev || game.away || "";
+      if (home && away) {
+        map[home] = `vs ${away}`;
+        map[away] = `@ ${home}`;
+      }
+    });
+    return map;
+  }
+
+  function buildProjMap(projData) {
+    const map = {};
+    const scores = projData?.projectedScores?.playerScore;
+    if (!Array.isArray(scores)) return map;
+    scores.forEach(s => {
+      if (s.id) map[String(s.id)] = parseFloat(s.score) || null;
+    });
+    return map;
   }
 
   // Helper functions
