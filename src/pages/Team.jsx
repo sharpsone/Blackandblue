@@ -194,7 +194,6 @@ export default function Team({ leagueInfo }) {
 
     return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
   }
-}
 
   // ⭐ SECTION 2 — RENDER LOGIC (INSIDE COMPONENT)
 
