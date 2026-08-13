@@ -247,3 +247,14 @@ p {
   background-color: #ffd666;
   color: #333;
 }
+
+.team-badges {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+}

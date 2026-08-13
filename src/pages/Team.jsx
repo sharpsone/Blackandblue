@@ -286,7 +286,9 @@ export default function Team({ leagueInfo }) {
       setSelectedPlayer({
         ...player,
         ...statsRes,
-        externalNews:     newsRes.news               || [],
+        externalNews: player.externalNews.length > 0
+          ? player.externalNews
+          : (newsRes.news || []),
         byeWeek:          modalRes.byeWeek            || null,
         matchup:          modalRes.matchup            || player.matchup || null,
         avg:              modalRes.scores?.avg        || player.avg     || 0,
@@ -348,29 +350,34 @@ export default function Team({ leagueInfo }) {
 
                   {/* INJURY PILL */}
                   {p.healthStatus && p.healthStatus !== "Healthy" && (
-                    <span className={`injury-pill ${
-                      p.healthStatus === "Out" ? "O" :
-                      p.healthStatus === "Doubtful" ? "D" :
-                      p.healthStatus === "Questionable" ? "Q" : ""
-                    }`}>
-                      {p.healthStatus === "Out" && "O"}
-                      {p.healthStatus === "Doubtful" && "D"}
-                      {p.healthStatus === "Questionable" && "Q"}
+                    <span className="badge injury-badge">
+                      <span className={`injury-pill ${
+                        p.healthStatus === "Out" ? "O" :
+                        p.healthStatus === "Doubtful" ? "D" :
+                        p.healthStatus === "Questionable" ? "Q" : ""
+                      }`}>
+                        {p.healthStatus === "Out" && "O"}
+                        {p.healthStatus === "Doubtful" && "D"}
+                        {p.healthStatus === "Questionable" && "Q"}
+                      </span>
                     </span>
                   )}
 
                   {/* NEWS BADGE */}
                   {p.externalNews && p.externalNews.length > 0 && (
-                    <span
-                      className={`news-badge ${
-                        Date.now() / 1000 - p.externalNews[0].timestamp < 10 * 7 * 24 * 3600
-                          ? "news-recent"
-                          : "news-old"
-                      }`}
-                    >
-                      📰
+                    <span className="badge news-badge-wrapper">
+                      <span
+                        className={`news-badge ${
+                          Date.now() / 1000 - p.externalNews[0].timestamp < 10 * 7 * 24 * 3600
+                            ? "news-recent"
+                            : "news-old"
+                        }`}
+                      >
+                        📰
+                      </span>
                     </span>
                   )}
+
                 </span>
               )}
             </div>
