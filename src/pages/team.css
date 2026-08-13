@@ -202,13 +202,13 @@ p {
 .health-O { background: #ff0000; color: #fff; }   /* Out */
 
 /* ─── BADGE SYSTEM (Unified) ───────────────────────────────────────── */
-/* ─── BADGE SYSTEM (Unified + Balanced) ─────────────────────────── */
+/* ─── UNIFIED BADGE SYSTEM ───────────────────────────────────────── */
 
 .team-badges {
   display: flex;
   align-items: center;
-  gap: 4px;          /* ⭐ small gap between pill + news icon */
-  margin-left: 6px;  /* ⭐ spacing from player name */
+  gap: 4px;          /* small gap between pill + news icon */
+  margin-left: 6px;  /* spacing from player name */
 }
 
 /* Shared wrapper for both badges */
@@ -217,16 +217,16 @@ p {
   align-items: center;
   justify-content: center;
 
-  height: 16px;      /* ⭐ identical height */
-  min-width: 16px;   /* ⭐ identical width */
+  height: 14px;      /* ⭐ identical height */
+  min-width: 14px;   /* ⭐ identical width */
   line-height: 1;
 }
 
 /* Injury pill */
 .injury-pill {
-  padding: 0 4px;        /* ⭐ keep pill shape */
+  padding: 0 4px;        /* keep pill shape */
   border-radius: 4px;
-  font-size: 10px;       /* ⭐ matches news icon size */
+  font-size: 10px;       /* matches news icon size */
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -245,8 +245,8 @@ p {
 
 /* News badge */
 .news-badge {
-  font-size: 12px;       /* ⭐ slightly larger emoji */
-  padding: 0 4px;        /* ⭐ matches pill padding */
+  font-size: 12px;       /* slightly larger emoji */
+  padding: 0 4px;        /* matches pill padding */
   border-radius: 4px;
 }
 
