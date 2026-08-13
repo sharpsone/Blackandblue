@@ -157,19 +157,22 @@ export default function Team({ leagueInfo }) {
       // 1. Build rosterPlayers with real names
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
+
         return {
           id: rp.id,
-          name: full.name || rp.name || null,
+          name: full.name || rp.name || null,   // KEEP FantasyPros format "Last, First"
           status: rp.status
         };
       });
 
+
       // 2. Bulk payload (must include id, name, status)
       const playersPayload = rosterPlayers.map(rp => ({
         id: rp.id,
-        name: rp.name,
+        name: rp.name,   // now "Last, First"
         status: rp.status
       }));
+
 
       // 3. ONE bulk request — NOT inside a loop
       const newsData = await fetch(
@@ -184,30 +187,34 @@ export default function Team({ leagueInfo }) {
       const matchupMap = buildMatchupMap(schedData);
       const projMap = buildProjMap(projData);
 
-      function makeSlug(name) {
-        if (!name || typeof name !== "string") return null;
-        if (name.includes(",")) {
-          const [lastRaw, firstRaw] = name.split(",");
-          const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          return `${first}-${last}`;
+        function makeSlug(name) {
+          if (!name) return null;
+
+          // FantasyPros format: "Last, First"
+          if (name.includes(",")) {
+            const [lastRaw, firstRaw] = name.split(",");
+            const first = firstRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            const last  = lastRaw.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            return `${first}-${last}`;
+          }
+
+          // Fallback
+          const parts = name.trim().split(" ");
+          if (parts.length >= 2) {
+            const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            return `${first}-${last}`;
+          }
+
+          return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
         }
-        const parts = name.trim().split(" ");
-        if (parts.length >= 2) {
-          const first = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          const last  = parts[parts.length - 1].toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          return `${first}-${last}`;
-        }
-        return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      }
+
 
         const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
-
-        // ALWAYS use full.name (FantasyPros format)
-        const name = full.name;
-
+        const name = full.name; // ALWAYS FantasyPros format
         const slug = makeSlug(name);
+
 
         const news = newsList
           .filter(n => n.slug === slug)
