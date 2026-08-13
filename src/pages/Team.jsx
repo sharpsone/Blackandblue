@@ -191,7 +191,7 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-       // const merged = rosterPlayers.map(rp => {
+        const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
 
         // ⭐ REMOVE THE OLD NEWS BLOCK HERE
@@ -203,7 +203,7 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
-      const merged = rosterPlayers.map(rp => {
+     // const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
 
         // Correct name format: "Jordan Addison"
