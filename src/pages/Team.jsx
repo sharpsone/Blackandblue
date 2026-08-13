@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getRoster, getPlayers } from "../utils/api";
+// REMOVE getPlayers import entirely
+import { getRoster } from "../utils/api";
 import PlayerModal from "../components/PlayerModal";
 import "../pages/team.css";
 
@@ -21,7 +22,7 @@ export default function Team({ leagueInfo }) {
   useEffect(() => {
     async function loadPlayers() {
       try {
-        const data = await getPlayers(year);
+        const data = await fetch(`/api/players?year=${year}`).then(r => r.json());
         setPlayerDataState(data);
       } catch (err) {
         console.error("❌ getPlayers failed:", err);
