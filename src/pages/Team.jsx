@@ -154,32 +154,31 @@ export default function Team({ leagueInfo }) {
       // 1. Load allPlayers FIRST
       const allPlayers = playerDataState?.players || [];
 
-      // 2. Build rosterPlayers (convert Last, First → First Last)
+          // 1. Build rosterPlayers with real names
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
-
-        let name = full.name || rp.name || "";
-        if (name.includes(",")) {
-          const [last, first] = name.split(",");
-          name = `${first.trim()} ${last.trim()}`;
-        }
-
         return {
           id: rp.id,
-          name,
+          name: full.name || rp.name || null,
           status: rp.status
         };
       });
 
-      // 3. Build playersPayload AFTER rosterPlayers exists
+      // 2. Bulk payload (must include id, name, status)
       const playersPayload = rosterPlayers.map(rp => ({
-   //     id: rp.id,
-        name: rp.name,   // now First Last
-   //     status: rp.status
+        id: rp.id,
+        name: rp.name,
+        status: rp.status
       }));
 
-      // Fetch news for each player individually (same as FreeAgents.jsx)
-      const newsList = [];
+      // 3. ONE bulk request — NOT inside a loop
+      const newsData = await fetch(
+        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
+      )
+        .then(r => r.json())
+        .catch(() => ({ news: [] }));
+
+      const newsList = newsData.news || [];
 
       for (const rp of rosterPlayers) {
         try {
