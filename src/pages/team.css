@@ -226,13 +226,14 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 6px;
+  padding: 0px 4px;        /* smaller padding */
   margin-left: 6px;
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: 4px;
+  font-size: 10px;         /* slightly smaller font */
   font-weight: 700;
+  line-height: 1;          /* critical: keeps pill height tight */
+  height: 14px;            /* forces pill to match text height */
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 /* Out (O) and Doubtful (D) = Red */
