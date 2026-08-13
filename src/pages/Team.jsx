@@ -151,25 +151,37 @@ export default function Team({ leagueInfo }) {
 
       console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
 
-      const allPlayers = playerDataState?.players || [];
-
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
+
+        // Convert "Last, First" → "First Last"
+        let name = full.name || rp.name || "";
+        if (name.includes(",")) {
+          const [last, first] = name.split(",");
+          name = `${first.trim()} ${last.trim()}`;
+        }
+
         return {
           id: rp.id,
-          name: full.name || rp.name || null,
+          name,
           status: rp.status
         };
       });
+
 //test fix code
-        const playersPayload = rosterPlayers.map(rp => {
-        const full = allPlayers.find(p => p.id === rp.id) || {};
-        return {
-          id: rp.id,
-          name: full.name,   // ⭐ ALWAYS use First Last
-          status: rp.status
-        };
-      });
+ //       const playersPayload = rosterPlayers.map(rp => {
+//        const full = allPlayers.find(p => p.id === rp.id) || {};
+ //       return {
+//          id: rp.id,
+//          name: full.name,   // ⭐ ALWAYS use First Last
+//          status: rp.status
+//        };
+//      });
+      const playersPayload = rosterPlayers.map(rp => ({
+        id: rp.id,
+        name: rp.name,   // now ALWAYS First Last
+        status: rp.status
+      }));
 
  //     const newsData = await fetch(
  //       `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(rosterPlayers))}`
