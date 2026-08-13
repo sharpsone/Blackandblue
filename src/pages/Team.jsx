@@ -178,14 +178,22 @@ export default function Team({ leagueInfo }) {
         status: rp.status
       }));
 
-      // 4. Fetch news
-      const newsData = await fetch(
-        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
-      )
-        .then(r => r.json())
-        .catch(() => ({ news: [] }));
+      // Fetch news for each player individually (same as FreeAgents.jsx)
+      const newsList = [];
 
-      const newsList = newsData.news || [];
+      for (const rp of rosterPlayers) {
+        try {
+          const single = await fetch(
+            `/api/mfl?action=fantasyProsNews&player=${encodeURIComponent(rp.name)}`
+          ).then(r => r.json());
+
+          if (Array.isArray(single.news)) {
+            newsList.push(...single.news);
+          }
+        } catch (err) {
+          console.log("❌ Single-player news fetch failed for:", rp.name, err);
+        }
+      }
 
       const injuriesList = injuriesData?.injuries?.injury || [];
       const matchupMap = buildMatchupMap(schedData);
