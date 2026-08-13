@@ -165,7 +165,6 @@ export default function Team({ leagueInfo }) {
   // ───────────────────────────────────────────────────────────────
   function buildMatchupMap(schedData) { /* unchanged */ }
   function buildProjMap(projData) { /* unchanged */ }
-}
 
 
   // ⭐ SECTION 2 — RENDER LOGIC (INSIDE COMPONENT)
