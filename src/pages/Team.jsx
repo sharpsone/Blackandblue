@@ -184,7 +184,7 @@ export default function Team({ leagueInfo }) {
       for (const rp of rosterPlayers) {
         try {
           const single = await fetch(
-            `/api/mfl?action=fantasyProsNewsBulk=${encodeURIComponent(rp.name)}&leagueId=${leagueId}&year=${year}`
+            `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(rp.name)}&leagueId=${leagueId}&year=${year}`
           ).then(r => r.json());
 
           if (Array.isArray(single.news)) {
