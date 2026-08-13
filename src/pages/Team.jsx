@@ -191,12 +191,11 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-      // ⭐ Merge everything + attach rank (ID normalized)
-      const merged = rosterPlayers.map(rp => {
+        const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
-       // const slug = makeSlug(rp.name);
 
-        // ⭐ MERGE LOGGING
+        // ⭐ REMOVE THE OLD NEWS BLOCK HERE
+
         console.log("📌 MERGE PLAYER:", {
           rpId: rp.id,
           rpIdString: String(rp.id),
@@ -204,7 +203,6 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
-        // Convert "Jordan Addison" → "Addison, Jordan"
         function toLastFirst(name) {
           if (!name) return null;
           if (name.includes(",")) return name;
@@ -221,7 +219,7 @@ export default function Team({ leagueInfo }) {
         const correctedName = toLastFirst(full.name || rp.name);
         const slug = makeSlug(correctedName);
 
-        // ⭐ NOW filter news using the correct slug
+        // ⭐ KEEP ONLY THIS NEWS BLOCK
         const news = newsList
           .filter(n => n.slug === slug)
           .map(n => ({
@@ -232,16 +230,13 @@ export default function Team({ leagueInfo }) {
         return {
           ...rp,
           ...full,
-
           name: correctedName,
           slug,
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
-
           rank: rankMap[String(rp.id)]?.rank ?? null,
           posRank: rankMap[String(rp.id)]?.posRank ?? null,
-
           matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
           healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
