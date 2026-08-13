@@ -196,13 +196,6 @@ export default function Team({ leagueInfo }) {
         const full = allPlayers.find(p => p.id === rp.id) || {};
        // const slug = makeSlug(rp.name);
 
-        const news = newsList
-          .filter(n => n.slug === slug)
-          .map(n => ({
-            ...n,
-            formattedTime: formatNewsTime(n.time)
-          }));
-
         // ⭐ MERGE LOGGING
         console.log("📌 MERGE PLAYER:", {
           rpId: rp.id,
