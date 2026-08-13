@@ -227,7 +227,7 @@ export default function Team({ leagueInfo }) {
     });
     return map;
   }
-}
+
 
 
   // ─── Player modal ─────────────────────────────────────────────────────────
