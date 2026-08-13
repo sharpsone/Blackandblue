@@ -6,7 +6,7 @@ import "../pages/team.css";
 const GRID_COLS = "56px 1fr 60px 68px";
 
 // ⭐ ONLY valid MFL POS groups
-const POSITIONS = ["QB", "RB", "WR", "TE", "PK", "DL", "LB", "DB"];
+const POSITIONS = ["QB", "RB", "WR", "TE", "PK", "DT", "LB", "CB", "S", "DE"];
 
 export default function Team({ leagueInfo }) {
   const leagueId      = leagueInfo?.leagueId;
