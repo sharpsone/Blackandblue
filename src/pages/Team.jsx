@@ -152,14 +152,15 @@ export default function Team({ leagueInfo }) {
       console.log("📌 ROSTER COUNT:", rosterData.roster.players.length);
 
 //test fix code
- //       const playersPayload = rosterPlayers.map(rp => {
-//        const full = allPlayers.find(p => p.id === rp.id) || {};
- //       return {
-//          id: rp.id,
-//          name: full.name,   // ⭐ ALWAYS use First Last
-//          status: rp.status
-//        };
-//      });
+       const playersPayload = rosterPlayers.map(rp => {
+        const full = allPlayers.find(p => p.id === rp.id) || {};
+       return {
+         id: rp.id,
+          name: full.name,   // ⭐ ALWAYS use First Last
+          status: rp.status
+        };
+      });
+
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
 
