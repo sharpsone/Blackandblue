@@ -113,15 +113,30 @@ if (action === "fantasyProsNewsBulk") {
 
   try {
     const { players } = req.query;
+
+    console.log("📌 RAW players param:", players);
+
     if (!players) {
       console.log("❌ No players provided");
       return res.status(200).json({ news: [] });
     }
 
-    const list = JSON.parse(players);
+    let list;
+    try {
+      list = JSON.parse(players);
+      console.log("📌 Parsed players array:", list);
+      console.log("📌 Player count:", list.length);
+    } catch (err) {
+      console.log("❌ JSON parse failed:", err.message);
+      return res.status(200).json({ error: "Invalid players JSON", raw: players });
+    }
+
     const fpItems = [];
 
     for (const p of list) {
+      console.log("──────────────────────────────────────────────");
+      console.log("📌 PROCESSING PLAYER:", p);
+
       const name = p.name;
       if (!name) {
         console.log("❌ Player missing name:", p);
@@ -134,59 +149,91 @@ if (action === "fantasyProsNewsBulk") {
       const last  = (lastRaw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const slug  = `${first}-${last}`;
 
-      const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+      console.log("📌 NAME:", name);
+      console.log("📌 SLUG:", slug);
 
-      const fpResp = await fetch(fpUrl);
-      const fpHtml = await fpResp.text();
+      const fpUrl = `https://www.fantasypros.com/nfl/news/${slug}.php`;
+      console.log("📌 FP URL:", fpUrl);
+
+      let fpHtml = "";
+      try {
+        const fpResp = await fetch(fpUrl);
+        fpHtml = await fpResp.text();
+        console.log("📌 FP HTML length:", fpHtml.length);
+      } catch (err) {
+        console.log("❌ FP fetch failed:", err.message);
+        continue;
+      }
 
       const blocks = fpHtml.match(
         /<div class="subsection feature-stretch[\s\S]*?<div class="foot-row clearfix">[\s\S]*?<\/div>\s*<\/div>/gi
       );
 
-      if (!blocks) continue;
+      console.log("📌 BLOCK COUNT:", blocks ? blocks.length : 0);
+
+      if (!blocks || blocks.length === 0) {
+        console.log("❌ No FP blocks found for:", name);
+        continue;
+      }
 
       for (const block of blocks) {
+        console.log("📌 Processing block…");
+
         const headlineMatch   = block.match(/<a[^>]*><b>([^<]+)<\/b><\/a>/i);
         const bodyMatch       = block.match(/<p>([^<]*)<\/p>/i);
         const impactMatch     = block.match(/<p><b>Fantasy Impact<\/b><\/p>\s*<p>([^<]+)<\/p>/i);
         const timestampMatch  = block.match(/<span[^>]*class="pull-right timestamp"[^>]*>([^<]+)<\/span>/i);
 
-        // Require timestamp
-        if (!timestampMatch) continue;
+        console.log("📌 headlineMatch:", headlineMatch ? headlineMatch[1] : null);
+        console.log("📌 bodyMatch:", bodyMatch ? bodyMatch[1] : null);
+        console.log("📌 impactMatch:", impactMatch ? impactMatch[1] : null);
+        console.log("📌 timestampMatch:", timestampMatch ? timestampMatch[1] : null);
+
+        if (!timestampMatch) {
+          console.log("❌ No timestamp → skipping block");
+          continue;
+        }
 
         // Timestamp parser
         let ts = null;
-        if (timestampMatch) {
-          let raw = timestampMatch[1].trim();
-          let parsed = new Date(raw).getTime();
+        let raw = timestampMatch[1].trim();
+        console.log("📌 Raw timestamp:", raw);
 
-          if (isNaN(parsed)) {
-            raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
-            parsed = new Date(raw).getTime();
-          }
+        let parsed = new Date(raw).getTime();
 
-          if (isNaN(parsed)) {
-            raw = `${raw} ${new Date().getFullYear()}`;
-            parsed = new Date(raw).getTime();
-          }
-
-          if (isNaN(parsed)) {
-            parsed = Date.parse(raw);
-          }
-
-          if (!isNaN(parsed)) {
-            ts = Math.floor(parsed / 1000);
-          }
+        if (isNaN(parsed)) {
+          raw = raw.replace(/(\d+)(st|nd|rd|th)/, "$1");
+          parsed = new Date(raw).getTime();
         }
+
+        if (isNaN(parsed)) {
+          raw = `${raw} ${new Date().getFullYear()}`;
+          parsed = new Date(raw).getTime();
+        }
+
+        if (isNaN(parsed)) {
+          parsed = Date.parse(raw);
+        }
+
+        if (!isNaN(parsed)) {
+          ts = Math.floor(parsed / 1000);
+        }
+
+        console.log("📌 Parsed timestamp:", ts);
 
         const bodyText = bodyMatch ? bodyMatch[1].trim() : "";
 
         const hasHeadline = headlineMatch && headlineMatch[1].trim().length > 0;
         const hasTime     = ts !== null;
 
-        if (!hasHeadline && !hasTime) continue;
+        console.log("📌 hasHeadline:", hasHeadline, "hasTime:", hasTime);
 
-        fpItems.push({
+        if (!hasHeadline && !hasTime) {
+          console.log("❌ Missing headline/time → skipping block");
+          continue;
+        }
+
+        const item = {
           player: name,
           slug,
           source: "FantasyPros",
@@ -194,9 +241,15 @@ if (action === "fantasyProsNewsBulk") {
           body: bodyText || null,
           fantasyImpact: impactMatch ? impactMatch[1].trim() : null,
           timestamp: ts
-        });
+        };
+
+        console.log("📌 PUSHING ITEM:", item);
+
+        fpItems.push(item);
       }
     }
+
+    console.log("📌 TOTAL ITEMS BEFORE SORT:", fpItems.length);
 
     // Sort newest first
     fpItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -210,6 +263,9 @@ if (action === "fantasyProsNewsBulk") {
       return (nowSec - item.timestamp) <= tenWeeksSec;
     });
 
+    console.log("📌 TOTAL ITEMS AFTER FILTER:", filtered.length);
+    console.log("📌 SAMPLE ITEM:", filtered[0]);
+
     return res.status(200).json({ news: filtered });
 
   } catch (err) {
@@ -217,6 +273,7 @@ if (action === "fantasyProsNewsBulk") {
     return res.status(200).json({ news: [] });
   }
 }
+
 
     // -----------------------------
     // NOW VALIDATE leagueId/year
