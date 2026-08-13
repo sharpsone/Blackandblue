@@ -360,10 +360,10 @@ export default function Team({ leagueInfo }) {
                   )}
 
                   {/* NEWS BADGE */}
-                  {p.newsTimestamp && (
+                  {p.externalNews && p.externalNews.length > 0 && (
                     <span
                       className={`news-badge ${
-                        Date.now() - p.newsTimestamp < 10 * 24 * 60 * 60 * 1000
+                        Date.now() / 1000 - p.externalNews[0].timestamp < 10 * 7 * 24 * 3600
                           ? "news-recent"
                           : "news-old"
                       }`}
