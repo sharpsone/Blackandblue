@@ -191,10 +191,8 @@ export default function Team({ leagueInfo }) {
         return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
       }
 
-        const merged = rosterPlayers.map(rp => {
+      const merged = rosterPlayers.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
-
-        // ⭐ REMOVE THE OLD NEWS BLOCK HERE
 
         console.log("📌 MERGE PLAYER:", {
           rpId: rp.id,
@@ -203,16 +201,9 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
-     // const merged = rosterPlayers.map(rp => {
-   //     const full = allPlayers.find(p => p.id === rp.id) || {};
-
-        // Correct name format: "Jordan Addison"
         const name = full.name || rp.name;
-
-        // Correct FantasyPros slug: "jordan-addison"
         const slug = makeSlug(name);
 
-        // Correct news filter
         const news = newsList
           .filter(n => n.slug === slug)
           .map(n => ({
@@ -223,17 +214,13 @@ export default function Team({ leagueInfo }) {
         return {
           ...rp,
           ...full,
-
           name,
           slug,
-
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
           avg: full.avg ?? rp.avg ?? null,
-
           rank: rankMap[String(rp.id)]?.rank ?? null,
           posRank: rankMap[String(rp.id)]?.posRank ?? null,
-
           matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
           healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
