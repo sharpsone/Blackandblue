@@ -286,3 +286,16 @@ p {
   font-size: 14px;         /* tweak if needed */
   height: 16px;            /* same height as pill */
 }
+
+.injury-pill,
+.news-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 16px;        /* ⭐ SAME HEIGHT */
+  min-width: 16px;     /* ⭐ SAME WIDTH */
+  line-height: 1;      /* ⭐ removes baseline weirdness */
+  padding: 0 4px;      /* pill needs horizontal padding */
+  font-size: 10px;     /* pill font size */
+}
