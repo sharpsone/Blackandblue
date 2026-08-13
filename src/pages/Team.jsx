@@ -154,7 +154,7 @@ export default function Team({ leagueInfo }) {
       // 1. Load allPlayers FIRST
       const allPlayers = playerDataState?.players || [];
 
-      // 2. Build rosterPlayers (convert Last, First → First Last)
+      // 2. Build rosterPlayers
       const rosterPlayers = rosterData.roster.players.map(rp => {
         const full = allPlayers.find(p => p.id === rp.id) || {};
 
@@ -173,24 +173,17 @@ export default function Team({ leagueInfo }) {
 
       // 3. Build playersPayload AFTER rosterPlayers exists
       const playersPayload = rosterPlayers.map(rp => ({
-   //     id: rp.id,
-        name: rp.name,   // now First Last
-   //     status: rp.status
+        id: rp.id,
+        name: rp.name,
+        status: rp.status
       }));
 
-      // Fetch news for each player individually (same as FreeAgents.jsx)
-      const newsList = [];
-
-      for (const rp of rosterPlayers) {
-        try {
-          //const single = await fetch(
-          //  `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(rp.name)}&leagueId=${leagueId}&year=${year}`
-          //).then(r => r.json());
-          const newsData = await fetch(
-            `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
-          )
-            .then(r => r.json())
-            .catch(() => ({ news: [] }));
+      // 4. Correct fetch URL
+      const newsData = await fetch(
+        `/api/mfl?action=fantasyProsNewsBulk&players=${encodeURIComponent(JSON.stringify(playersPayload))}`
+      )
+        .then(r => r.json())
+        .catch(() => ({ news: [] }));
 
 
           if (Array.isArray(single.news)) {
