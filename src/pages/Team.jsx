@@ -335,34 +335,27 @@ export default function Team({ leagueInfo }) {
                   <div className="team-info">
             <div className="team-name-row">
               <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
+              {!isEmpty && (
+                <span className="team-badges">
 
-           {!isEmpty && (
-            <span className="team-badges">
-              {/* INJURY PILL */}
-              {p.healthStatus && p.healthStatus !== "Healthy" && (
-                <span className={`injury-pill ${
-                  p.healthStatus === "Out" ? "O" :
-                  p.healthStatus === "Doubtful" ? "D" :
-                  p.healthStatus === "Questionable" ? "Q" : ""
-                }`}>
-                  {p.healthStatus === "Out" && "O"}
-                  {p.healthStatus === "Doubtful" && "D"}
-                  {p.healthStatus === "Questionable" && "Q"}
-                </span>
-              )}
-
-                  {/* NEWS BADGE */}
-                  {p.externalNews && p.externalNews.length > 0 && (
-                    <span
-                      className={`news-badge ${
-                        Date.now() / 1000 - p.externalNews[0].date < 7 * 24 * 3600
-                          ? "news-recent"
-                          : "news-old"
-                      }`}
-                    >
-                      📰
+                  {/* INJURY PILL */}
+                  {p.healthStatus && p.healthStatus !== "Healthy" && (
+                    <span className={`injury-pill ${
+                      p.healthStatus === "Out" ? "O" :
+                      p.healthStatus === "Doubtful" ? "D" :
+                      p.healthStatus === "Questionable" ? "Q" : ""
+                    }`}>
+                      {p.healthStatus === "Out" && "O"}
+                      {p.healthStatus === "Doubtful" && "D"}
+                      {p.healthStatus === "Questionable" && "Q"}
                     </span>
                   )}
+
+                  {/* NEWS ICON */}
+                  {p.newsTimestamp && (Date.now() - p.newsTimestamp) < 10 * 24 * 60 * 60 * 1000 && (
+                    <span className="news-icon">📰</span>
+                  )}
+
                 </span>
               )}
             </div>
