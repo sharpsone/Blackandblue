@@ -211,9 +211,10 @@ export default function Team({ leagueInfo }) {
           rankValue: rankMap[String(rp.id)]?.rank
         });
 
+        // Convert "Jordan Addison" → "Addison, Jordan"
         function toLastFirst(name) {
           if (!name) return null;
-          if (name.includes(",")) return name; // already correct
+          if (name.includes(",")) return name;
 
           const parts = name.trim().split(" ");
           if (parts.length < 2) return name;
@@ -224,12 +225,15 @@ export default function Team({ leagueInfo }) {
           return `${last}, ${first}`;
         }
 
+        const correctedName = toLastFirst(full.name || rp.name);
+        const slug = makeSlug(correctedName);
+
         return {
           ...rp,
           ...full,
 
-          // FIXED: convert "Jordan Addison" → "Addison, Jordan"
-          name: toLastFirst(full.name || rp.name),
+          name: correctedName,   // FIXED
+          slug,                  // FIXED
 
           pos: full.position || rp.position || "",
           projected: projMap[String(rp.id)] ?? null,
@@ -240,7 +244,6 @@ export default function Team({ leagueInfo }) {
 
           matchup: matchupMap[full.team] || null,
           headshot: `/api/headshot?id=${rp.id}`,
-          slug,
           healthStatus: injuriesList.find(x => x.id === rp.id)?.status || null,
           externalNews: news
         };
