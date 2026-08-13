@@ -336,16 +336,20 @@ export default function Team({ leagueInfo }) {
             <div className="team-name-row">
               <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
 
-              {!isEmpty && (
-                <span className="team-badges">
-                  {/* HEALTH BADGE */}
-                  {p.healthStatus !== "Healthy" && (
-                    <span className={`health-badge health-${p.healthStatus}`}>
-                      {p.healthStatus === "Questionable" && "Q"}
-                      {p.healthStatus === "Doubtful" && "D"}
-                      {p.healthStatus === "Out" && "O"}
-                    </span>
-                  )}
+           {!isEmpty && (
+            <span className="team-badges">
+              {/* INJURY PILL */}
+              {p.healthStatus && p.healthStatus !== "Healthy" && (
+                <span className={`injury-pill ${
+                  p.healthStatus === "Out" ? "O" :
+                  p.healthStatus === "Doubtful" ? "D" :
+                  p.healthStatus === "Questionable" ? "Q" : ""
+                }`}>
+                  {p.healthStatus === "Out" && "O"}
+                  {p.healthStatus === "Doubtful" && "D"}
+                  {p.healthStatus === "Questionable" && "Q"}
+                </span>
+              )}
 
                   {/* NEWS BADGE */}
                   {p.externalNews && p.externalNews.length > 0 && (
