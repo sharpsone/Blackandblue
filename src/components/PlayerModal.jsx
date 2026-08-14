@@ -326,12 +326,12 @@ export default function PlayerModal({
           {/* Roster buttons */}
           {fromRoster && (
             <>
-              <button className="modal-btn drop-btn">
-                Drop Player
+              <button className="modal-btn ir-btn" onClick={() => onMoveToIR(player)}>
+                Move to IR
               </button>
 
-              <button className="modal-btn ir-btn">
-                Move to IR
+              <button className="modal-btn drop-btn" onClick={() => onDropPlayer(player)}>
+                Drop Player
               </button>
             </>
           )}

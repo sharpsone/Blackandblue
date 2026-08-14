@@ -273,183 +273,244 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
-  // ─── Player modal ─────────────────────────────────────────────────────────
-  const openPlayer = async (player) => {
-    setSelectedPlayer({ loading: true });
-    try {
-      const [modalRes, statsRes, newsRes] = await Promise.all([
-        fetch(`/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
-        fetch(`/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
-        fetch(`/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
-      ]);
+ // ─── Player modal ─────────────────────────────────────────────────────────
+const openPlayer = async (player) => {
+  setSelectedPlayer({ loading: true });
+  try {
+    const [modalRes, statsRes, newsRes] = await Promise.all([
+      fetch(`/api/mfl?action=playerModal&playerId=${player.id}&team=${player.team}&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+      fetch(`/api/mfl?action=playerStats&playerId=${player.id}&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+      fetch(`/api/mfl?action=playerNewsFeed&name=${encodeURIComponent(player.name)}&leagueId=${leagueId}&year=${year}`).then(r => r.json()),
+    ]);
 
-      setSelectedPlayer({
-        ...player,
-        ...statsRes,
-        externalNews: player.externalNews.length > 0
-          ? player.externalNews
-          : (newsRes.news || []),
-        byeWeek:          modalRes.byeWeek            || null,
-        matchup:          modalRes.matchup            || player.matchup || null,
-        avg:              modalRes.scores?.avg        || player.avg     || 0,
-        projected:        modalRes.projections?.current ?? player.projected ?? null,
-        healthStatus:     modalRes.healthStatus,
-        injuryDetail:     modalRes.injuryDetail,
-        injuryNotes:      modalRes.injuryNotes,
-        rosteredPercent:  modalRes.rosteredPercent,
-        espnStats:        modalRes.espnStats,
-        loading:          false,
-      });
-    } catch (err) {
-      console.error("[Team openPlayer] Failed:", err);
-      setSelectedPlayer({ ...player, stats: [], externalNews: [], loading: false });
-    }
-  };
+    setSelectedPlayer({
+      ...player,
+      ...statsRes,
+      externalNews: player.externalNews.length > 0
+        ? player.externalNews
+        : (newsRes.news || []),
+      byeWeek:          modalRes.byeWeek            || null,
+      matchup:          modalRes.matchup            || player.matchup || null,
+      avg:              modalRes.scores?.avg        || player.avg     || 0,
+      projected:        modalRes.projections?.current ?? player.projected ?? null,
+      healthStatus:     modalRes.healthStatus,
+      injuryDetail:     modalRes.injuryDetail,
+      injuryNotes:      modalRes.injuryNotes,
+      rosteredPercent:  modalRes.rosteredPercent,
+      espnStats:        modalRes.espnStats,
+      loading:          false,
+    });
+  } catch (err) {
+    console.error("[Team openPlayer] Failed:", err);
+    setSelectedPlayer({ ...player, stats: [], externalNews: [], loading: false });
+  }
+};
 
-  if (loading)         return <p>Loading team...</p>;
-  if (!players.length) return <p>No roster data found.</p>;
+if (loading)         return <p>Loading team...</p>;
+if (!players.length) return <p>No roster data found.</p>;
 
-    // ─── Position groups ────────────────────────────────────────────────
-    const offensePositions = ["QB", "RB", "WR", "TE", "PK"];
-    const defensePositions = ["DL", "LB", "DB", "DT", "DE", "CB", "S"];
+// ─── Position groups ────────────────────────────────────────────────
+const offensePositions = ["QB", "RB", "WR", "TE", "PK"];
+const defensePositions = ["DL", "LB", "DB", "DT", "DE", "CB", "S"];
 
-    // ─── Group players by position only ─────────────────────────────────
-    const offense = players.filter(p => offensePositions.includes(p.pos));
-    const defense = players.filter(p => defensePositions.includes(p.pos));
+// ─── Group players by position only ─────────────────────────────────
+const offense = players.filter(p => offensePositions.includes(p.pos));
+const defense = players.filter(p => defensePositions.includes(p.pos));
 
-    // ─── IR stays separate ──────────────────────────────────────────────
-    const ir = players.filter(p => p.status === "IR");
+// ─── IR stays separate ──────────────────────────────────────────────
+const ir = players.filter(p => p.status === "IR");
 
-  // ─── Row renderer ─────────────────────────────────────────────────────────
-  function renderPlayer(p, idx) {
-    const isEmpty = p.empty;
-    return (
-      <div
-        key={p.id || `empty-${p.slot}-${idx}`}
-        className={`team-row${isEmpty ? " team-row--empty" : ""}`}
-        style={{ gridTemplateColumns: GRID_COLS }}   // ← matches header exactly
-        onClick={() => !isEmpty && openPlayer(p)}
-      >
-        {/* Column 1 — Slot */}
-        <div className="team-slot">{p.slot}</div>
+// ─── Row renderer ─────────────────────────────────────────────────────────
+function renderPlayer(p, idx) {
+  const isEmpty = p.empty;
+  return (
+    <div
+      key={p.id || `empty-${p.slot}-${idx}`}
+      className={`team-row${isEmpty ? " team-row--empty" : ""}`}
+      style={{ gridTemplateColumns: GRID_COLS }}
+      onClick={() => !isEmpty && openPlayer(p)}
+    >
+      {/* Column 1 — Slot */}
+      <div className="team-slot">{p.slot}</div>
 
-        {/* Column 2 — Player */}
-        <div className="team-player">
-          <img
-            src={isEmpty ? "/silhouettes/player.png" : p.headshot}
-            className="team-photo"
-            alt={isEmpty ? "Empty slot" : p.name}
-            onError={e => { e.target.src = "/silhouettes/player.png"; }}
-          />
-                  <div className="team-info">
-            <div className="team-name-row">
-              <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
+      {/* Column 2 — Player */}
+      <div className="team-player">
+        <img
+          src={isEmpty ? "/silhouettes/player.png" : p.headshot}
+          className="team-photo"
+          alt={isEmpty ? "Empty slot" : p.name}
+          onError={e => { e.target.src = "/silhouettes/player.png"; }}
+        />
 
-              {!isEmpty && (
-                <span className="team-badges">
-
-                  {/* INJURY PILL */}
-                  {p.healthStatus && p.healthStatus !== "Healthy" && (
-                    <span className="badge injury-badge">
-                      <span className={`injury-pill ${
-                        p.healthStatus === "Out" ? "O" :
-                        p.healthStatus === "Doubtful" ? "D" :
-                        p.healthStatus === "Questionable" ? "Q" : ""
-                      }`}>
-                        {p.healthStatus === "Out" && "O"}
-                        {p.healthStatus === "Doubtful" && "D"}
-                        {p.healthStatus === "Questionable" && "Q"}
-                      </span>
-                    </span>
-                  )}
-
-                  {/* NEWS BADGE */}
-                  {p.externalNews && p.externalNews.length > 0 && (
-                    <span className="badge news-badge-wrapper">
-                      <span
-                        className={`news-badge ${
-                          Date.now() / 1000 - p.externalNews[0].timestamp < 10 * 7 * 24 * 3600
-                            ? "news-recent"
-                            : "news-old"
-                        }`}
-                      >
-                        📰
-                      </span>
-                    </span>
-                  )}
-
-                </span>
-              )}
-            </div>
+        <div className="team-info">
+          <div className="team-name-row">
+            <span className="team-name">{isEmpty ? "Empty" : p.name}</span>
 
             {!isEmpty && (
+              <span className="team-badges">
+
+                {/* INJURY PILL */}
+                {p.healthStatus && p.healthStatus !== "Healthy" && (
+                  <span className="badge injury-badge">
+                    <span className={`injury-pill ${
+                      p.healthStatus === "Out" ? "O" :
+                      p.healthStatus === "Doubtful" ? "D" :
+                      p.healthStatus === "Questionable" ? "Q" : ""
+                    }`}>
+                      {p.healthStatus === "Out" && "O"}
+                      {p.healthStatus === "Doubtful" && "D"}
+                      {p.healthStatus === "Questionable" && "Q"}
+                    </span>
+                  </span>
+                )}
+
+                {/* NEWS BADGE */}
+                {p.externalNews && p.externalNews.length > 0 && (
+                  <span className="badge news-badge-wrapper">
+                    <span
+                      className={`news-badge ${
+                        Date.now() / 1000 - p.externalNews[0].timestamp < 10 * 7 * 24 * 3600
+                          ? "news-recent"
+                          : "news-old"
+                      }`}
+                    >
+                      📰
+                    </span>
+                  </span>
+                )}
+
+              </span>
+            )}
+          </div>
+
+          {!isEmpty && (
             <div className="team-meta">
               <span className="meta-team">{p.team}</span>
               <span className="meta-pos">{p.pos}</span>
 
-              {/* Opponent + kickoff */}
               {p.matchup && (
                 <span className="meta-matchup">
                   {p.matchup.home ? "v" : "@"} {p.matchup.opponent} · {p.matchup.kickoff}
                 </span>
               )}
 
-              {/* Bye week */}
               {p.byeWeek && <span className="meta-bye">Bye {p.byeWeek}</span>}
             </div>
-            )}
-          </div>
-        </div>
-
-        {/* Column 3 — Rank */}
-        <div className="team-rank">
-          {isEmpty ? "" : (p.rank ? `#${p.rank}` : "NR")}
-        </div>
-
-        {/* Column 4 — Projected points */}
-        <div className="team-proj">
-          {isEmpty ? "" : (p.projected ?? p.avg ?? "–")}
+          )}
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="team-container">
-      <h1 className="team-title">My Team</h1>
-
-      {/* Sticky header — same GRID_COLS as every team-row */}
-      <div className="team-header" style={{ gridTemplateColumns: GRID_COLS }}>
-        <div className="col-pos">POS</div>
-        <div className="col-player">Player</div>
-        <div className="col-rank">Rank</div>
-        <div className="col-proj">Proj</div>
+      {/* Column 3 — Rank */}
+      <div className="team-rank">
+        {isEmpty ? "" : (p.rank ? `#${p.rank}` : "NR")}
       </div>
 
-      <div className="team-section">
-        <div className="section-label offense-label">Offense</div>
-        {offense.map(renderPlayer)}
+      {/* Column 4 — Projected points */}
+      <div className="team-proj">
+        {isEmpty ? "" : (p.projected ?? p.avg ?? "–")}
       </div>
-
-      <div className="team-section">
-        <div className="section-label defense-label">Defense</div>
-        {defense.map(renderPlayer)}
-      </div>
-
-      {ir.length > 0 && (
-        <div className="team-section">
-          <div className="section-label ir-label">Injured Reserve</div>
-          {ir.map(renderPlayer)}
-        </div>
-      )}
-
-      <PlayerModal
-        player={selectedPlayer}
-        fromRoster={true}
-        onClose={() => setSelectedPlayer(null)}
-        onAdd={() => {}}
-        onWaiver={() => {}}
-      />
     </div>
   );
+}
+
+async function onMoveToIR(player) {
+  try {
+    console.log("📌 Moving to IR:", player.id);
+
+    const url = `/api/mfl?action=ir&L=${leagueId}&DEACTIVATE=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
+
+    const res = await fetch(url, { method: "POST" });
+    const text = await res.text();
+    console.log("📌 IR RESPONSE:", text);
+
+    loadRoster();
+    setSelectedPlayer(null);
+  } catch (err) {
+    console.error("❌ IR move failed:", err);
+  }
+}
+
+// ===============================
+// IR HANDLER
+// ===============================
+async function onMoveToIR(player) {
+  try {
+    console.log("📌 Moving to IR:", player.id);
+
+    const url = `/api/mfl?action=ir&L=${leagueId}&DEACTIVATE=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
+
+    const res = await fetch(url, { method: "POST" });
+    const text = await res.text();
+    console.log("📌 IR RESPONSE:", text);
+
+    loadRoster();
+    setSelectedPlayer(null);
+  } catch (err) {
+    console.error("❌ IR move failed:", err);
+  }
+}
+
+
+// ===============================
+// DROP HANDLER
+// ===============================
+async function onDropPlayer(player) {
+  try {
+    console.log("📌 Dropping player:", player.id);
+
+    const url = `/api/mfl?action=fcfsWaiver&L=${leagueId}&DROP=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
+
+    const res = await fetch(url, { method: "POST" });
+    const text = await res.text();
+    console.log("📌 DROP RESPONSE:", text);
+
+    loadRoster();
+    setSelectedPlayer(null);
+  } catch (err) {
+    console.error("❌ Drop failed:", err);
+  }
+}
+
+
+// ===============================
+// RETURN BLOCK
+// ===============================
+return (
+  <div className="team-container">
+    <h1 className="team-title">My Team</h1>
+
+    <div className="team-header" style={{ gridTemplateColumns: GRID_COLS }}>
+      <div className="col-pos">POS</div>
+      <div className="col-player">Player</div>
+      <div className="col-rank">Rank</div>
+      <div className="col-proj">Proj</div>
+    </div>
+
+    <div className="team-section">
+      <div className="section-label offense-label">Offense</div>
+      {offense.map(renderPlayer)}
+    </div>
+
+    <div className="team-section">
+      <div className="section-label defense-label">Defense</div>
+      {defense.map(renderPlayer)}
+    </div>
+
+    {ir.length > 0 && (
+      <div className="team-section">
+        <div className="section-label ir-label">Injured Reserve</div>
+        {ir.map(renderPlayer)}
+      </div>
+    )}
+
+    {/* ⭐ Correct modal wiring */}
+    <PlayerModal
+      player={selectedPlayer}
+      fromRoster={true}
+      onClose={() => setSelectedPlayer(null)}
+      onMoveToIR={onMoveToIR}
+      onDropPlayer={onDropPlayer}
+    />
+  </div>
+);
 }
