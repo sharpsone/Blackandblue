@@ -861,7 +861,7 @@ if (action === "playerNewsFeed") {
       if (DEACTIVATE) params.append("DEACTIVATE", DEACTIVATE);
       if (ACTIVATE) params.append("ACTIVATE", ACTIVATE);
 
-      const url = `https://${host}/${year}/export?TYPE=ir&L=${leagueId}&FRANCHISE_ID=${FRANCHISE_ID}&JSON=1`;
+      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=ir&L=${leagueId}&FRANCHISE_ID=${FRANCHISE_ID}&JSON=1`;
 
       console.log("🔵 IR URL:", url);
       console.log("🔵 IR PARAMS:", params.toString());
