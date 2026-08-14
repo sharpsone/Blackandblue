@@ -6,6 +6,8 @@ export default function PlayerModal({
   onClose,
   onAdd,
   onWaiver,
+  onMoveToIR,
+  onDropPlayer,
   fromRoster = false,   // ⭐ NEW FLAG
 }) {
   // Prevent crash if player missing
