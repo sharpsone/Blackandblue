@@ -847,6 +847,82 @@ if (action === "playerNewsFeed") {
       return res.status(200).json(data);
     }
 
+    // --- ACTION: IR (activate/deactivate) ---
+    if (action === "IR") {
+      const { DEACTIVATE, ACTIVATE, FRANCHISE_ID } = req.query;
+
+      if (!FRANCHISE_ID) {
+        return res.status(400).json({ error: "Missing FRANCHISE_ID" });
+      }
+
+      const host = detectMflHost(year);
+
+      const params = new URLSearchParams();
+      if (DEACTIVATE) params.append("DEACTIVATE", DEACTIVATE);
+      if (ACTIVATE) params.append("ACTIVATE", ACTIVATE);
+
+      const url = `https://${host}/${year}/export?TYPE=ir&L=${leagueId}&FRANCHISE_ID=${FRANCHISE_ID}&JSON=1`;
+
+      console.log("🔵 IR URL:", url);
+      console.log("🔵 IR PARAMS:", params.toString());
+
+      const resp = await fetch(url, {
+        method: "POST",
+        body: params,
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      });
+
+      const text = await resp.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text };
+      }
+
+      return res.status(200).json(data);
+    }
+
+
+    // --- ACTION: fcfsWaiver (drop player immediately) ---
+    if (action === "fcfsWaiver") {
+      const { DROP, FRANCHISE_ID } = req.query;
+
+      if (!DROP || !FRANCHISE_ID) {
+        return res.status(400).json({ error: "Missing DROP or FRANCHISE_ID" });
+      }
+
+      const host = detectMflHost(year);
+
+      const params = new URLSearchParams();
+      params.append("DROP", DROP);
+
+      const url = `https://${host}/${year}/export?TYPE=fcfsWaiver&L=${leagueId}&FRANCHISE_ID=${FRANCHISE_ID}&JSON=1`;
+
+      console.log("🔵 WAIVER URL:", url);
+      console.log("🔵 WAIVER PARAMS:", params.toString());
+
+      const resp = await fetch(url, {
+        method: "POST",
+        body: params,
+        headers: {
+          Cookie: req.headers.cookie || ""
+        }
+      });
+
+      const text = await resp.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text };
+      }
+
+      return res.status(200).json(data);
+    }
+
     return res.status(400).json({ error: "Unknown action", action });
 
   } catch (err) {
