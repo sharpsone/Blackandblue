@@ -855,12 +855,11 @@ if (action === "playerNewsFeed") {
         return res.status(400).json({ error: "Missing FRANCHISE_ID" });
       }
 
-      const host = detectMflHost(year);
-
       const params = new URLSearchParams();
       if (DEACTIVATE) params.append("DEACTIVATE", DEACTIVATE);
       if (ACTIVATE) params.append("ACTIVATE", ACTIVATE);
 
+      // ⭐ MUST use api.myfantasyleague.com
       const url = `https://api.myfantasyleague.com/${year}/export?TYPE=ir&L=${leagueId}&FRANCHISE_ID=${FRANCHISE_ID}&JSON=1`;
 
       console.log("🔵 IR URL:", url);
@@ -884,7 +883,6 @@ if (action === "playerNewsFeed") {
 
       return res.status(200).json(data);
     }
-
 
     // --- ACTION: fcfsWaiver (drop player immediately) ---
     if (action === "fcfsWaiver") {
