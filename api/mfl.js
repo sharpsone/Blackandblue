@@ -855,19 +855,23 @@ if (action === "playerNewsFeed") {
         return res.status(400).json({ error: "Missing FRANCHISE_ID" });
       }
 
-      const params = new URLSearchParams();
-      if (DEACTIVATE) params.append("DEACTIVATE", DEACTIVATE);
-      if (ACTIVATE) params.append("ACTIVATE", ACTIVATE);
+      // Build query string
+      const qs = new URLSearchParams();
+      qs.append("TYPE", "ir");
+      qs.append("L", leagueId);
+      qs.append("FRANCHISE_ID", FRANCHISE_ID);
+      qs.append("JSON", "1");
 
-      // ⭐ MUST use api.myfantasyleague.com
-      const url = `https://api.myfantasyleague.com/${year}/export?TYPE=ir&L=${leagueId}&FRANCHISE_ID=${FRANCHISE_ID}&JSON=1`;
+      if (DEACTIVATE) qs.append("DEACTIVATE", DEACTIVATE);
+      if (ACTIVATE) qs.append("ACTIVATE", ACTIVATE);
+
+      const url = `https://api.myfantasyleague.com/${year}/export?${qs.toString()}`;
 
       console.log("🔵 IR URL:", url);
-      console.log("🔵 IR PARAMS:", params.toString());
 
+      // ⭐ MUST be GET — NOT POST
       const resp = await fetch(url, {
-        method: "POST",
-        body: params,
+        method: "GET",
         headers: {
           Cookie: req.headers.cookie || ""
         }
