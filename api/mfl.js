@@ -869,7 +869,7 @@ if (action === "playerNewsFeed") {
 
       console.log("🔵 IR URL:", url);
 
-      // ⭐ MUST be GET — NOT POST
+      // ⭐ MUST include Cookie header for authentication
       const resp = await fetch(url, {
         method: "GET",
         headers: {
