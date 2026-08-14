@@ -420,14 +420,14 @@ async function onMoveToIR(player) {
   try {
     console.log("📌 Moving to IR:", player.id);
 
-    const url = `/api/mfl?action=ir&L=${leagueId}&DEACTIVATE=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
+    const url = `/api/mfl?action=ir&L=${leagueId}&leagueId=${leagueId}&year=${year}&DEACTIVATE=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
 
     const res = await fetch(url, { method: "POST" });
     const text = await res.text();
     console.log("📌 IR RESPONSE:", text);
 
-    loadRoster();
-    setSelectedPlayer(null);
+    loadRoster();              // ⭐ refresh roster
+    setSelectedPlayer(null);   // ⭐ close modal
   } catch (err) {
     console.error("❌ IR move failed:", err);
   }
@@ -440,18 +440,19 @@ async function onDropPlayer(player) {
   try {
     console.log("📌 Dropping player:", player.id);
 
-    const url = `/api/mfl?action=fcfsWaiver&L=${leagueId}&DROP=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
+    const url = `/api/mfl?action=fcfsWaiver&L=${leagueId}&leagueId=${leagueId}&year=${year}&DROP=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
 
     const res = await fetch(url, { method: "POST" });
     const text = await res.text();
     console.log("📌 DROP RESPONSE:", text);
 
-    loadRoster();
-    setSelectedPlayer(null);
+    loadRoster();              // ⭐ refresh roster
+    setSelectedPlayer(null);   // ⭐ close modal
   } catch (err) {
     console.error("❌ Drop failed:", err);
   }
 }
+
 
 // ===============================
 // RETURN BLOCK
