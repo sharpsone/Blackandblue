@@ -273,7 +273,7 @@ export default function Team({ leagueInfo }) {
     return map;
   }
 
- // ─── Player modal ─────────────────────────────────────────────────────────
+// ─── Player modal ─────────────────────────────────────────────────────────
 const openPlayer = async (player) => {
   setSelectedPlayer({ loading: true });
   try {
@@ -413,23 +413,6 @@ function renderPlayer(p, idx) {
   );
 }
 
-async function onMoveToIR(player) {
-  try {
-    console.log("📌 Moving to IR:", player.id);
-
-    const url = `/api/mfl?action=ir&L=${leagueId}&DEACTIVATE=${player.id}&FRANCHISE_ID=${myFranchiseId}`;
-
-    const res = await fetch(url, { method: "POST" });
-    const text = await res.text();
-    console.log("📌 IR RESPONSE:", text);
-
-    loadRoster();
-    setSelectedPlayer(null);
-  } catch (err) {
-    console.error("❌ IR move failed:", err);
-  }
-}
-
 // ===============================
 // IR HANDLER
 // ===============================
@@ -450,7 +433,6 @@ async function onMoveToIR(player) {
   }
 }
 
-
 // ===============================
 // DROP HANDLER
 // ===============================
@@ -470,7 +452,6 @@ async function onDropPlayer(player) {
     console.error("❌ Drop failed:", err);
   }
 }
-
 
 // ===============================
 // RETURN BLOCK
